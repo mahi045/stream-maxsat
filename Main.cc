@@ -50,14 +50,6 @@
 #include "MaxSAT.h"
 #include "MaxTypes.h"
 #include "ParserMaxSAT.h"
-#include "ParserPB.h"
-
-// Algorithms
-#include "algorithms/Alg_LinearSU.h"
-#include "algorithms/Alg_MSU3.h"
-#include "algorithms/Alg_OLL.h"
-#include "algorithms/Alg_PartMSU3.h"
-#include "algorithms/Alg_WBO.h"
 
 #define VER1_(x) #x
 #define VER_(x) VER1_(x)
@@ -159,108 +151,108 @@ int main(int argc, char **argv) {
         "c WARNING: for repeatability, setting FPU to use double precision\n");
 #endif
 
-    BoolOption printmodel("Open-WBO", "print-model", "Print model.\n", true);
+    // BoolOption printmodel("Open-WBO", "print-model", "Print model.\n", true);
 
-    StringOption printsoft("Open-WBO", "print-unsat-soft", "Print unsatisfied soft claues in the optimal assignment.\n", NULL);
+    // StringOption printsoft("Open-WBO", "print-unsat-soft", "Print unsatisfied soft claues in the optimal assignment.\n", NULL);
 
-    IntOption verbosity("Open-WBO", "verbosity",
-                        "Verbosity level (0=minimal, 1=more).\n", 0,
-                        IntRange(0, 1));
+    // IntOption verbosity("Open-WBO", "verbosity",
+    //                     "Verbosity level (0=minimal, 1=more).\n", 0,
+    //                     IntRange(0, 1));
 
-    IntOption cpu_lim("Open-WBO", "cpu-lim",
-                      "Limit on CPU time allowed in seconds.\n", 0,
-                      IntRange(0, INT32_MAX));
+    // IntOption cpu_lim("Open-WBO", "cpu-lim",
+    //                   "Limit on CPU time allowed in seconds.\n", 0,
+    //                   IntRange(0, INT32_MAX));
 
-    IntOption mem_lim("Open-WBO", "mem-lim",
-                      "Limit on memory usage in megabytes.\n", 0,
-                      IntRange(0, INT32_MAX));
+    // IntOption mem_lim("Open-WBO", "mem-lim",
+    //                   "Limit on memory usage in megabytes.\n", 0,
+    //                   IntRange(0, INT32_MAX));
 
-    IntOption algorithm("Open-WBO", "algorithm",
-                        "Search algorithm "
-                        "(0=wbo,1=linear-su,2=msu3,3=part-msu3,4=oll,5=best)."
-                        "\n",
-                        5, IntRange(0, 5));
+    // IntOption algorithm("Open-WBO", "algorithm",
+    //                     "Search algorithm "
+    //                     "(0=wbo,1=linear-su,2=msu3,3=part-msu3,4=oll,5=best)."
+    //                     "\n",
+    //                     5, IntRange(0, 5));
 
-    IntOption partition_strategy("PartMSU3", "partition-strategy",
-                                 "Partition strategy (0=sequential, "
-                                 "1=sequential-sorted, 2=binary)"
-                                 "(only for unsat-based partition algorithms).",
-                                 2, IntRange(0, 2));
+    // IntOption partition_strategy("PartMSU3", "partition-strategy",
+    //                              "Partition strategy (0=sequential, "
+    //                              "1=sequential-sorted, 2=binary)"
+    //                              "(only for unsat-based partition algorithms).",
+    //                              2, IntRange(0, 2));
 
-    IntOption graph_type("PartMSU3", "graph-type",
-                         "Graph type (0=vig, 1=cvig, 2=res) (only for unsat-"
-                         "based partition algorithms).",
-                         2, IntRange(0, 2));
+    // IntOption graph_type("PartMSU3", "graph-type",
+    //                      "Graph type (0=vig, 1=cvig, 2=res) (only for unsat-"
+    //                      "based partition algorithms).",
+    //                      2, IntRange(0, 2));
 
-    BoolOption bmo("Open-WBO", "bmo", "BMO search.\n", true);
+    // BoolOption bmo("Open-WBO", "bmo", "BMO search.\n", true);
 
-    IntOption cardinality("Encodings", "cardinality",
-                          "Cardinality encoding (0=cardinality networks, "
-                          "1=totalizer, 2=modulo totalizer).\n",
-                          1, IntRange(0, 2));
+    // IntOption cardinality("Encodings", "cardinality",
+    //                       "Cardinality encoding (0=cardinality networks, "
+    //                       "1=totalizer, 2=modulo totalizer).\n",
+    //                       1, IntRange(0, 2));
 
-    IntOption amo("Encodings", "amo", "AMO encoding (0=Ladder).\n", 0,
-                  IntRange(0, 0));
+    // IntOption amo("Encodings", "amo", "AMO encoding (0=Ladder).\n", 0,
+    //               IntRange(0, 0));
 
-    IntOption pb("Encodings", "pb", "PB encoding (0=SWC,1=GTE,2=Adder).\n", 1,
-                 IntRange(0, 2));
+    // IntOption pb("Encodings", "pb", "PB encoding (0=SWC,1=GTE,2=Adder).\n", 1,
+    //              IntRange(0, 2));
 
-    IntOption formula("Open-WBO", "formula",
-                      "Type of formula (0=WCNF, 1=OPB).\n", 0, IntRange(0, 1));
+    // IntOption formula("Open-WBO", "formula",
+    //                   "Type of formula (0=WCNF, 1=OPB).\n", 0, IntRange(0, 1));
 
-    IntOption weight(
-        "WBO", "weight-strategy",
-        "Weight strategy (0=none, 1=weight-based, 2=diversity-based).\n", 2,
-        IntRange(0, 2));
+    // IntOption weight(
+    //     "WBO", "weight-strategy",
+    //     "Weight strategy (0=none, 1=weight-based, 2=diversity-based).\n", 2,
+    //     IntRange(0, 2));
 
-    BoolOption symmetry("WBO", "symmetry", "Symmetry breaking.\n", true);
+    // BoolOption symmetry("WBO", "symmetry", "Symmetry breaking.\n", true);
 
-    IntOption symmetry_lim(
-        "WBO", "symmetry-limit",
-        "Limit on the number of symmetry breaking clauses.\n", 500000,
-        IntRange(0, INT32_MAX));
+    // IntOption symmetry_lim(
+    //     "WBO", "symmetry-limit",
+    //     "Limit on the number of symmetry breaking clauses.\n", 500000,
+    //     IntRange(0, INT32_MAX));
 
-    parseOptions(argc, argv, true);
+    // parseOptions(argc, argv, true);
 
-    // Try to set resource limits:
-    if (cpu_lim != 0) limitTime(cpu_lim);
-    if (mem_lim != 0) limitMemory(mem_lim);
+    // // Try to set resource limits:
+    // if (cpu_lim != 0) limitTime(cpu_lim);
+    // if (mem_lim != 0) limitMemory(mem_lim);
 
     double initial_time = cpuTime();
     MaxSAT *S = NULL;
 
-    switch ((int)algorithm) {
-    case _ALGORITHM_WBO_:
-      S = new WBO(verbosity, weight, symmetry, symmetry_lim);
-      break;
+    // switch ((int)algorithm) {
+    // case _ALGORITHM_WBO_:
+    //   S = new WBO(verbosity, weight, symmetry, symmetry_lim);
+    //   break;
 
-    case _ALGORITHM_LINEAR_SU_:
-      S = new LinearSU(verbosity, bmo, cardinality, pb);
-      break;
+    // case _ALGORITHM_LINEAR_SU_:
+    //   S = new LinearSU(verbosity, bmo, cardinality, pb);
+    //   break;
 
-    case _ALGORITHM_PART_MSU3_:
-      S = new PartMSU3(verbosity, partition_strategy, graph_type, cardinality);
-      break;
+    // case _ALGORITHM_PART_MSU3_:
+    //   S = new PartMSU3(verbosity, partition_strategy, graph_type, cardinality);
+    //   break;
 
-    case _ALGORITHM_MSU3_:
-      S = new MSU3(verbosity);
-      break;
+    // case _ALGORITHM_MSU3_:
+    //   S = new MSU3(verbosity);
+    //   break;
 
-    case _ALGORITHM_OLL_:
-      S = new OLL(verbosity, cardinality);
-      break;
+    // case _ALGORITHM_OLL_:
+    //   S = new OLL(verbosity, cardinality);
+    //   break;
 
-    case _ALGORITHM_BEST_:
-      break;
+    // case _ALGORITHM_BEST_:
+    //   break;
 
-    default:
-      printf("c Error: Invalid MaxSAT algorithm.\n");
-      printf("s UNKNOWN\n");
-      exit(_ERROR_);
-    }
+    // default:
+    //   printf("c Error: Invalid MaxSAT algorithm.\n");
+    //   printf("s UNKNOWN\n");
+    //   exit(_ERROR_);
+    // }
 
-    signal(SIGXCPU, SIGINT_exit);
-    signal(SIGTERM, SIGINT_exit);
+    // signal(SIGXCPU, SIGINT_exit);
+    // signal(SIGTERM, SIGINT_exit);
 
     if (argc == 1) {
       printf("c Warning: no filename.\n");
@@ -274,14 +266,14 @@ int main(int argc, char **argv) {
 
     MaxSATFormula *maxsat_formula = new MaxSATFormula();
 
-    if ((int)formula == _FORMAT_MAXSAT_) {
+    // if ((int)formula == _FORMAT_MAXSAT_) {
       parseMaxSATFormula(in, maxsat_formula);
       maxsat_formula->setFormat(_FORMAT_MAXSAT_);
-    } else {
-      ParserPB *parser_pb = new ParserPB();
-      parser_pb->parsePBFormula(argv[1], maxsat_formula);
-      maxsat_formula->setFormat(_FORMAT_PB_);
-    }
+    // } else {
+    //   ParserPB *parser_pb = new ParserPB();
+    //   parser_pb->parsePBFormula(argv[1], maxsat_formula);
+    //   maxsat_formula->setFormat(_FORMAT_PB_);
+    // }
     gzclose(in);
 
     printf("c |                                                                "
@@ -334,37 +326,8 @@ int main(int argc, char **argv) {
     printf("c |                                                                "
            "                                       |\n");
 
-    if (algorithm == _ALGORITHM_BEST_) {
-      assert(S == NULL);
-
-      if (maxsat_formula->getProblemType() == _UNWEIGHTED_) {
-        // Unweighted
-        S = new PartMSU3(verbosity, _PART_BINARY_, RES_GRAPH,
-                         cardinality);
-        S->loadFormula(maxsat_formula);
-
-        if (((PartMSU3 *)S)->chooseAlgorithm() == _ALGORITHM_MSU3_) {
-          // FIXME: possible memory leak
-          S = new MSU3(verbosity);
-        }
-
-      } else {
-        // Weighted
-        S = new OLL(verbosity, cardinality);
-      }
-    }
-
-    if (S->getMaxSATFormula() == NULL)
-      S->loadFormula(maxsat_formula);
-    S->setPrintModel(printmodel);
-    S->setPrintSoft((const char *)printsoft);
-    S->setInitialTime(initial_time);
-    mxsolver = S;
-    mxsolver->setPrint(true);
-
-    int ret = (int)mxsolver->search();
     delete S;
-    return ret;
+
   } catch (OutOfMemoryException &) {
     sleep(1);
     printf("c Error: Out of memory.\n");
