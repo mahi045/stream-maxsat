@@ -50,6 +50,8 @@
 #include "MaxSAT.h"
 #include "MaxTypes.h"
 #include "ParserMaxSAT.h"
+#include "constants.h"
+#include "sampling.h"
 
 #define VER1_(x) #x
 #define VER_(x) VER1_(x)
@@ -68,7 +70,7 @@ using namespace openwbo;
 //=================================================================================================
 
 static MaxSAT *mxsolver;
-
+MaxSATFormula *maxsat_formula;
 static void SIGINT_exit(int signum) {
   mxsolver->printAnswer(_UNKNOWN_);
   exit(_UNKNOWN_);
@@ -211,9 +213,31 @@ int main(int argc, char **argv) {
     //     "WBO", "symmetry-limit",
     //     "Limit on the number of symmetry breaking clauses.\n", 500000,
     //     IntRange(0, INT32_MAX));
+    IntOption R_value("Open-WBO", "Rvalue",
+                        "the ratio of bucket size and pool size "
+                        "\n",
+                        1, IntRange(1, 100));
 
-    // parseOptions(argc, argv, true);
+    IntOption K_value("Open-WBO", "Kvalue",
+                        "the value of K "
+                        "\n",
+                        1, IntRange(1, 100));
+    Glucose::DoubleOption epsilon("Open-WBO", "epsilon",
+                        "the value of ep "
+                        "\n",
+                        0.25);
+    BoolOption streaming("WBO", "streaming", "Symmetry breaking.\n", true);
+    parseOptions(argc, argv, true);
+    R = (int)R_value;
+    K = (int)K_value;
+    eps = (double)epsilon;
 
+    printf("R_value: %d\n", R);
+    printf("K_value: %d\n", K);
+    printf("Epsilon: %f\n", (double)epsilon);
+    printf("Streaming: %d\n", (int)streaming);
+
+    
     // // Try to set resource limits:
     // if (cpu_lim != 0) limitTime(cpu_lim);
     // if (mem_lim != 0) limitMemory(mem_lim);
@@ -264,8 +288,8 @@ int main(int argc, char **argv) {
              argc == 1 ? "<stdin>" : argv[1]),
           printf("s UNKNOWN\n"), exit(_ERROR_);
 
-    MaxSATFormula *maxsat_formula = new MaxSATFormula();
-
+    maxsat_formula = new MaxSATFormula();
+    file_name = std::string(argv[1]);   
     // if ((int)formula == _FORMAT_MAXSAT_) {
       parseMaxSATFormula(in, maxsat_formula);
       maxsat_formula->setFormat(_FORMAT_MAXSAT_);
@@ -275,6 +299,7 @@ int main(int argc, char **argv) {
     //   maxsat_formula->setFormat(_FORMAT_PB_);
     // }
     gzclose(in);
+    sample_clauses(maxsat_formula);
 
     printf("c |                                                                "
            "                                       |\n");
@@ -325,7 +350,7 @@ int main(int argc, char **argv) {
            parsed_time - initial_time);
     printf("c |                                                                "
            "                                       |\n");
-
+     
     delete S;
 
   } catch (OutOfMemoryException &) {
