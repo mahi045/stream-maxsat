@@ -42,6 +42,7 @@
 
 using NSPACE::vec;
 using NSPACE::Lit;
+using NSPACE::lbool;
 using NSPACE::lit_Undef;
 using NSPACE::mkLit;
 
@@ -111,6 +112,9 @@ public:
   }
 
   MaxSATFormula *copyMaxSATFormula();
+  vec<double> occurance_list;
+  vec<lbool> assignment;
+  int clause_seen_so_far;
 
   /*! Add a new hard clause. */
   void addHardClause(vec<Lit> &lits);
@@ -118,12 +122,17 @@ public:
   /*! Add a new soft clause. */
   void addSoftClause(uint64_t weight, vec<Lit> &lits);
 
+  /*! Add a new pool clause. */
+  void addPoolClause(uint64_t weight, vec<Lit> &lits);
+  void updatePoolClause(uint64_t weight, vec<Lit> &lits, int pos);
+
   /*! Add a new soft clause with predefined relaxation variables. */
   void addSoftClause(uint64_t weight, vec<Lit> &lits, vec<Lit> &vars);
 
   int nVars();   // Number of variables.
   int nSoft();   // Number of soft clauses.
   int nHard();   // Number of hard clauses.
+  int nPool();   // Number of pool clauses.
   void newVar(int v = -1); // New variable. Set to the given value.
 
   Lit newLiteral(bool sign = false); // Make a new literal.
@@ -148,6 +157,9 @@ public:
 
   /*! Return i-soft clause. */
   Soft &getSoftClause(int pos);
+
+   /*! Return i-pool clause. */
+  Soft &getPoolClause(int pos);
 
   /*! Return i-hard clause. */
   Hard &getHardClause(int pos);
@@ -191,6 +203,7 @@ protected:
   // MaxSAT database
   //
   vec<Soft> soft_clauses; //<! Stores the soft clauses of the MaxSAT formula.
+  vec<Soft> pool_clauses; //<! Stores the pool of clauses of the MaxSAT formula.
   vec<Hard> hard_clauses; //<! Stores the hard clauses of the MaxSAT formula.
 
   // PB database
@@ -206,6 +219,7 @@ protected:
   int n_vars;           //<! Number of variables used in the SAT solver.
   int n_soft;           //<! Number of soft clauses.
   int n_hard;           //<! Number of hard clauses.
+  int n_pool;           //<! Number of pool clauses.
   int n_initial_vars;   //<! Number of variables of the initial MaxSAT formula.
   uint64_t sum_soft_weight; //<! Sum of weights of soft clauses.
   uint64_t max_soft_weight; //<! Maximum weight of soft clauses.

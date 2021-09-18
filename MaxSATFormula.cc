@@ -76,6 +76,55 @@ void MaxSATFormula::addSoftClause(uint64_t weight, vec<Lit> &lits) {
   n_soft++;
 }
 
+void MaxSATFormula::addPoolClause(uint64_t weight, vec<Lit> &lits) {
+  pool_clauses.push();
+  vec<Lit> vars;
+  Lit assump = lit_Undef;
+  vec<Lit> copy_lits;
+  lits.copyTo(copy_lits);
+
+  new (&pool_clauses[pool_clauses.size() - 1])
+      Soft(copy_lits, weight, assump, vars);
+  n_pool++;
+}
+
+// void test_update_function(MaxSATFormula *maxsat_formula) {
+//     cout << "Before update" << endl;
+//     cout << maxsat_formula->getSoftClause(11).weight << " ";
+//     for (int j = 0; j < maxsat_formula->getSoftClause(11).clause.size(); j++) {
+//         cout << var(maxsat_formula->getSoftClause(11).clause[j]) + 1<< " ";
+//     }
+//     cout << endl;
+//     cout << maxsat_formula->getSoftClause(13).weight << " ";
+//     for (int j = 0; j < maxsat_formula->getSoftClause(13).clause.size(); j++) {
+//         cout << var(maxsat_formula->getSoftClause(13).clause[j]) + 1<< " ";
+//     }
+//     cout << endl;
+//     maxsat_formula->updatePoolClause(maxsat_formula->getSoftClause(11).weight, maxsat_formula->getSoftClause(11).clause, 13);
+//     cout << "After update" << endl;
+//     cout << maxsat_formula->getSoftClause(11).weight << " ";
+//     for (int j = 0; j < maxsat_formula->getSoftClause(11).clause.size(); j++) {
+//         cout << var(maxsat_formula->getSoftClause(11).clause[j]) + 1<< " ";
+//     }
+//     cout << endl;
+//     cout << maxsat_formula->getSoftClause(13).weight << " ";
+//     for (int j = 0; j < maxsat_formula->getSoftClause(13).clause.size(); j++) {
+//         cout << var(maxsat_formula->getSoftClause(13).clause[j]) + 1 << " ";
+//     }
+//     cout << endl;
+// }
+
+void MaxSATFormula::updatePoolClause(uint64_t weight, vec<Lit> &lits, int pos) {
+  // pool_clauses.push();
+  vec<Lit> vars;
+  Lit assump = lit_Undef;
+  vec<Lit> copy_lits;
+  lits.copyTo(copy_lits);
+
+  new (&soft_clauses[pos])
+      Soft(copy_lits, weight, assump, vars);
+}
+
 // Adds a new soft clause to the hard clause database with predefined relaxation
 // variables.
 void MaxSATFormula::addSoftClause(uint64_t weight, vec<Lit> &lits,
@@ -103,6 +152,10 @@ int MaxSATFormula::nVars() {
 int MaxSATFormula::nSoft() {
   return n_soft;
 } // Returns the number of soft clauses in the working MaxSAT formula.
+
+int MaxSATFormula::nPool() {
+  return n_pool;
+} // Returns the number of pool clauses in the working MaxSAT formula.
 
 int MaxSATFormula::nHard() {
   return n_hard;
@@ -155,6 +208,11 @@ Soft &MaxSATFormula::getSoftClause(int pos) {
 Hard &MaxSATFormula::getHardClause(int pos) {
   assert(pos < nHard());
   return hard_clauses[pos];
+}
+
+Soft &MaxSATFormula::getPoolClause(int pos) {
+  assert(pos < nPool());
+  return pool_clauses[pos];
 }
 
 void MaxSATFormula::addPBConstraint(PB *p) {

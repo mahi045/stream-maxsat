@@ -52,6 +52,7 @@
 #include "ParserMaxSAT.h"
 #include "constants.h"
 #include "sampling.h"
+#include "streaming.h"
 
 #define VER1_(x) #x
 #define VER_(x) VER1_(x)
@@ -216,7 +217,7 @@ int main(int argc, char **argv) {
     IntOption R_value("Open-WBO", "Rvalue",
                         "the ratio of bucket size and pool size "
                         "\n",
-                        1, IntRange(1, 100));
+                        5, IntRange(1, 100));
 
     IntOption K_value("Open-WBO", "Kvalue",
                         "the value of K "
@@ -226,7 +227,7 @@ int main(int argc, char **argv) {
                         "the value of ep "
                         "\n",
                         0.25);
-    BoolOption streaming("WBO", "streaming", "Symmetry breaking.\n", true);
+    BoolOption sampling("WBO", "sampling", "Symmetry breaking.\n", false);
     parseOptions(argc, argv, true);
     R = (int)R_value;
     K = (int)K_value;
@@ -235,7 +236,7 @@ int main(int argc, char **argv) {
     printf("R_value: %d\n", R);
     printf("K_value: %d\n", K);
     printf("Epsilon: %f\n", (double)epsilon);
-    printf("Streaming: %d\n", (int)streaming);
+    printf("Streaming: %d\n", (int)sampling);
 
     
     // // Try to set resource limits:
@@ -299,7 +300,12 @@ int main(int argc, char **argv) {
     //   maxsat_formula->setFormat(_FORMAT_PB_);
     // }
     gzclose(in);
-    sample_clauses(maxsat_formula);
+    if (sampling) {
+       sample_clauses(maxsat_formula);
+    }
+    else {
+       streaming_maxsat(maxsat_formula);
+    }
 
     printf("c |                                                                "
            "                                       |\n");
@@ -365,3 +371,4 @@ int main(int argc, char **argv) {
     exit(_ERROR_);
   }
 }
+// ./open-wbo -epsilon=0.25  maxcut-hamming.wcnf

@@ -18,11 +18,10 @@ using namespace std;
 std::random_device rd;
 std::mt19937 gen(rd());
 
-void sample_clauses(MaxSATFormula *maxsat_formula) {
-    POOL_SIZE = K * maxsat_formula->nVars() / (eps * eps);
-
+/* the function chooses k elements from n elements */
+vector<int> sample_k_items(int n, int k) {
     vector<int> b(POOL_SIZE);
-    for(std::size_t i = 0; i != maxsat_formula->nSoft(); ++i) {
+    for(std::size_t i = 0; i != n; ++i) {
         std::uniform_int_distribution<> dis(0, i);
         std::size_t j = dis(gen);
         if(j < b.size()) {
@@ -32,6 +31,12 @@ void sample_clauses(MaxSATFormula *maxsat_formula) {
             b[j] = i;
         }
     }
+    return b;
+}
+
+void sample_clauses(MaxSATFormula *maxsat_formula) {
+    POOL_SIZE = K * maxsat_formula->nVars() / (eps * eps);
+    vector<int> b = sample_k_items(maxsat_formula->nSoft(), POOL_SIZE);
     ofstream myfile;
     std::string sampled_maxsat_file = "sampled_" + file_name;
     myfile.open(sampled_maxsat_file);
