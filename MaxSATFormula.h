@@ -115,6 +115,7 @@ public:
   vec<double> occurance_list;
   vec<lbool> assignment;
   int clause_seen_so_far;
+  int hard_clause_identifier = 0;
 
   /*! Add a new hard clause. */
   void addHardClause(vec<Lit> &lits);

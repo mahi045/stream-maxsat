@@ -38,23 +38,35 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     double w;
     for (int i = 0; i < maxsat_formula->nSoft(); i++) {
         for (int j = 0; j < maxsat_formula->getSoftClause(i).clause.size(); j++) {
-            w = maxsat_formula->getSoftClause(i).weight / maxsat_formula->getSoftClause(i).clause.size();
+            w = (double) maxsat_formula->getSoftClause(i).weight / maxsat_formula->getSoftClause(i).clause.size();
             maxsat_formula->occurance_list[var(maxsat_formula->getSoftClause(i).clause[j])] += w; 
+            if (maxsat_formula->hard_clause_identifier <= ceil(maxsat_formula->occurance_list[var(maxsat_formula->getSoftClause(i).clause[j])])) {
+                maxsat_formula->hard_clause_identifier = ceil(maxsat_formula->occurance_list[var(maxsat_formula->getSoftClause(i).clause[j])]) + 2;
+            }
+            // if (maxsat_formula->hard_clause_identifier <= ceil(maxsat_formula->occurance_list[var(maxsat_formula->getSoftClause(i).clause[j])])) {
+            //     assert(false);
+            // }
         }
         if (!(i % BUCKET_SIZE)) {
             bucket_start = i;
             myfile.open(stream_maxsat_file);
-            myfile << "p wcnf " + to_string(maxsat_formula->nVars()) + " " + to_string(BUCKET_SIZE) + " " + to_string(maxsat_formula->getHardWeight()) << endl;
+
         }
-        myfile << maxsat_formula->getSoftClause(i).weight << " ";
-        for (int j = 0; j < maxsat_formula->getSoftClause(i).clause.size(); j++) {
-            if (sign(maxsat_formula->getSoftClause(i).clause[j])) {
-                myfile << "-";
-            }
-            myfile << var(maxsat_formula->getSoftClause(i).clause[j]) + 1 << " ";
-        }
-        myfile << "0" << endl;
         if (!((i + 1) % BUCKET_SIZE) || i + 1 == maxsat_formula->nSoft()) {
+            myfile << "p wcnf " + to_string(maxsat_formula->nVars()) + " " + to_string(BUCKET_SIZE) + " " + to_string(maxsat_formula->hard_clause_identifier) << endl;
+            for (auto start_index = bucket_start; start_index <= i;
+                 start_index++) {
+                myfile << maxsat_formula->getSoftClause(start_index).weight << " ";
+                for (int j = 0;
+                    j < maxsat_formula->getSoftClause(start_index).clause.size(); j++) {
+                        if (sign(maxsat_formula->getSoftClause(start_index).clause[j])) {
+                        myfile << "-";
+                        }
+                        myfile << var(maxsat_formula->getSoftClause(start_index).clause[j]) + 1
+                            << " ";
+                }
+                myfile << "0" << endl;
+            }
             for (int variable = 1; variable <= maxsat_formula->nVars(); variable++) {
                 if (maxsat_formula->assignment[variable] == l_True) {
                     if (ceil(maxsat_formula->occurance_list[2 * variable]) >= ceil(maxsat_formula->occurance_list[2 * variable + 1])) {
@@ -80,8 +92,10 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             agreed.clear();
             result_file_name = "result_" + stream_maxsat_file;
             ifstream resultfile2(result_file_name);
+            bool no_assign = false;
             while (getline(resultfile2, line)) {
                 if (line.rfind("v ") == 0) {
+                    no_assign = true;
                     auto start = 0U;
                     auto end = line.find(delim);
                     while (end != std::string::npos) {
@@ -112,8 +126,12 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                     }
                 }
             }
-            cout << "Total " << incompatible.size() << " literals are incompatible" << endl;
-            cout << "Total " << agreed.size() << " literals are compatibles" << endl;
+            if (!no_assign) {
+                cout << " I found no assignment";
+                exit(1);
+            }
+            cout << "Total " << incompatible.size() << " (" << agreed.size() << ") literals are incompatible (compatibles)" << endl;
+            
             if (incompatible.size() > 0) {
                 // now invoking maxsat query again
                 myfile.open(stream_maxsat_file, std::ios_base::app);
@@ -132,7 +150,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             if (agreed.size() > 0) {
                 // adding agreed literals as hard clauses
                 for (auto lit_index = 0; lit_index < agreed.size(); lit_index++) {
-                    myfile << maxsat_formula->getHardWeight() << " " << agreed[lit_index] << " 0" << endl;
+                    myfile << maxsat_formula->hard_clause_identifier << " " << agreed[lit_index] << " 0" << endl;
                 }
             }
             myfile.close();
@@ -176,9 +194,9 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 }
                 vector<int> replaced_clause_pool = sample_k_items(maxsat_formula->nPool(), clause_need_replace);
                 vector<int> replaced_clause_bucket = sample_k_items(remaining_clause, clause_need_replace);
-                cout << " From bucket index " << bucket_start << " to " << i << endl;
+                cout << " From bucket index " << bucket_start << " to " << i << " => ";
                 for (auto cla_index = 0; cla_index < clause_need_replace; cla_index++) {
-                    cout << " Bucket " << index_bucket << "'th clause replace pool " << index_pool << "'th clause" << endl;
+                    // cout << " Bucket " << index_bucket << "'th clause replace pool " << index_pool << "'th clause" << endl;
                     index_bucket = replaced_clause_bucket[cla_index] + maxsat_formula->clause_seen_so_far - 1;
                     index_pool = replaced_clause_pool[cla_index];
                     maxsat_formula->updatePoolClause(maxsat_formula->getSoftClause(index_bucket).weight, 
