@@ -37,3 +37,5 @@ write_file.close()
 os.system('./open-wbo_static {0} -cpu-lim={1}'.format('assess_{0}'.format(file_name),
     10000))
 
+os.system('rm -f assess_*')
+
