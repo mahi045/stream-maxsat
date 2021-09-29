@@ -85,6 +85,7 @@ template <class B, class MaxSATFormula>
 static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
   vec<Lit> lits;
   uint64_t hard_weight = UINT64_MAX;
+  maxsat_formula->weight_sampler.clear();
   for (;;) {
     skipWhitespace(in);
     if (*in == EOF)
@@ -120,6 +121,7 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
         maxsat_formula->addHardClause(lits);
     }
   }
+  assert(maxsat_formula->nSoft() == maxsat_formula->weight_sampler.size());
 }
 
 // Inserts problem into solver.

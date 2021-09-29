@@ -223,6 +223,14 @@ int main(int argc, char **argv) {
                         "the value of K "
                         "\n",
                         1, IntRange(1, 100));
+       IntOption Timeout_value("Open-WBO", "timeout",
+                            "the value of timeout "
+                            "\n",
+                            10, IntRange(1, 10000));
+       IntOption Immediate_timeout_value("Open-WBO", "small-timeout",
+                            "the value of small timeout "
+                            "\n",
+                            100, IntRange(1, 10000));
     Glucose::DoubleOption epsilon("Open-WBO", "epsilon",
                         "the value of ep "
                         "\n",
@@ -232,11 +240,15 @@ int main(int argc, char **argv) {
     R = (int)R_value;
     K = (int)K_value;
     eps = (double)epsilon;
+    TIMEOUT = (int) Timeout_value;
+    SMALL_TIMEOUT = (int) Immediate_timeout_value;
 
     printf("R_value: %d\n", R);
     printf("K_value: %d\n", K);
     printf("Epsilon: %f\n", (double)epsilon);
-    printf("Streaming: %d\n", (int)sampling);
+//     printf("Streaming: %d\n", (int)sampling);
+    printf("Timeout for complete maxsat: %d\n", (int)TIMEOUT);
+    printf("Timeout for partition maxsat: %d\n", (int)SMALL_TIMEOUT);
 
     
     // // Try to set resource limits:
@@ -301,9 +313,11 @@ int main(int argc, char **argv) {
     // }
     gzclose(in);
     if (sampling) {
+       printf("Running sampling version of maxsat!!!\n");
        sample_clauses(maxsat_formula);
     }
     else {
+       printf("Running streaming version of maxsat!!!\n");
        streaming_maxsat(maxsat_formula);
     }
 

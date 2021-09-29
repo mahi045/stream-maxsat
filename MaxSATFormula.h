@@ -28,6 +28,7 @@
 #ifndef MaxSATFormula_h
 #define MaxSATFormula_h
 
+#include <cstdint>
 #ifdef SIMP
 #include "simp/SimpSolver.h"
 #else
@@ -39,12 +40,16 @@
 
 #include <map>
 #include <string>
+#include <vector>
+#include <random>
+#include <unordered_set>
 
 using NSPACE::vec;
 using NSPACE::Lit;
 using NSPACE::lbool;
 using NSPACE::lit_Undef;
 using NSPACE::mkLit;
+using namespace std;
 
 namespace openwbo {
 
@@ -114,6 +119,8 @@ public:
   MaxSATFormula *copyMaxSATFormula();
   vec<double> occurance_list;
   vec<lbool> assignment;
+  vector<uint32_t> weight_sampler;
+  unordered_set<uint32_t> pick_k_clauses(int k, bool reversed);
   int clause_seen_so_far;
   int hard_clause_identifier = 0;
 
@@ -233,6 +240,9 @@ protected:
   // Format
   //
   int format;
+  // initialize random sampler
+  random_device rd;
+  mt19937 rng{rd()};
 };
 
 } // namespace openwbo
