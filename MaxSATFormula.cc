@@ -86,7 +86,7 @@ void MaxSATFormula::addPoolClause(uint64_t weight, vec<Lit> &lits) {
   Lit assump = lit_Undef;
   vec<Lit> copy_lits;
   lits.copyTo(copy_lits);
-
+  weight_pool.push_back(weight);
   new (&pool_clauses[pool_clauses.size() - 1])
       Soft(copy_lits, weight, assump, vars);
   n_pool++;
@@ -124,6 +124,7 @@ void MaxSATFormula::updatePoolClause(uint64_t weight, vec<Lit> &lits, int pos) {
   Lit assump = lit_Undef;
   vec<Lit> copy_lits;
   lits.copyTo(copy_lits);
+  weight_pool[pos] = weight;
 
   new (&soft_clauses[pos])
       Soft(copy_lits, weight, assump, vars);
@@ -304,6 +305,57 @@ unordered_set<uint32_t> MaxSATFormula::pick_k_clauses(int k, bool reverse = fals
     int offset = pow2(tree_levels) - 1;
     for (int ix = 0; ix < rnd_max; ix++) {
         tree_weights[ix + offset] = weight_sampler[ix];
+    }
+    for (int ix = pow2(tree_levels+1) - 1; ix > 0; ix--) {
+        tree_weights[(ix - 1) / 2] += tree_weights[ix];
+    }
+
+    /* sample according to uniform distribution */
+    double rnd_subrange, w_left;
+    double curr_subrange;
+    int curr_ix;
+    std::unordered_set<uint32_t> sampled(ntake);
+    for (int el = 0; el < ntake; el++) {
+
+        /* go down the tree by drawing a random number and
+           checking if it falls in the left or right sub-ranges */
+        curr_ix = 0;
+        curr_subrange = tree_weights[0];
+        for (int lev = 0; lev < tree_levels; lev++) {
+            rnd_subrange = std::uniform_real_distribution<double>(0, curr_subrange)(rng);
+            w_left = tree_weights[2 * curr_ix + 1];
+            curr_ix = 2 * curr_ix + 1 + (rnd_subrange >= w_left);
+            curr_subrange = tree_weights[curr_ix];
+        }
+
+        /* finally, add element from this iteration */
+        sampled.insert(curr_ix - offset);
+
+        /* now remove the weight of the chosen element */
+        tree_weights[curr_ix] = 0;
+        for (int lev = 0; lev < tree_levels; lev++) {
+            curr_ix = (curr_ix - 1) / 2;
+            tree_weights[curr_ix] =   tree_weights[2 * curr_ix + 1]
+                                    + tree_weights[2 * curr_ix + 2];
+        }
+    }
+  return sampled;
+}
+unordered_set<uint32_t> MaxSATFormula::pick_k_clauses_from_pool(int k) {
+  int rnd_max = weight_sampler.size();
+    int ntake = k;
+
+    /* determine smallest power of two that is larger than N */
+    int tree_levels = ceil(log2((double) rnd_max));
+
+    /* initialize vector with place-holders for perfectly-balanced tree */
+    std::vector<double> tree_weights(pow2(tree_levels + 1));
+
+    /* compute sums for the tree leaves at each node */
+    int offset = pow2(tree_levels) - 1;
+    for (int ix = 0; ix < rnd_max; ix++) {
+        tree_weights[ix + offset] = hard_clause_identifier - weight_pool[ix];
+        assert(tree_weights[ix + offset] >= 0);
     }
     for (int ix = pow2(tree_levels+1) - 1; ix > 0; ix--) {
         tree_weights[(ix - 1) / 2] += tree_weights[ix];

@@ -118,9 +118,12 @@ public:
 
   MaxSATFormula *copyMaxSATFormula();
   vec<double> occurance_list;
+  vec<double> temp_occurance_list;
   vec<lbool> assignment;
   vector<uint32_t> weight_sampler;
+  vector<uint32_t> weight_pool;
   unordered_set<uint32_t> pick_k_clauses(int k, bool reversed);
+  unordered_set<uint32_t> pick_k_clauses_from_pool(int k);
   int clause_seen_so_far;
   int hard_clause_identifier = 0;
 

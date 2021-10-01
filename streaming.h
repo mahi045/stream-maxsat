@@ -2,6 +2,7 @@
 #define STREAMING_h
 #include "constants.h"
 #include <cmath>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
@@ -10,13 +11,14 @@
 #include <random>
 #include <stdio.h>
 #include <sstream>
+#include <unordered_set>
 
 using NSPACE::vec;
 using namespace openwbo;
 using namespace std;
 
 void streaming_maxsat(MaxSATFormula *maxsat_formula) { 
-    POOL_SIZE = K * maxsat_formula->nVars() / (eps * eps);
+    POOL_SIZE = min((int) (K * maxsat_formula->nVars() / (eps * eps)), maxsat_formula->nSoft());
     BUCKET_SIZE = POOL_SIZE / R;
     // test_update_function(maxsat_formula);
     std::ostringstream stringStream;
@@ -24,6 +26,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     string delim = " ";
     int lit;
     maxsat_formula->occurance_list.growTo(2 * maxsat_formula->nVars() + 1, 0);
+    maxsat_formula->temp_occurance_list.growTo(2 * maxsat_formula->nVars() + 1, 0);
     maxsat_formula->assignment.growTo(maxsat_formula->nVars(), l_Undef);
     printf("Size of occurance list: %d\n", maxsat_formula->occurance_list.size());
     printf("Size of assignment list: %d\n", maxsat_formula->assignment.size());
@@ -34,12 +37,16 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     vec<int> agreed;
     int bucket_start;
     int index_bucket, index_pool;
+    double positive_phase, negative_phase;
+    maxsat_formula->weight_sampler.clear();
+    maxsat_formula->weight_pool.clear();
     std::string stream_maxsat_file = "streaming_" + file_name;
     double w;
     for (int i = 0; i < maxsat_formula->nSoft(); i++) {
         for (int j = 0; j < maxsat_formula->getSoftClause(i).clause.size(); j++) {
             w = (double) maxsat_formula->getSoftClause(i).weight / maxsat_formula->getSoftClause(i).clause.size();
             maxsat_formula->occurance_list[var(maxsat_formula->getSoftClause(i).clause[j])] += w; 
+            maxsat_formula->temp_occurance_list[var(maxsat_formula->getSoftClause(i).clause[j])] += w; 
             if (maxsat_formula->hard_clause_identifier <= ceil(maxsat_formula->occurance_list[var(maxsat_formula->getSoftClause(i).clause[j])])) {
                 maxsat_formula->hard_clause_identifier = ceil(maxsat_formula->occurance_list[var(maxsat_formula->getSoftClause(i).clause[j])]) + 2;
             }
@@ -68,22 +75,28 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 myfile << "0" << endl;
             }
             for (int variable = 1; variable <= maxsat_formula->nVars(); variable++) {
+                positive_phase = maxsat_formula->occurance_list[2 * variable] - maxsat_formula->temp_occurance_list[2 * variable];
+                negative_phase = maxsat_formula->occurance_list[2 * variable + 1] - maxsat_formula->temp_occurance_list[2 * variable + 1];
                 if (maxsat_formula->assignment[variable] == l_True) {
-                    if (ceil(maxsat_formula->occurance_list[2 * variable]) >= ceil(maxsat_formula->occurance_list[2 * variable + 1])) {
-                        myfile << ceil(maxsat_formula->occurance_list[2 * variable]) << " " << variable << " " << 0 << endl;
-                        myfile << ceil(maxsat_formula->occurance_list[2 * variable + 1]) << " " << -variable << " " << 0 << endl;
+                    if (ceil(positive_phase) > ceil(negative_phase)) {
+                        myfile << (int) ceil(positive_phase) << " " << variable << " " << 0 << endl;
+                        myfile << (int) ceil(negative_phase) << " " << -variable << " " << 0 << endl;
                     }
                 }
                 else if (maxsat_formula->assignment[variable] == l_False) {
-                    if (ceil(maxsat_formula->occurance_list[2 * variable]) <= ceil(maxsat_formula->occurance_list[2 * variable + 1])) {
-                        myfile << ceil(maxsat_formula->occurance_list[2 * variable]) << " " << variable << " " << 0 << endl;
-                        myfile << ceil(maxsat_formula->occurance_list[2 * variable + 1]) << " " << -variable << " " << 0 << endl;
+                    if (ceil(positive_phase) < ceil(negative_phase)) {
+                        myfile << (int) ceil(positive_phase) << " " << variable << " " << 0 << endl;
+                        myfile << (int) ceil(negative_phase) << " " << -variable << " " << 0 << endl;
                     }
                 }
+                // reset the state of temp occurence list
+                maxsat_formula->temp_occurance_list[2 * variable] = 0;
+                maxsat_formula->temp_occurance_list[2 * variable + 1] = 0;
             }
             myfile.close();
             stringStream.str("");
-            stringStream << "./open-wbo_static -print-model -cpu-lim=10 " + stream_maxsat_file + " > " + "result_" + stream_maxsat_file;
+            cout << "Calling maxsat query from clause = " << bucket_start << " to clause = " << i << endl;
+            stringStream << "./open-wbo_static -print-model -cpu-lim=" << SMALL_TIMEOUT << " " + stream_maxsat_file + " > " + "result_" + stream_maxsat_file;
             // calling the smapled maxsat query
             system(stringStream.str().c_str());
 
@@ -156,7 +169,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             myfile.close();
             if (incompatible.size() > 0) {
                 stringStream.str("");
-                stringStream << "./open-wbo_static -print-model -cpu-lim=10 " +
+                stringStream << "./open-wbo_static -print-model -cpu-lim=" << SMALL_TIMEOUT << " " <<
                                   stream_maxsat_file + " > " + "result_" + stream_maxsat_file;
                 // calling the new maxsat query
                 system(stringStream.str().c_str());
@@ -192,18 +205,27 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                     remaining_clause = i + 1 - bucket_start;
                     clause_need_replace = ((double) (remaining_clause) / (remaining_clause + maxsat_formula->clause_seen_so_far)) * maxsat_formula->nPool();
                 }
-                vector<int> replaced_clause_pool = sample_k_items(maxsat_formula->nPool(), clause_need_replace);
-                vector<int> replaced_clause_bucket = sample_k_items(remaining_clause, clause_need_replace);
+                unordered_set<uint32_t> replaced_clause_pool = maxsat_formula->pick_k_clauses_from_pool(clause_need_replace);
+                unordered_set<uint32_t> replaced_clause_bucket = maxsat_formula->pick_k_clauses(clause_need_replace, true);
                 cout << " From bucket index " << bucket_start << " to " << i << " => ";
-                for (auto cla_index = 0; cla_index < clause_need_replace; cla_index++) {
-                    // cout << " Bucket " << index_bucket << "'th clause replace pool " << index_pool << "'th clause" << endl;
-                    index_bucket = replaced_clause_bucket[cla_index] + maxsat_formula->clause_seen_so_far - 1;
-                    index_pool = replaced_clause_pool[cla_index];
+                auto start_itr1 = replaced_clause_pool.begin();
+                auto start_itr2 = replaced_clause_bucket.begin();
+                assert(replaced_clause_pool.size() == replaced_clause_bucket.size());
+                for (;start_itr1 != replaced_clause_pool.end(); start_itr1++, start_itr2++) {
+                    index_bucket = *start_itr2 + maxsat_formula->clause_seen_so_far - 1;
+                    index_pool = *start_itr1;
                     maxsat_formula->updatePoolClause(maxsat_formula->getSoftClause(index_bucket).weight, 
                         maxsat_formula->getSoftClause(index_bucket).clause, index_pool);
+                }
+                // for (auto cla_index = 0; cla_index < clause_need_replace; cla_index++) {
+                //     // cout << " Bucket " << index_bucket << "'th clause replace pool " << index_pool << "'th clause" << endl;
+                //     index_bucket = replaced_clause_bucket[cla_index] + maxsat_formula->clause_seen_so_far - 1;
+                //     index_pool = replaced_clause_pool[cla_index];
+                //     maxsat_formula->updatePoolClause(maxsat_formula->getSoftClause(index_bucket).weight, 
+                //         maxsat_formula->getSoftClause(index_bucket).clause, index_pool);
 
                     
-                }
+                // }
                 cout << "Total " << clause_need_replace << " clauses replaced from pool !!!" << endl;
             }
             else {
@@ -213,6 +235,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 }
             }
             maxsat_formula->clause_seen_so_far = i + 1;
+            maxsat_formula->weight_sampler.clear();
         }
     }
 }
