@@ -79,14 +79,14 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 negative_phase = maxsat_formula->occurance_list[2 * variable + 1] - maxsat_formula->temp_occurance_list[2 * variable + 1];
                 if (maxsat_formula->assignment[variable] == l_True) {
                     if (ceil(positive_phase) > ceil(negative_phase)) {
-                        myfile << (int) ceil(positive_phase) << " " << variable << " " << 0 << endl;
-                        myfile << (int) ceil(negative_phase) << " " << -variable << " " << 0 << endl;
+                        myfile << static_cast<int>(ceil(positive_phase)) << " " << variable << " " << 0 << endl;
+                        myfile << static_cast<int>(ceil(negative_phase)) << " " << -variable << " " << 0 << endl;
                     }
                 }
                 else if (maxsat_formula->assignment[variable] == l_False) {
                     if (ceil(positive_phase) < ceil(negative_phase)) {
-                        myfile << (int) ceil(positive_phase) << " " << variable << " " << 0 << endl;
-                        myfile << (int) ceil(negative_phase) << " " << -variable << " " << 0 << endl;
+                        myfile << static_cast<int>(ceil(positive_phase)) << " " << variable << " " << 0 << endl;
+                        myfile << static_cast<int>(ceil(negative_phase)) << " " << -variable << " " << 0 << endl;
                     }
                 }
                 // reset the state of temp occurence list

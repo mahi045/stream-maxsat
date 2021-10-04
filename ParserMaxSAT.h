@@ -85,6 +85,7 @@ template <class B, class MaxSATFormula>
 static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
   vec<Lit> lits;
   uint64_t hard_weight = UINT64_MAX;
+  mpz_init_set_ui(maxsat_formula->clause_weight_sum, 0);
   maxsat_formula->weight_sampler.clear();
   for (;;) {
     skipWhitespace(in);
@@ -122,6 +123,7 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
     }
   }
   assert(maxsat_formula->nSoft() == maxsat_formula->weight_sampler.size());
+  printf("Sum of weight: %s\n", mpz_get_str (NULL, 10, maxsat_formula->clause_weight_sum));
 }
 
 // Inserts problem into solver.
