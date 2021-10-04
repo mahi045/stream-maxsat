@@ -127,7 +127,7 @@ public:
   unordered_set<uint32_t> pick_k_clauses_from_pool(int k);
   int clause_seen_so_far;
   mpz_t clause_weight_sum;
-  int hard_clause_identifier = 0;
+  uint64_t hard_clause_identifier = 0;
 
   /*! Add a new hard clause. */
   void addHardClause(vec<Lit> &lits);

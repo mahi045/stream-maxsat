@@ -34,7 +34,7 @@ for var in assignment:
     write_file.write('{0} {1} 0 \n'.format(hard_clause_sign, var))
 
 write_file.close()
-os.system('./open-wbo_static {0} -cpu-lim={1}'.format('assess_{0}'.format(file_name),
+os.system('./open-wbo_static {0} -no-print-model -cpu-lim={1}'.format('assess_{0}'.format(file_name),
     10000))
 
 os.system('rm -f assess_*')

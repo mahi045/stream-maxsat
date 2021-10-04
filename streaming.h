@@ -42,13 +42,18 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     maxsat_formula->weight_pool.clear();
     std::string stream_maxsat_file = "streaming_" + file_name;
     double w;
+    int var_ind = 0;
     for (int i = 0; i < maxsat_formula->nSoft(); i++) {
         for (int j = 0; j < maxsat_formula->getSoftClause(i).clause.size(); j++) {
             w = (double) maxsat_formula->getSoftClause(i).weight / maxsat_formula->getSoftClause(i).clause.size();
-            maxsat_formula->occurance_list[var(maxsat_formula->getSoftClause(i).clause[j])] += w; 
-            maxsat_formula->temp_occurance_list[var(maxsat_formula->getSoftClause(i).clause[j])] += w; 
-            if (maxsat_formula->hard_clause_identifier <= ceil(maxsat_formula->occurance_list[var(maxsat_formula->getSoftClause(i).clause[j])])) {
-                maxsat_formula->hard_clause_identifier = ceil(maxsat_formula->occurance_list[var(maxsat_formula->getSoftClause(i).clause[j])]) + 2;
+            var_ind = var(maxsat_formula->getSoftClause(i).clause[j]) * 2;
+            if (sign(maxsat_formula->getSoftClause(i).clause[j])) {
+                var_ind += 1;
+            }
+            maxsat_formula->occurance_list[var_ind] += w; 
+            maxsat_formula->temp_occurance_list[var_ind] += w; 
+            if (maxsat_formula->hard_clause_identifier <= static_cast<uint64_t>(ceil(maxsat_formula->occurance_list[var_ind]))) {
+                maxsat_formula->hard_clause_identifier = static_cast<uint64_t>(ceil(maxsat_formula->occurance_list[var_ind]) + 2);
             }
             // if (maxsat_formula->hard_clause_identifier <= ceil(maxsat_formula->occurance_list[var(maxsat_formula->getSoftClause(i).clause[j])])) {
             //     assert(false);
@@ -75,23 +80,23 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 myfile << "0" << endl;
             }
             for (int variable = 1; variable <= maxsat_formula->nVars(); variable++) {
-                positive_phase = maxsat_formula->occurance_list[2 * variable] - maxsat_formula->temp_occurance_list[2 * variable];
-                negative_phase = maxsat_formula->occurance_list[2 * variable + 1] - maxsat_formula->temp_occurance_list[2 * variable + 1];
+                positive_phase = maxsat_formula->occurance_list[2 * (variable - 1)] - maxsat_formula->temp_occurance_list[2 * (variable - 1)];
+                negative_phase = maxsat_formula->occurance_list[2 * (variable - 1) + 1] - maxsat_formula->temp_occurance_list[2 * (variable - 1) + 1];
                 if (maxsat_formula->assignment[variable] == l_True) {
                     if (ceil(positive_phase) > ceil(negative_phase)) {
-                        myfile << static_cast<int>(ceil(positive_phase)) << " " << variable << " " << 0 << endl;
-                        myfile << static_cast<int>(ceil(negative_phase)) << " " << -variable << " " << 0 << endl;
+                        myfile << static_cast<uint64_t>(ceil(positive_phase)) << " " << variable << " " << 0 << endl;
+                        myfile << static_cast<uint64_t>(ceil(negative_phase)) << " " << -variable << " " << 0 << endl;
                     }
                 }
                 else if (maxsat_formula->assignment[variable] == l_False) {
                     if (ceil(positive_phase) < ceil(negative_phase)) {
-                        myfile << static_cast<int>(ceil(positive_phase)) << " " << variable << " " << 0 << endl;
-                        myfile << static_cast<int>(ceil(negative_phase)) << " " << -variable << " " << 0 << endl;
+                        myfile << static_cast<uint64_t>(ceil(positive_phase)) << " " << variable << " " << 0 << endl;
+                        myfile << static_cast<uint64_t>(ceil(negative_phase)) << " " << -variable << " " << 0 << endl;
                     }
                 }
                 // reset the state of temp occurence list
-                maxsat_formula->temp_occurance_list[2 * variable] = 0;
-                maxsat_formula->temp_occurance_list[2 * variable + 1] = 0;
+                maxsat_formula->temp_occurance_list[2 * (variable - 1)] = 0;
+                maxsat_formula->temp_occurance_list[2 * (variable - 1) + 1] = 0;
             }
             myfile.close();
             stringStream.str("");
