@@ -125,7 +125,7 @@ public:
   vector<uint32_t> weight_pool;
   unordered_set<uint32_t> pick_k_clauses(int k, bool reversed);
   unordered_set<uint32_t> pick_k_clauses_from_pool(int k);
-  int clause_seen_so_far;
+  uint32_t clause_seen_so_far;
   mpz_t clause_weight_sum;
   uint64_t hard_clause_identifier = 0;
 

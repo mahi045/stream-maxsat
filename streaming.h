@@ -25,8 +25,8 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     string line, variable;
     string delim = " ";
     int lit;
-    maxsat_formula->occurance_list.growTo(2 * maxsat_formula->nVars() + 1, 0);
-    maxsat_formula->temp_occurance_list.growTo(2 * maxsat_formula->nVars() + 1, 0);
+    maxsat_formula->occurance_list.growTo(2 * maxsat_formula->nVars() + 1, 0.0);
+    maxsat_formula->temp_occurance_list.growTo(2 * maxsat_formula->nVars() + 1, 0.0);
     maxsat_formula->assignment.growTo(maxsat_formula->nVars(), l_Undef);
     printf("Size of occurance list: %d\n", maxsat_formula->occurance_list.size());
     printf("Size of assignment list: %d\n", maxsat_formula->assignment.size());
@@ -80,18 +80,20 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 myfile << "0" << endl;
             }
             for (int variable = 1; variable <= maxsat_formula->nVars(); variable++) {
-                positive_phase = maxsat_formula->occurance_list[2 * (variable - 1)] - maxsat_formula->temp_occurance_list[2 * (variable - 1)];
-                negative_phase = maxsat_formula->occurance_list[2 * (variable - 1) + 1] - maxsat_formula->temp_occurance_list[2 * (variable - 1) + 1];
-                if (maxsat_formula->assignment[variable] == l_True) {
-                    if (ceil(positive_phase) > ceil(negative_phase)) {
-                        myfile << static_cast<uint64_t>(ceil(positive_phase)) << " " << variable << " " << 0 << endl;
-                        myfile << static_cast<uint64_t>(ceil(negative_phase)) << " " << -variable << " " << 0 << endl;
+                positive_phase = ceil(maxsat_formula->occurance_list[2 * (variable - 1)] - maxsat_formula->temp_occurance_list[2 * (variable - 1)]);
+                negative_phase = ceil(maxsat_formula->occurance_list[2 * (variable - 1) + 1] - maxsat_formula->temp_occurance_list[2 * (variable - 1) + 1]);
+                if (positive_phase > 0 || negative_phase > 0) {
+                    if (maxsat_formula->assignment[variable] == l_True) {
+                        if (positive_phase > negative_phase) {
+                            myfile << static_cast<uint64_t>(positive_phase) << " " << variable << " " << 0 << endl;
+                            myfile << static_cast<uint64_t>(negative_phase) << " " << -variable << " " << 0 << endl;
+                        }
                     }
-                }
-                else if (maxsat_formula->assignment[variable] == l_False) {
-                    if (ceil(positive_phase) < ceil(negative_phase)) {
-                        myfile << static_cast<uint64_t>(ceil(positive_phase)) << " " << variable << " " << 0 << endl;
-                        myfile << static_cast<uint64_t>(ceil(negative_phase)) << " " << -variable << " " << 0 << endl;
+                    else if (maxsat_formula->assignment[variable] == l_False) {
+                        if (positive_phase < negative_phase) {
+                            myfile << static_cast<uint64_t>(positive_phase) << " " << variable << " " << 0 << endl;
+                            myfile << static_cast<uint64_t>(negative_phase) << " " << -variable << " " << 0 << endl;
+                        }
                     }
                 }
                 // reset the state of temp occurence list
