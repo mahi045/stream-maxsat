@@ -45,7 +45,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     int var_ind = 0;
     for (int i = 0; i < maxsat_formula->nSoft(); i++) {
         for (int j = 0; j < maxsat_formula->getSoftClause(i).clause.size(); j++) {
-            w = (double) maxsat_formula->getSoftClause(i).weight / maxsat_formula->getSoftClause(i).clause.size();
+            w = (double) maxsat_formula->getSoftClause(i).weight / pow(1.1, maxsat_formula->getSoftClause(i).clause.size() - 1);
             var_ind = var(maxsat_formula->getSoftClause(i).clause[j]) * 2;
             if (sign(maxsat_formula->getSoftClause(i).clause[j])) {
                 var_ind += 1;
@@ -64,7 +64,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             myfile.open(stream_maxsat_file);
 
         }
-        if (!((i + 1) % BUCKET_SIZE)) {
+        if (!((i + 1) % BUCKET_SIZE) || i + 1 == maxsat_formula->nSoft()) {
             myfile << "p wcnf " + to_string(maxsat_formula->nVars()) + " " + to_string(BUCKET_SIZE) + " " + to_string(maxsat_formula->hard_clause_identifier) << endl;
             for (auto start_index = bucket_start; start_index <= i;
                  start_index++) {
