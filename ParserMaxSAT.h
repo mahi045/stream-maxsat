@@ -30,11 +30,15 @@
 #ifndef ParserMaxSAT_h
 #define ParserMaxSAT_h
 
+#include <cstdint>
+#include <cstdio>
 #include <stdio.h>
 
 #include "MaxSATFormula.h"
 #include "core/SolverTypes.h"
 #include "utils/ParseUtils.h"
+#include "constants.h"
+#include "streaming.h"
 
 #ifdef HAS_EXTRA_STREAMBUFFER
 #include "utils/StreamBuffer.h"
@@ -85,6 +89,7 @@ template <class B, class MaxSATFormula>
 static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
   vec<Lit> lits;
   uint64_t hard_weight = UINT64_MAX;
+  uint64_t num_var, num_cla;
   mpz_init_set_ui(maxsat_formula->clause_weight_sum, 0);
   maxsat_formula->weight_sampler.clear();
   for (;;) {
@@ -93,16 +98,18 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
       break;
     else if (*in == 'p') {
       if (eagerMatch(in, "p cnf")) {
-        parseInt(in); // Variables
-        parseInt(in); // Clauses
+        num_var = parseInt(in); // Variables
+        num_cla = parseInt(in); // Clauses
+        init_stream(maxsat_formula, num_var, num_cla);
       } else if (eagerMatch(in, "wcnf")) {
         maxsat_formula->setProblemType(_WEIGHTED_);
-        parseInt(in); // Variables
-        parseInt(in); // Clauses
+        num_var = parseInt(in); // Variables
+        num_cla = parseInt(in); // Clauses
         if (*in != '\r' && *in != '\n') {
           hard_weight = parseWeight(in);
           maxsat_formula->setHardWeight(hard_weight);
         }
+        init_stream(maxsat_formula, num_var, num_cla);
       } else
         printf("c PARSE ERROR! Unexpected char: %c\n", *in),
             printf("s UNKNOWN\n"), exit(_ERROR_);
@@ -120,10 +127,19 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
         maxsat_formula->addSoftClause(weight, lits);
       } else
         maxsat_formula->addHardClause(lits);
+      if ((maxsat_formula->nSoft() > 0) && (maxsat_formula->nSoft() % BUCKET_SIZE == 0)) {
+        printf("%d-th bucket !! \n", maxsat_formula->nSoft() / BUCKET_SIZE);
+        streaming_maxsat(maxsat_formula);
+        maxsat_formula->clearBucket();
+      }
     }
   }
-  assert(maxsat_formula->nSoft() == maxsat_formula->weight_sampler.size());
+  if (maxsat_formula->nSoft() % BUCKET_SIZE > 0) {
+    printf("%d-th bucket !! \n", (maxsat_formula->nSoft() / BUCKET_SIZE) + 1);
+    streaming_maxsat(maxsat_formula);
+  }
   printf("Sum of weight: %s\n", mpz_get_str (NULL, 10, maxsat_formula->clause_weight_sum));
+  // assert(maxsat_formula->nSoft() == maxsat_formula->weight_sampler.size());
 }
 
 // Inserts problem into solver.

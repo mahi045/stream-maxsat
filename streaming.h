@@ -17,19 +17,25 @@ using NSPACE::vec;
 using namespace openwbo;
 using namespace std;
 
-void streaming_maxsat(MaxSATFormula *maxsat_formula) { 
-    POOL_SIZE = min((int) (K * maxsat_formula->nVars() / (eps * eps)), maxsat_formula->nSoft());
+void init_stream(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
+    POOL_SIZE = min((uint64_t) (K * var / (eps * eps)), cla);
     BUCKET_SIZE = POOL_SIZE / R;
+    maxsat_formula->occurance_list.growTo(2 * var + 1, 0.0);
+    maxsat_formula->assignment.growTo(var, l_Undef);
+    printf("Size of occurance list: %d\n", maxsat_formula->occurance_list.size());
+    printf("Size of assignment list: %d\n", maxsat_formula->assignment.size());
+    maxsat_formula->weight_pool.clear();
+}
+
+void streaming_maxsat(MaxSATFormula *maxsat_formula) { 
+    // POOL_SIZE = min((int) (K * maxsat_formula->nVars() / (eps * eps)), maxsat_formula->nSoft());
+    // BUCKET_SIZE = POOL_SIZE / R;
     // test_update_function(maxsat_formula);
     std::ostringstream stringStream;
     string line, variable;
     string delim = " ";
     int lit;
-    maxsat_formula->occurance_list.growTo(2 * maxsat_formula->nVars() + 1, 0.0);
     maxsat_formula->temp_occurance_list.growTo(2 * maxsat_formula->nVars() + 1, 0.0);
-    maxsat_formula->assignment.growTo(maxsat_formula->nVars(), l_Undef);
-    printf("Size of occurance list: %d\n", maxsat_formula->occurance_list.size());
-    printf("Size of assignment list: %d\n", maxsat_formula->assignment.size());
     ofstream myfile, assignfile;
     ifstream resultfile;
     string result_file_name;
@@ -39,11 +45,12 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     int index_bucket, index_pool;
     double positive_phase, negative_phase;
     maxsat_formula->weight_sampler.clear();
-    maxsat_formula->weight_pool.clear();
     std::string stream_maxsat_file = "streaming_" + file_name;
     double w;
     int var_ind = 0;
-    for (int i = 0; i < maxsat_formula->nSoft(); i++) {
+    int bucket_index = maxsat_formula->nSoft() / BUCKET_SIZE - 1;
+    int bound = (maxsat_formula->nSoft() % BUCKET_SIZE) ? maxsat_formula->nSoft() % BUCKET_SIZE : BUCKET_SIZE;
+    for (int i = 0; i < bound; i++) {
         for (int j = 0; j < maxsat_formula->getSoftClause(i).clause.size(); j++) {
             w = (double) maxsat_formula->getSoftClause(i).weight / pow(1.1, maxsat_formula->getSoftClause(i).clause.size() - 1);
             var_ind = var(maxsat_formula->getSoftClause(i).clause[j]) * 2;
@@ -64,7 +71,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             myfile.open(stream_maxsat_file);
 
         }
-        if (!((i + 1) % BUCKET_SIZE) || i + 1 == maxsat_formula->nSoft()) {
+        if (!((i + 1) % BUCKET_SIZE) || i + 1 == bound) {
             myfile << "p wcnf " + to_string(maxsat_formula->nVars()) + " " + to_string(BUCKET_SIZE) + " " + to_string(maxsat_formula->hard_clause_identifier) << endl;
             for (auto start_index = bucket_start; start_index <= i;
                  start_index++) {
@@ -116,7 +123,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             }
             myfile.close();
             stringStream.str("");
-            cout << "Calling maxsat query from clause = " << bucket_start << " to clause = " << i << endl;
+            cout << "Calling maxsat query from clause = " << bucket_start + bucket_index * BUCKET_SIZE << " to clause = " << i + bucket_index * BUCKET_SIZE << endl;
             stringStream << "./open-wbo_static -print-model -cpu-lim=" << SMALL_TIMEOUT << " " + stream_maxsat_file + " > " + "result_" + stream_maxsat_file;
             // calling the smapled maxsat query
             system(stringStream.str().c_str());
@@ -234,18 +241,19 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 // this clauses will be replaced
                 int clause_need_replace = ((double) (BUCKET_SIZE) / (BUCKET_SIZE + maxsat_formula->clause_seen_so_far)) * maxsat_formula->nPool();
                 int remaining_clause = BUCKET_SIZE;
-                if (i + 1 == maxsat_formula->nSoft()) {
-                    remaining_clause = i + 1 - bucket_start;
+                if (i + 1 == bound) {
+                    remaining_clause = i + 1;
                     clause_need_replace = ((double) (remaining_clause) / (remaining_clause + maxsat_formula->clause_seen_so_far)) * maxsat_formula->nPool();
                 }
                 unordered_set<uint32_t> replaced_clause_pool = maxsat_formula->pick_k_clauses_from_pool(clause_need_replace);
                 unordered_set<uint32_t> replaced_clause_bucket = maxsat_formula->pick_k_clauses(clause_need_replace, true);
-                cout << " From bucket index " << bucket_start << " to " << i << " => ";
+                cout << " From bucket index " << bucket_start + bucket_index * BUCKET_SIZE << " to " << i + bucket_index * BUCKET_SIZE << " => ";
                 auto start_itr1 = replaced_clause_pool.begin();
                 auto start_itr2 = replaced_clause_bucket.begin();
                 assert(replaced_clause_pool.size() == replaced_clause_bucket.size());
                 for (;start_itr1 != replaced_clause_pool.end(); start_itr1++, start_itr2++) {
-                    index_bucket = *start_itr2 + maxsat_formula->clause_seen_so_far - 1;
+                    // index_bucket = *start_itr2 + maxsat_formula->clause_seen_so_far - 1;
+                    index_bucket = *start_itr2;
                     index_pool = *start_itr1;
                     maxsat_formula->updatePoolClause(maxsat_formula->getSoftClause(index_bucket).weight, 
                         maxsat_formula->getSoftClause(index_bucket).clause, index_pool);
@@ -262,12 +270,12 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 cout << "Total " << clause_need_replace << " clauses replaced from pool !!!" << endl;
             }
             else {
-                for (auto cla_index = maxsat_formula->clause_seen_so_far; cla_index != i + 1; cla_index++) {
+                for (auto cla_index = 0; cla_index != i + 1; cla_index++) {
                     maxsat_formula->addPoolClause(maxsat_formula->getSoftClause(cla_index).weight, 
                         maxsat_formula->getSoftClause(cla_index).clause);
                 }
             }
-            maxsat_formula->clause_seen_so_far = i + 1;
+            maxsat_formula->clause_seen_so_far += (i + 1);
             maxsat_formula->weight_sampler.clear();
         }
     }

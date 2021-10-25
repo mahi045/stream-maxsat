@@ -125,7 +125,7 @@ public:
   vector<uint32_t> weight_pool;
   unordered_set<uint32_t> pick_k_clauses(int k, bool reversed);
   unordered_set<uint32_t> pick_k_clauses_from_pool(int k);
-  uint32_t clause_seen_so_far;
+  uint32_t clause_seen_so_far = 0;
   mpz_t clause_weight_sum;
   uint64_t hard_clause_identifier = 0;
 
@@ -134,6 +134,9 @@ public:
 
   /*! Add a new soft clause. */
   void addSoftClause(uint64_t weight, vec<Lit> &lits);
+
+  /*! clear the bucket. */
+  void clearBucket();
 
   /*! Add a new pool clause. */
   void addPoolClause(uint64_t weight, vec<Lit> &lits);

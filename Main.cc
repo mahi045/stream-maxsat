@@ -318,7 +318,7 @@ int main(int argc, char **argv) {
     }
     else {
        printf("Running streaming version of maxsat!!!\n");
-       streaming_maxsat(maxsat_formula);
+      //  streaming_maxsat(maxsat_formula);
     }
 
     printf("c |                                                                "
