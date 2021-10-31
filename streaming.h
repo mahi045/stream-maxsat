@@ -21,7 +21,7 @@ void init_stream(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
     POOL_SIZE = min((uint64_t) (K * var / (eps * eps)), cla);
     BUCKET_SIZE = POOL_SIZE / R;
     maxsat_formula->occurance_list.growTo(2 * var + 1, 0.0);
-    maxsat_formula->assignment.growTo(var, l_Undef);
+    maxsat_formula->assignment.growTo(var + 1, l_Undef);
     printf("Size of occurance list: %d\n", maxsat_formula->occurance_list.size());
     printf("Size of assignment list: %d\n", maxsat_formula->assignment.size());
     maxsat_formula->weight_pool.clear();
@@ -89,34 +89,34 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             for (int variable = 1; variable <= maxsat_formula->nVars(); variable++) {
                 positive_phase = ceil(maxsat_formula->occurance_list[2 * (variable - 1)] - maxsat_formula->temp_occurance_list[2 * (variable - 1)]);
                 negative_phase = ceil(maxsat_formula->occurance_list[2 * (variable - 1) + 1] - maxsat_formula->temp_occurance_list[2 * (variable - 1) + 1]);
-                // if (maxsat_formula->temp_occurance_list[2 * (variable - 1)] <= 1 && maxsat_formula->temp_occurance_list[2 * (variable - 1) + 1] <= 1) {
-                //     if (maxsat_formula->assignment[variable] == l_True) {
-                //         // if (positive_phase > negative_phase) {
-                //             myfile << static_cast<uint64_t>(positive_phase) << " " << variable << " " << 0 << endl;
-                //             // myfile << static_cast<uint64_t>(negative_phase) << " " << -variable << " " << 0 << endl;
-                //         // }
-                //     }
-                //     else if (maxsat_formula->assignment[variable] == l_False) {
-                //         // if (positive_phase < negative_phase) {
-                //         //     myfile << static_cast<uint64_t>(positive_phase) << " " << variable << " " << 0 << endl;
-                //             myfile << static_cast<uint64_t>(negative_phase) << " " << -variable << " " << 0 << endl;
-                //         // }
-                //     }
-                // }
-                // else if (positive_phase > 0 || negative_phase > 0) {
-                //     if (maxsat_formula->assignment[variable] == l_True) {
-                //         if (positive_phase > negative_phase) {
-                //             myfile << static_cast<uint64_t>(positive_phase) << " " << variable << " " << 0 << endl;
-                //             myfile << static_cast<uint64_t>(negative_phase) << " " << -variable << " " << 0 << endl;
-                //         }
-                //     }
-                //     else if (maxsat_formula->assignment[variable] == l_False) {
-                //         if (positive_phase < negative_phase) {
-                //             myfile << static_cast<uint64_t>(positive_phase) << " " << variable << " " << 0 << endl;
-                //             myfile << static_cast<uint64_t>(negative_phase) << " " << -variable << " " << 0 << endl;
-                //         }
-                //     }
-                // }
+                if (maxsat_formula->temp_occurance_list[2 * (variable - 1)] <= 1 && maxsat_formula->temp_occurance_list[2 * (variable - 1) + 1] <= 1) {
+                    if (maxsat_formula->assignment[variable] == l_True) {
+                        // if (positive_phase > negative_phase) {
+                            myfile << static_cast<uint64_t>(positive_phase) << " " << variable << " " << 0 << endl;
+                            // myfile << static_cast<uint64_t>(negative_phase) << " " << -variable << " " << 0 << endl;
+                        // }
+                    }
+                    else if (maxsat_formula->assignment[variable] == l_False) {
+                        // if (positive_phase < negative_phase) {
+                        //     myfile << static_cast<uint64_t>(positive_phase) << " " << variable << " " << 0 << endl;
+                            myfile << static_cast<uint64_t>(negative_phase) << " " << -variable << " " << 0 << endl;
+                        // }
+                    }
+                }
+                else if (positive_phase > 0 || negative_phase > 0) {
+                    if (maxsat_formula->assignment[variable] == l_True) {
+                        if (positive_phase > negative_phase) {
+                            myfile << static_cast<uint64_t>(positive_phase) << " " << variable << " " << 0 << endl;
+                            myfile << static_cast<uint64_t>(negative_phase) << " " << -variable << " " << 0 << endl;
+                        }
+                    }
+                    else if (maxsat_formula->assignment[variable] == l_False) {
+                        if (positive_phase < negative_phase) {
+                            myfile << static_cast<uint64_t>(positive_phase) << " " << variable << " " << 0 << endl;
+                            myfile << static_cast<uint64_t>(negative_phase) << " " << -variable << " " << 0 << endl;
+                        }
+                    }
+                }
                 // reset the state of temp occurence list
                 maxsat_formula->temp_occurance_list[2 * (variable - 1)] = 0;
                 maxsat_formula->temp_occurance_list[2 * (variable - 1) + 1] = 0;
@@ -239,9 +239,14 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
 
             if (maxsat_formula->clause_seen_so_far + BUCKET_SIZE > POOL_SIZE) {
                 // this clauses will be replaced
-                int clause_need_replace = ((double) (BUCKET_SIZE) / (BUCKET_SIZE + maxsat_formula->clause_seen_so_far)) * maxsat_formula->nPool();
+                // int clause_need_replace = ((double) (BUCKET_SIZE) / (BUCKET_SIZE + maxsat_formula->clause_seen_so_far)) * maxsat_formula->nPool();
+                int clause_need_replace = ceil(((double) (mpz_get_d(maxsat_formula->bucket_clause_weight)) / (mpz_get_d(maxsat_formula->clause_weight_sum))) 
+                    * maxsat_formula->nPool());
                 int remaining_clause = BUCKET_SIZE;
-                if (i + 1 == bound) {
+                // cout << "clause_need_replace: " << clause_need_replace << endl;
+                clause_need_replace = min(clause_need_replace, bound);
+                // cout << "clause_need_replace: " << clause_need_replace << endl;
+                if (false && i + 1 == bound) {
                     remaining_clause = i + 1;
                     clause_need_replace = ((double) (remaining_clause) / (remaining_clause + maxsat_formula->clause_seen_so_far)) * maxsat_formula->nPool();
                 }
@@ -276,6 +281,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 }
             }
             maxsat_formula->clause_seen_so_far += (i + 1);
+            mpz_init(maxsat_formula->bucket_clause_weight);
             maxsat_formula->weight_sampler.clear();
         }
     }

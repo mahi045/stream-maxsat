@@ -99,7 +99,7 @@ class MaxSATFormula {
 public:
   MaxSATFormula()
       : hard_weight(UINT64_MAX), problem_type(_UNWEIGHTED_), n_vars(0),
-        n_soft(0), n_hard(0), n_initial_vars(0), sum_soft_weight(0),
+        n_soft(0), n_pool(0), n_hard(0), n_initial_vars(0), sum_soft_weight(0),
         max_soft_weight(0) {
     objective_function = NULL;
     format = _FORMAT_MAXSAT_;
@@ -111,6 +111,7 @@ public:
       soft_clauses[i].relaxation_vars.clear();
     }
     soft_clauses.clear();
+    pool_clauses.clear();
 
     for (int i = 0; i < nHard(); i++)
       hard_clauses[i].clause.clear();
@@ -126,7 +127,7 @@ public:
   unordered_set<uint32_t> pick_k_clauses(int k, bool reversed);
   unordered_set<uint32_t> pick_k_clauses_from_pool(int k);
   uint32_t clause_seen_so_far = 0;
-  mpz_t clause_weight_sum;
+  mpz_t clause_weight_sum, bucket_clause_weight;
   uint64_t hard_clause_identifier = 0;
 
   /*! Add a new hard clause. */

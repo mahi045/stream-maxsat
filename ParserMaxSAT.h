@@ -91,6 +91,7 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
   uint64_t hard_weight = UINT64_MAX;
   uint64_t num_var, num_cla;
   mpz_init_set_ui(maxsat_formula->clause_weight_sum, 0);
+  mpz_init_set_ui(maxsat_formula->bucket_clause_weight, 0);
   maxsat_formula->weight_sampler.clear();
   for (;;) {
     skipWhitespace(in);
