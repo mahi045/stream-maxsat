@@ -120,6 +120,8 @@ public:
 
   MaxSATFormula *copyMaxSATFormula();
   vec<double> occurance_list;
+  vec<double> var_bias;
+  vector<int> m;
   vec<double> temp_occurance_list;
   vec<lbool> assignment;
   vector<uint32_t> weight_sampler;
@@ -129,6 +131,7 @@ public:
   uint32_t clause_seen_so_far = 0;
   mpz_t clause_weight_sum, bucket_clause_weight;
   uint64_t hard_clause_identifier = 0;
+  uint64_t bias = 0;
 
   /*! Add a new hard clause. */
   void addHardClause(vec<Lit> &lits);

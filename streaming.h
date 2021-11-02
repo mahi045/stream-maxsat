@@ -22,9 +22,23 @@ void init_stream(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
     BUCKET_SIZE = POOL_SIZE / R;
     maxsat_formula->occurance_list.growTo(2 * var + 1, 0.0);
     maxsat_formula->assignment.growTo(var + 1, l_Undef);
+    maxsat_formula->var_bias.growTo(var + 1, 0);
     printf("Size of occurance list: %d\n", maxsat_formula->occurance_list.size());
     printf("Size of assignment list: %d\n", maxsat_formula->assignment.size());
     maxsat_formula->weight_pool.clear();
+}
+
+double bias_threshold(MaxSATFormula *maxsat_formula) {
+    double sum = 0;
+    double coff;
+    for (int k = 2; k <= maxsat_formula->m.size(); k++) {
+        if (maxsat_formula->m[k] == 0) {
+            continue;
+        }
+        coff = (double) (pow(2, k) - k - 1) / (pow(2, k-2));
+        sum += coff * maxsat_formula->m[k];
+    }
+    return sum;
 }
 
 void streaming_maxsat(MaxSATFormula *maxsat_formula) { 
@@ -46,19 +60,33 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     double positive_phase, negative_phase;
     maxsat_formula->weight_sampler.clear();
     std::string stream_maxsat_file = "streaming_" + file_name;
-    double w;
+    double w, w_adj;
     int var_ind = 0;
+    double bias_thre, gamma;
     int bucket_index = maxsat_formula->nSoft() / BUCKET_SIZE - 1;
     int bound = (maxsat_formula->nSoft() % BUCKET_SIZE) ? maxsat_formula->nSoft() % BUCKET_SIZE : BUCKET_SIZE;
     for (int i = 0; i < bound; i++) {
         for (int j = 0; j < maxsat_formula->getSoftClause(i).clause.size(); j++) {
-            w = (double) maxsat_formula->getSoftClause(i).weight / pow(1.1, maxsat_formula->getSoftClause(i).clause.size() - 1);
+            w = (double) maxsat_formula->getSoftClause(i).weight / pow(2, maxsat_formula->getSoftClause(i).clause.size() - 1);
+            w_adj = (double) maxsat_formula->getSoftClause(i).weight / pow(1.1, maxsat_formula->getSoftClause(i).clause.size() - 1);
+            if (maxsat_formula->m.size() < maxsat_formula->getSoftClause(i).clause.size() + 1) {
+                maxsat_formula->m.resize(maxsat_formula->getSoftClause(i).clause.size() + 1, 0);
+                maxsat_formula->m[maxsat_formula->getSoftClause(i).clause.size()] = 1;
+            }
+            else {
+                maxsat_formula->m[maxsat_formula->getSoftClause(i).clause.size()] += 1;
+            }
             var_ind = var(maxsat_formula->getSoftClause(i).clause[j]) * 2;
             if (sign(maxsat_formula->getSoftClause(i).clause[j])) {
                 var_ind += 1;
             }
             maxsat_formula->occurance_list[var_ind] += w; 
             maxsat_formula->temp_occurance_list[var_ind] += w; 
+            if (sign(maxsat_formula->getSoftClause(i).clause[j])) {
+                w *= -1;
+            }
+            maxsat_formula->bias += (abs(maxsat_formula->var_bias[var_ind/2] + w) - abs(maxsat_formula->var_bias[var_ind/2]));
+            maxsat_formula->var_bias[var_ind/2] += w;
             if (maxsat_formula->hard_clause_identifier <= static_cast<uint64_t>(ceil(maxsat_formula->occurance_list[var_ind]))) {
                 maxsat_formula->hard_clause_identifier = static_cast<uint64_t>(ceil(maxsat_formula->occurance_list[var_ind]) + 2);
             }
@@ -86,6 +114,12 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 }
                 myfile << "0" << endl;
             }
+            bias_thre = bias_threshold(maxsat_formula);
+            gamma = 0;
+            if (maxsat_formula->bias <= bias_thre) {
+                gamma = (double) ((maxsat_formula->bias) / (2 * bias_thre));
+                gamma += 0.5;
+            }
             for (int variable = 1; variable <= maxsat_formula->nVars(); variable++) {
                 positive_phase = ceil(maxsat_formula->occurance_list[2 * (variable - 1)] - maxsat_formula->temp_occurance_list[2 * (variable - 1)]);
                 negative_phase = ceil(maxsat_formula->occurance_list[2 * (variable - 1) + 1] - maxsat_formula->temp_occurance_list[2 * (variable - 1) + 1]);
@@ -104,16 +138,42 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                     }
                 }
                 else if (positive_phase > 0 || negative_phase > 0) {
-                    if (maxsat_formula->assignment[variable] == l_True) {
-                        if (positive_phase > negative_phase) {
-                            myfile << static_cast<uint64_t>(positive_phase) << " " << variable << " " << 0 << endl;
-                            myfile << static_cast<uint64_t>(negative_phase) << " " << -variable << " " << 0 << endl;
+                    // if (maxsat_formula->assignment[variable] == l_True) {
+                    //     if (positive_phase > negative_phase) {
+                    //         myfile << static_cast<uint64_t>(positive_phase) << " " << variable << " " << 0 << endl;
+                    //         myfile << static_cast<uint64_t>(negative_phase) << " " << -variable << " " << 0 << endl;
+                    //     }
+                    // }
+                    // else if (maxsat_formula->assignment[variable] == l_False) {
+                    //     if (positive_phase < negative_phase) {
+                    //         myfile << static_cast<uint64_t>(positive_phase) << " " << variable << " " << 0 << endl;
+                    //         myfile << static_cast<uint64_t>(negative_phase) << " " << -variable << " " << 0 << endl;
+                    //     }
+                    // }
+                    if (maxsat_formula->bias > bias_thre) {
+                        if (maxsat_formula->assignment[variable] == l_True) {
+                            if (maxsat_formula->var_bias[variable] > 0) {
+                                myfile << static_cast<uint64_t>(positive_phase) << " " << variable << " " << 0 << endl;
+                            // myfile << static_cast<uint64_t>(negative_phase) << " " << -variable << " " << 0 << endl;
+                            }
+                        } else if (maxsat_formula->assignment[variable] == l_False) {
+                            if (maxsat_formula->var_bias[variable] < 0) {
+                                // myfile << static_cast<uint64_t>(positive_phase) << " " << variable << " " << 0 << endl;
+                                myfile << static_cast<uint64_t>(negative_phase) << " " << -variable << " " << 0 << endl;
+                            }
                         }
                     }
-                    else if (maxsat_formula->assignment[variable] == l_False) {
-                        if (positive_phase < negative_phase) {
-                            myfile << static_cast<uint64_t>(positive_phase) << " " << variable << " " << 0 << endl;
-                            myfile << static_cast<uint64_t>(negative_phase) << " " << -variable << " " << 0 << endl;
+                    else {
+                        if (maxsat_formula->assignment[variable] == l_True) {
+                            if (maxsat_formula->var_bias[variable] > 0) {
+                                myfile << static_cast<uint64_t>(gamma * positive_phase) << " " << variable << " " << 0 << endl;
+                                myfile << static_cast<uint64_t>((1 - gamma) * negative_phase) << " " << -variable << " " << 0 << endl;
+                            }
+                        } else if (maxsat_formula->assignment[variable] == l_False) {
+                            if (maxsat_formula->var_bias[variable] < 0) {
+                                myfile << static_cast<uint64_t>((1 - gamma) * positive_phase) << " " << variable << " " << 0 << endl;
+                                myfile << static_cast<uint64_t>(gamma * negative_phase) << " " << -variable << " " << 0 << endl;
+                            }
                         }
                     }
                 }
