@@ -21,6 +21,7 @@ void init_stream(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
     POOL_SIZE = min((uint64_t) (K * var / (eps * eps)), cla);
     BUCKET_SIZE = POOL_SIZE / R;
     maxsat_formula->occurance_list.growTo(2 * var + 1, 0.0);
+    maxsat_formula->unit.growTo(2 * var + 1, 0.0);
     maxsat_formula->assignment.growTo(var + 1, l_Undef);
     printf("Size of occurance list: %d\n", maxsat_formula->occurance_list.size());
     printf("Size of assignment list: %d\n", maxsat_formula->assignment.size());
@@ -36,6 +37,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     string delim = " ";
     int lit;
     maxsat_formula->temp_occurance_list.growTo(2 * maxsat_formula->nVars() + 1, 0.0);
+    maxsat_formula->unit_last.growTo(2 * maxsat_formula->nVars() + 1, 0.0);
     ofstream myfile, assignfile;
     ifstream resultfile;
     string result_file_name;
@@ -43,7 +45,8 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     vec<int> agreed;
     int bucket_start;
     int index_bucket, index_pool;
-    double positive_phase, negative_phase;
+    double positive_phase, negative_phase, p1, p0;
+    double positive_unit_phase, negative_unit_phase;
     maxsat_formula->weight_sampler.clear();
     std::string stream_maxsat_file = "streaming_" + file_name;
     double w;
@@ -52,10 +55,14 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     int bound = (maxsat_formula->nSoft() % BUCKET_SIZE) ? maxsat_formula->nSoft() % BUCKET_SIZE : BUCKET_SIZE;
     for (int i = 0; i < bound; i++) {
         for (int j = 0; j < maxsat_formula->getSoftClause(i).clause.size(); j++) {
-            w = (double) maxsat_formula->getSoftClause(i).weight / pow(1.1, maxsat_formula->getSoftClause(i).clause.size() - 1);
+            w = (double) maxsat_formula->getSoftClause(i).weight / pow(2, maxsat_formula->getSoftClause(i).clause.size() - 1);
             var_ind = var(maxsat_formula->getSoftClause(i).clause[j]) * 2;
             if (sign(maxsat_formula->getSoftClause(i).clause[j])) {
                 var_ind += 1;
+            }
+            if (maxsat_formula->getSoftClause(i).clause.size() == 1) {
+                maxsat_formula->unit[var_ind] += w; 
+                maxsat_formula->unit_last[var_ind] += w; 
             }
             maxsat_formula->occurance_list[var_ind] += w; 
             maxsat_formula->temp_occurance_list[var_ind] += w; 
@@ -89,31 +96,55 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             for (int variable = 1; variable <= maxsat_formula->nVars(); variable++) {
                 positive_phase = ceil(maxsat_formula->occurance_list[2 * (variable - 1)] - maxsat_formula->temp_occurance_list[2 * (variable - 1)]);
                 negative_phase = ceil(maxsat_formula->occurance_list[2 * (variable - 1) + 1] - maxsat_formula->temp_occurance_list[2 * (variable - 1) + 1]);
+                positive_unit_phase = ceil(maxsat_formula->unit[2 * (variable - 1)] - maxsat_formula->unit_last[2 * (variable - 1)]);
+                negative_unit_phase = ceil(maxsat_formula->unit[2 * (variable - 1) + 1] - maxsat_formula->unit_last[2 * (variable - 1) + 1]);
+                
                 if (maxsat_formula->temp_occurance_list[2 * (variable - 1)] <= 1 && maxsat_formula->temp_occurance_list[2 * (variable - 1) + 1] <= 1) {
                     if (maxsat_formula->assignment[variable] == l_True) {
                         // if (positive_phase > negative_phase) {
-                            myfile << static_cast<uint64_t>(positive_phase) << " " << variable << " " << 0 << endl;
+                            myfile << static_cast<uint64_t>(positive_phase+positive_unit_phase) << " " << variable << " " << 0 << endl;
                             // myfile << static_cast<uint64_t>(negative_phase) << " " << -variable << " " << 0 << endl;
                         // }
                     }
                     else if (maxsat_formula->assignment[variable] == l_False) {
                         // if (positive_phase < negative_phase) {
                         //     myfile << static_cast<uint64_t>(positive_phase) << " " << variable << " " << 0 << endl;
-                            myfile << static_cast<uint64_t>(negative_phase) << " " << -variable << " " << 0 << endl;
+                            myfile << static_cast<uint64_t>(negative_phase+negative_unit_phase) << " " << -variable << " " << 0 << endl;
                         // }
                     }
                 }
                 else if (positive_phase > 0 || negative_phase > 0) {
-                    if (maxsat_formula->assignment[variable] == l_True) {
-                        if (positive_phase > negative_phase) {
-                            myfile << static_cast<uint64_t>(positive_phase) << " " << variable << " " << 0 << endl;
-                            myfile << static_cast<uint64_t>(negative_phase) << " " << -variable << " " << 0 << endl;
+                    double slack = abs(positive_phase+positive_unit_phase - negative_phase - negative_unit_phase);
+                    p1 = positive_phase + positive_unit_phase;
+                    p0 = negative_phase + negative_unit_phase;
+                    if (slack <= 1e-9 || slack >= positive_unit_phase + negative_unit_phase) {
+                        if (maxsat_formula->assignment[variable] == l_True) {
+                            if (p1 > p0) {
+                                myfile << static_cast<uint64_t>(p1) << " " << variable << " " << 0 << endl;
+                                myfile << static_cast<uint64_t>(p0) << " " << -variable << " " << 0 << endl;
+                            }
+                        }
+                        else if (maxsat_formula->assignment[variable] == l_False) {
+                            if (p1 < p0) {
+                                myfile << static_cast<uint64_t>(p1) << " " << variable << " " << 0 << endl;
+                                myfile << static_cast<uint64_t>(p0) << " " << -variable << " " << 0 << endl;
+                            }
                         }
                     }
-                    else if (maxsat_formula->assignment[variable] == l_False) {
-                        if (positive_phase < negative_phase) {
-                            myfile << static_cast<uint64_t>(positive_phase) << " " << variable << " " << 0 << endl;
-                            myfile << static_cast<uint64_t>(negative_phase) << " " << -variable << " " << 0 << endl;
+                    else {
+                        double epsilon_1 = (double) (slack * (positive_unit_phase + negative_unit_phase) - slack * slack) /
+                        (slack + slack + positive_phase + negative_phase - positive_unit_phase - negative_unit_phase);
+                        if (maxsat_formula->assignment[variable] == l_True) {
+                            if (p1 + epsilon_1 > p0 - epsilon_1) {
+                                myfile << static_cast<uint64_t>(p1 + epsilon_1) << " " << variable << " " << 0 << endl;
+                                myfile << static_cast<uint64_t>(p0 - epsilon_1) << " " << -variable << " " << 0 << endl;
+                            }
+                        }
+                        else if (maxsat_formula->assignment[variable] == l_False) {
+                            if (p1 - epsilon_1 < p0 + epsilon_1) {
+                                myfile << static_cast<uint64_t>(p1 - epsilon_1) << " " << variable << " " << 0 << endl;
+                                myfile << static_cast<uint64_t>(p0 + epsilon_1) << " " << -variable << " " << 0 << endl;
+                            }
                         }
                     }
                 }

@@ -120,6 +120,8 @@ public:
 
   MaxSATFormula *copyMaxSATFormula();
   vec<double> occurance_list;
+  vec<double> unit;
+  vec<double> unit_last;
   vec<double> temp_occurance_list;
   vec<lbool> assignment;
   vector<uint32_t> weight_sampler;
