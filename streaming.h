@@ -22,9 +22,23 @@ void init_stream(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
     BUCKET_SIZE = POOL_SIZE / R;
     maxsat_formula->occurance_list.growTo(2 * var + 1, 0.0);
     maxsat_formula->assignment.growTo(var + 1, l_Undef);
+    maxsat_formula->var_bias.growTo(var + 1, 0);
     printf("Size of occurance list: %d\n", maxsat_formula->occurance_list.size());
     printf("Size of assignment list: %d\n", maxsat_formula->assignment.size());
     maxsat_formula->weight_pool.clear();
+}
+
+double bias_threshold(MaxSATFormula *maxsat_formula) {
+    double sum = 0;
+    double coff;
+    for (int k = 2; k <= maxsat_formula->m.size(); k++) {
+        if (maxsat_formula->m[k] == 0) {
+            continue;
+        }
+        coff = (double) (pow(2, k) - k - 1) / (pow(2, k-2));
+        sum += coff * maxsat_formula->m[k];
+    }
+    return sum;
 }
 
 void streaming_maxsat(MaxSATFormula *maxsat_formula) { 

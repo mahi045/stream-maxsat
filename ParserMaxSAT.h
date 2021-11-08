@@ -33,7 +33,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <stdio.h>
-
+#include <cmath>
 #include "MaxSATFormula.h"
 #include "core/SolverTypes.h"
 #include "utils/ParseUtils.h"
@@ -93,6 +93,7 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
   mpz_init_set_ui(maxsat_formula->clause_weight_sum, 0);
   mpz_init_set_ui(maxsat_formula->bucket_clause_weight, 0);
   maxsat_formula->weight_sampler.clear();
+  double w;
   for (;;) {
     skipWhitespace(in);
     if (*in == EOF)
@@ -118,27 +119,45 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
       skipLine(in);
     else {
       uint64_t weight = readClause(in, maxsat_formula, lits);
-      if (weight < hard_weight ||
-          maxsat_formula->getProblemType() == _UNWEIGHTED_) {
-        assert(weight > 0);
-        // Updates the maximum weight of soft clauses.
-        maxsat_formula->setMaximumWeight(weight);
-        // Updates the sum of the weights of soft clauses.
-        maxsat_formula->updateSumWeights(weight);
-        maxsat_formula->addSoftClause(weight, lits);
-      } else
-        maxsat_formula->addHardClause(lits);
-      if ((maxsat_formula->nSoft() > 0) && (maxsat_formula->nSoft() % BUCKET_SIZE == 0)) {
-        printf("%d-th bucket !! \n", maxsat_formula->nSoft() / BUCKET_SIZE);
-        streaming_maxsat(maxsat_formula);
-        maxsat_formula->clearBucket();
+      if (maxsat_formula->m.size() < lits.size() + 1)
+      {
+        maxsat_formula->m.resize(lits.size() + 1, 0);
+        maxsat_formula->m[lits.size()] = 1;
       }
+      else
+      {
+        maxsat_formula->m[lits.size()] += 1;
+      }
+      w = (double) weight / pow(2, lits.size() - 1);
+      for (int j = 0; j < lits.size(); j++)
+      {
+        if (sign(lits[j])) w *= -1;
+        maxsat_formula->bias += (abs(maxsat_formula->var_bias[var(lits[j])] + w) - abs(maxsat_formula->var_bias[var(lits[j])]));
+        maxsat_formula->var_bias[var(lits[j])] += w;
+      }
+      // if (weight < hard_weight ||
+      //     maxsat_formula->getProblemType() == _UNWEIGHTED_) {
+      //   assert(weight > 0);
+      //   // Updates the maximum weight of soft clauses.
+      //   maxsat_formula->setMaximumWeight(weight);
+      //   // Updates the sum of the weights of soft clauses.
+      //   maxsat_formula->updateSumWeights(weight);
+      //   maxsat_formula->addSoftClause(weight, lits);
+      // } else
+      //   maxsat_formula->addHardClause(lits);
+        
+      // if ((maxsat_formula->nSoft() > 0) && (maxsat_formula->nSoft() % BUCKET_SIZE == 0)) {
+      //   printf("%d-th bucket !! \n", maxsat_formula->nSoft() / BUCKET_SIZE);
+      //   streaming_maxsat(maxsat_formula);
+      //   maxsat_formula->clearBucket();
+      // }
     }
   }
-  if (maxsat_formula->nSoft() % BUCKET_SIZE > 0) {
-    printf("%d-th bucket !! \n", (maxsat_formula->nSoft() / BUCKET_SIZE) + 1);
-    streaming_maxsat(maxsat_formula);
-  }
+  
+  // if (maxsat_formula->nSoft() % BUCKET_SIZE > 0) {
+  //   printf("%d-th bucket !! \n", (maxsat_formula->nSoft() / BUCKET_SIZE) + 1);
+  //   streaming_maxsat(maxsat_formula);
+  // }
   printf("Sum of weight: %s\n", mpz_get_str (NULL, 10, maxsat_formula->clause_weight_sum));
   // assert(maxsat_formula->nSoft() == maxsat_formula->weight_sampler.size());
 }
