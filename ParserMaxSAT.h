@@ -39,6 +39,7 @@
 #include "utils/ParseUtils.h"
 #include "constants.h"
 #include "streaming.h"
+#include "sampling.h"
 
 #ifdef HAS_EXTRA_STREAMBUFFER
 #include "utils/StreamBuffer.h"
@@ -85,9 +86,31 @@ static uint64_t readClause(B &in, MaxSATFormula *maxsat_formula,
   return weight;
 }
 
+vector<uint32_t> sample_k_vars(int n, double k)
+{
+  int t = ceil(n * k);
+  // cout << "k " << k << endl;
+  vector<uint32_t> b(t);
+  for (std::size_t i = 0; i != n; ++i)
+  {
+    std::uniform_int_distribution<> dis(0, i);
+    std::size_t j = dis(gen);
+    if (j < b.size())
+    {
+      if (i < b.size())
+      {
+        b[i] = b[j];
+      }
+      b[j] = i;
+    }
+  }
+  return b;
+}
+
 template <class B, class MaxSATFormula>
 static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
   vec<Lit> lits;
+  ofstream assignfile;
   uint64_t hard_weight = UINT64_MAX;
   uint64_t num_var, num_cla;
   mpz_init_set_ui(maxsat_formula->clause_weight_sum, 0);
@@ -177,28 +200,44 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
     sum += ceil(((double) (maxsat_formula->bias * maxsat_formula->bias) / (4 * bias_thre)));
   }
   printf("Lower bound of MaxSAT: %ju\n", sum);
-  printf("v");
+  assignfile.open("result_simple_k_maxsat_" + file_name);
+  assignfile << "v ";
+  // printf("v");
   if (maxsat_formula->bias > bias_thre) {
-    for (uint32_t k = 1; k <= min(maxsat_formula->nVars(), 10); k++) {
+    for (uint32_t k = 1; k <= maxsat_formula->nVars(); k++) {
       if (maxsat_formula->var_bias[k] >= 0) {
-        printf(" %ju", k);
+        assignfile << k << " ";
       }
       else {
-        printf(" -%ju", k);
+        assignfile <<  "-" << k  << " ";
       }
     }
   }
   else {
-    for (uint32_t k = 1; k <= min(maxsat_formula->nVars(), 10); k++) {
+    vector<uint32_t> var = sample_k_vars(maxsat_formula->nVars(), 0.5 - (double) (maxsat_formula->bias) 
+        / (2 * bias_thre));
+    std::sort(var.begin(), var.end());
+    int in = 0;
+    for (uint32_t k = 1; k <= maxsat_formula->nVars(); k++) {
       if (maxsat_formula->var_bias[k] >= 0) {
-        printf(" %ju", k);
+        if(var[in] == k) {
+          assignfile << "-" << k << " ";
+          in++;
+        }
+        else 
+          assignfile << k << " ";
       }
       else {
-        printf(" -%ju", k);
+        if(var[in] == k) {
+          assignfile << k << " ";
+          in++;
+        }
+        else 
+          assignfile << "-" << k << " ";
       }
     }
   }
-  printf(" 0\n");
+  assignfile << "0" << endl;
   // if (maxsat_formula->nSoft() % BUCKET_SIZE > 0) {
   //   printf("%d-th bucket !! \n", (maxsat_formula->nSoft() / BUCKET_SIZE) + 1);
   //   streaming_maxsat(maxsat_formula);
