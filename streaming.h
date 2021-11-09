@@ -71,10 +71,10 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             w_adj = (double) maxsat_formula->getSoftClause(i).weight / pow(1.1, maxsat_formula->getSoftClause(i).clause.size() - 1);
             if (maxsat_formula->m.size() < maxsat_formula->getSoftClause(i).clause.size() + 1) {
                 maxsat_formula->m.resize(maxsat_formula->getSoftClause(i).clause.size() + 1, 0);
-                maxsat_formula->m[maxsat_formula->getSoftClause(i).clause.size()] = 1;
+                maxsat_formula->m[maxsat_formula->getSoftClause(i).clause.size()] = maxsat_formula->getSoftClause(i).weight;
             }
             else {
-                maxsat_formula->m[maxsat_formula->getSoftClause(i).clause.size()] += 1;
+                maxsat_formula->m[maxsat_formula->getSoftClause(i).clause.size()] += maxsat_formula->getSoftClause(i).weight;
             }
             var_ind = var(maxsat_formula->getSoftClause(i).clause[j]) * 2;
             if (sign(maxsat_formula->getSoftClause(i).clause[j])) {
