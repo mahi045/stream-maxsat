@@ -119,18 +119,20 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
       skipLine(in);
     else {
       uint64_t weight = readClause(in, maxsat_formula, lits);
+      mpz_add_ui(maxsat_formula->clause_weight_sum, maxsat_formula->clause_weight_sum, weight);
       if (maxsat_formula->m.size() < lits.size() + 1)
       {
         maxsat_formula->m.resize(lits.size() + 1, 0);
-        maxsat_formula->m[lits.size()] = 1;
+        maxsat_formula->m[lits.size()] = weight;
       }
       else
       {
-        maxsat_formula->m[lits.size()] += 1;
+        maxsat_formula->m[lits.size()] += weight;
       }
-      w = (double) weight / pow(2, lits.size() - 1);
+      
       for (int j = 0; j < lits.size(); j++)
       {
+        w = (double) weight / pow(2, lits.size() - 1);
         if (sign(lits[j])) w *= -1;
         maxsat_formula->bias += (abs(maxsat_formula->var_bias[var(lits[j])] + w) - abs(maxsat_formula->var_bias[var(lits[j])]));
         maxsat_formula->var_bias[var(lits[j])] += w;
@@ -153,7 +155,50 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
       // }
     }
   }
-  
+  double bias_thre = bias_threshold(maxsat_formula);
+  double coff;
+  uint64_t sum = 0;
+  if (maxsat_formula->bias > bias_thre) {
+    for (int k = 1; k <= maxsat_formula->m.size(); k++) {
+      if (maxsat_formula->var_bias[k] >= 0) {
+        continue;
+      }
+      sum += floor(((double) (k) / pow(2, k)) * maxsat_formula->m[k]);
+    }
+    sum += ceil(maxsat_formula->bias / 2);
+  }
+  else {
+    for (int k = 1; k <= maxsat_formula->m.size(); k++) {
+      if (maxsat_formula->m[k] == 0) {
+        continue;
+      }
+      sum += floor((1 - (double) (1) / pow(2, k)) * maxsat_formula->m[k]);
+    }
+    sum += ceil(((double) (maxsat_formula->bias * maxsat_formula->bias) / (4 * bias_thre)));
+  }
+  printf("Lower bound of MaxSAT: %ju\n", sum);
+  printf("v");
+  if (maxsat_formula->bias > bias_thre) {
+    for (uint32_t k = 1; k <= min(maxsat_formula->nVars(), 10); k++) {
+      if (maxsat_formula->var_bias[k] >= 0) {
+        printf(" %ju", k);
+      }
+      else {
+        printf(" -%ju", k);
+      }
+    }
+  }
+  else {
+    for (uint32_t k = 1; k <= min(maxsat_formula->nVars(), 10); k++) {
+      if (maxsat_formula->var_bias[k] >= 0) {
+        printf(" %ju", k);
+      }
+      else {
+        printf(" -%ju", k);
+      }
+    }
+  }
+  printf(" 0\n");
   // if (maxsat_formula->nSoft() % BUCKET_SIZE > 0) {
   //   printf("%d-th bucket !! \n", (maxsat_formula->nSoft() / BUCKET_SIZE) + 1);
   //   streaming_maxsat(maxsat_formula);
