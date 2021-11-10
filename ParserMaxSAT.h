@@ -200,7 +200,7 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
     sum += ceil(((double) (maxsat_formula->bias * maxsat_formula->bias) / (4 * bias_thre)));
   }
   printf("Lower bound of MaxSAT: %ju\n", sum);
-  assignfile.open("result_simple_k_maxsat_" + file_name);
+  assignfile.open("result_k_maxsat_" + file_name);
   assignfile << "v ";
   // printf("v");
   if (maxsat_formula->bias > bias_thre) {
@@ -237,7 +237,7 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
       }
     }
   }
-  assignfile << "0" << endl;
+  // assignfile << "0" << endl;
   // if (maxsat_formula->nSoft() % BUCKET_SIZE > 0) {
   //   printf("%d-th bucket !! \n", (maxsat_formula->nSoft() / BUCKET_SIZE) + 1);
   //   streaming_maxsat(maxsat_formula);

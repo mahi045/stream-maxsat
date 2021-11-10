@@ -12,6 +12,8 @@ if algorithm == "streaming":
     file_name_open_wbo = "result_streaming_" + file_name
 elif algorithm == "sampling":
     file_name_open_wbo = "result_sampled_" + file_name
+elif algorithm == "maxksat":
+    file_name_open_wbo = "result_k_maxsat_" + file_name
 
 
 assignment = None
