@@ -55,7 +55,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     int bound = (maxsat_formula->nSoft() % BUCKET_SIZE) ? maxsat_formula->nSoft() % BUCKET_SIZE : BUCKET_SIZE;
     for (int i = 0; i < bound; i++) {
         for (int j = 0; j < maxsat_formula->getSoftClause(i).clause.size(); j++) {
-            w = (double) maxsat_formula->getSoftClause(i).weight / pow(2, maxsat_formula->getSoftClause(i).clause.size() - 1);
+            w = (double) maxsat_formula->getSoftClause(i).weight / pow(1.1, maxsat_formula->getSoftClause(i).clause.size() - 1);
             var_ind = var(maxsat_formula->getSoftClause(i).clause[j]) * 2;
             if (sign(maxsat_formula->getSoftClause(i).clause[j])) {
                 var_ind += 1;
@@ -151,6 +151,8 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 // reset the state of temp occurence list
                 maxsat_formula->temp_occurance_list[2 * (variable - 1)] = 0;
                 maxsat_formula->temp_occurance_list[2 * (variable - 1) + 1] = 0;
+                maxsat_formula->unit_last[2 * (variable - 1)] = 0;
+                maxsat_formula->unit_last[2 * (variable - 1) + 1] = 0;
             }
             myfile.close();
             stringStream.str("");
