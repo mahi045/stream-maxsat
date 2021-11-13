@@ -153,12 +153,12 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                     // }
                     if (maxsat_formula->bias > bias_thre) {
                         if (maxsat_formula->assignment[variable] == l_True) {
-                            if (maxsat_formula->var_bias[variable] > 0) {
+                            if (maxsat_formula->var_bias[variable - 1] > 0) {
                                 myfile << static_cast<uint64_t>(positive_phase) << " " << variable << " " << 0 << endl;
                             // myfile << static_cast<uint64_t>(negative_phase) << " " << -variable << " " << 0 << endl;
                             }
                         } else if (maxsat_formula->assignment[variable] == l_False) {
-                            if (maxsat_formula->var_bias[variable] < 0) {
+                            if (maxsat_formula->var_bias[variable - 1] < 0) {
                                 // myfile << static_cast<uint64_t>(positive_phase) << " " << variable << " " << 0 << endl;
                                 myfile << static_cast<uint64_t>(negative_phase) << " " << -variable << " " << 0 << endl;
                             }
@@ -166,12 +166,12 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                     }
                     else {
                         if (maxsat_formula->assignment[variable] == l_True) {
-                            if (maxsat_formula->var_bias[variable] > 0) {
+                            if (maxsat_formula->var_bias[variable - 1] > 0) {
                                 myfile << static_cast<uint64_t>(gamma * positive_phase) << " " << variable << " " << 0 << endl;
                                 myfile << static_cast<uint64_t>((1 - gamma) * negative_phase) << " " << -variable << " " << 0 << endl;
                             }
                         } else if (maxsat_formula->assignment[variable] == l_False) {
-                            if (maxsat_formula->var_bias[variable] < 0) {
+                            if (maxsat_formula->var_bias[variable - 1] < 0) {
                                 myfile << static_cast<uint64_t>((1 - gamma) * positive_phase) << " " << variable << " " << 0 << endl;
                                 myfile << static_cast<uint64_t>(gamma * negative_phase) << " " << -variable << " " << 0 << endl;
                             }
