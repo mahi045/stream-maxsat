@@ -50,7 +50,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     string delim = " ";
     int lit;
     maxsat_formula->temp_occurance_list.growTo(2 * maxsat_formula->nVars() + 1, 0.0);
-    ofstream myfile, assignfile;
+    ofstream myfile, assignfile, debugfile;
     ifstream resultfile;
     string result_file_name;
     vec<int> incompatible;
@@ -60,6 +60,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     double positive_phase, negative_phase;
     maxsat_formula->weight_sampler.clear();
     std::string stream_maxsat_file = "streaming_" + file_name;
+    debugfile.open("debug_" + file_name);
     double w, w_adj;
     int var_ind = 0;
     double bias_thre, gamma;
@@ -232,7 +233,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 cout << " I found no assignment";
                 exit(1);
             }
-            cout << "Total " << incompatible.size() << " (" << agreed.size() << ") literals are incompatible (compatibles)" << endl;
+            
             
             if (incompatible.size() > 0) {
                 // now invoking maxsat query again
@@ -249,12 +250,28 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                     myfile << "0" << endl;
                 }
             }
+            int c = 0;
             if (agreed.size() > 0) {
                 // adding agreed literals as hard clauses
                 for (auto lit_index = 0; lit_index < agreed.size(); lit_index++) {
-                    myfile << maxsat_formula->hard_clause_identifier << " " << agreed[lit_index] << " 0" << endl;
+                    int var_ind = 2 * (abs(agreed[lit_index]) - 1);
+                    if (agreed[lit_index] < 0 && maxsat_formula->occurance_list[var_ind + 1] >= 10 * maxsat_formula->occurance_list[var_ind]) {
+                        // debugfile << agreed[lit_index] << " ";
+                        // debugfile << maxsat_formula->occurance_list[var_ind + 1] << " ";
+                        // debugfile << maxsat_formula->occurance_list[var_ind] << endl;
+                        myfile << maxsat_formula->hard_clause_identifier << " " << agreed[lit_index] << " 0" << endl;
+                        c++;
+                    }
+                    else if (agreed[lit_index] > 0 && maxsat_formula->occurance_list[var_ind] >= 10 * maxsat_formula->occurance_list[var_ind + 1]) {
+                        // debugfile << agreed[lit_index] << " ";
+                        // debugfile << maxsat_formula->occurance_list[var_ind] << " ";
+                        // debugfile << maxsat_formula->occurance_list[var_ind + 1] << endl;
+                        myfile << maxsat_formula->hard_clause_identifier << " " << agreed[lit_index] << " 0" << endl;
+                        c++;
+                    }
                 }
             }
+            cout << "Total " << incompatible.size() + (agreed.size() - c) << " (" << c << ") literals are incompatible (compatibles)" << endl;
             myfile.close();
             if (incompatible.size() > 0) {
                 stringStream.str("");
