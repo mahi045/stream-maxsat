@@ -223,6 +223,10 @@ int main(int argc, char **argv) {
                         "the value of K "
                         "\n",
                         1, IntRange(1, 100));
+    IntOption F_value("Open-WBO", "Fvalue",
+                        "the value of F "
+                        "\n",
+                        20, IntRange(1, 1000));
        IntOption Timeout_value("Open-WBO", "timeout",
                             "the value of timeout "
                             "\n",
@@ -239,6 +243,7 @@ int main(int argc, char **argv) {
     parseOptions(argc, argv, true);
     R = (int)R_value;
     K = (int)K_value;
+    F = (int)F_value;
     eps = (double)epsilon;
     TIMEOUT = (int) Timeout_value;
     SMALL_TIMEOUT = (int) Immediate_timeout_value;

@@ -255,14 +255,14 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 // adding agreed literals as hard clauses
                 for (auto lit_index = 0; lit_index < agreed.size(); lit_index++) {
                     int var_ind = 2 * (abs(agreed[lit_index]) - 1);
-                    if (agreed[lit_index] < 0 && maxsat_formula->occurance_list[var_ind + 1] >= 10 * maxsat_formula->occurance_list[var_ind]) {
+                    if (agreed[lit_index] < 0 && maxsat_formula->occurance_list[var_ind + 1] >= F * maxsat_formula->occurance_list[var_ind]) {
                         // debugfile << agreed[lit_index] << " ";
                         // debugfile << maxsat_formula->occurance_list[var_ind + 1] << " ";
                         // debugfile << maxsat_formula->occurance_list[var_ind] << endl;
                         myfile << maxsat_formula->hard_clause_identifier << " " << agreed[lit_index] << " 0" << endl;
                         c++;
                     }
-                    else if (agreed[lit_index] > 0 && maxsat_formula->occurance_list[var_ind] >= 10 * maxsat_formula->occurance_list[var_ind + 1]) {
+                    else if (agreed[lit_index] > 0 && maxsat_formula->occurance_list[var_ind] >= F * maxsat_formula->occurance_list[var_ind + 1]) {
                         // debugfile << agreed[lit_index] << " ";
                         // debugfile << maxsat_formula->occurance_list[var_ind] << " ";
                         // debugfile << maxsat_formula->occurance_list[var_ind + 1] << endl;

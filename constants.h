@@ -6,6 +6,7 @@ double eps;
 int BUCKET_SIZE;
 int POOL_SIZE;
 std::string file_name;
+int F;
 
 unsigned TIMEOUT = 9990;
 unsigned SMALL_TIMEOUT = 1000;
