@@ -226,7 +226,7 @@ int main(int argc, char **argv) {
     IntOption F_value("Open-WBO", "Fvalue",
                         "the value of F "
                         "\n",
-                        20, IntRange(1, 1000));
+                        20, IntRange(1, 10000));
        IntOption Timeout_value("Open-WBO", "timeout",
                             "the value of timeout "
                             "\n",
@@ -308,6 +308,7 @@ int main(int argc, char **argv) {
 
     maxsat_formula = new MaxSATFormula();
     file_name = std::string(argv[1]);   
+    sampling_maxsat = sampling;
     // if ((int)formula == _FORMAT_MAXSAT_) {
       parseMaxSATFormula(in, maxsat_formula);
       maxsat_formula->setFormat(_FORMAT_MAXSAT_);

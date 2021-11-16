@@ -129,14 +129,14 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
         maxsat_formula->addSoftClause(weight, lits);
       } else
         maxsat_formula->addHardClause(lits);
-      if ((maxsat_formula->nSoft() > 0) && (maxsat_formula->nSoft() % BUCKET_SIZE == 0)) {
+      if (!sampling_maxsat && (maxsat_formula->nSoft() > 0) && (maxsat_formula->nSoft() % BUCKET_SIZE == 0)) {
         printf("%d-th bucket !! \n", maxsat_formula->nSoft() / BUCKET_SIZE);
         streaming_maxsat(maxsat_formula);
         maxsat_formula->clearBucket();
       }
     }
   }
-  if (maxsat_formula->nSoft() % BUCKET_SIZE > 0) {
+  if (!sampling_maxsat && maxsat_formula->nSoft() % BUCKET_SIZE > 0) {
     printf("%d-th bucket !! \n", (maxsat_formula->nSoft() / BUCKET_SIZE) + 1);
     streaming_maxsat(maxsat_formula);
   }

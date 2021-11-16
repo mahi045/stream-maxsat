@@ -6,6 +6,7 @@ double eps;
 int BUCKET_SIZE;
 int POOL_SIZE;
 std::string file_name;
+bool sampling_maxsat;
 int F;
 
 unsigned TIMEOUT = 9990;
