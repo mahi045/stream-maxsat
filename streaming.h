@@ -121,7 +121,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 gamma = (double) ((maxsat_formula->bias) / (2 * bias_thre));
                 gamma += 0.5;
             }
-            double alpha = pow(M_E, -0.05 * bucket_index);
+            double alpha = pow(M_E, -heparam * bucket_index);
             for (int variable = 1; variable <= maxsat_formula->nVars(); variable++) {
                 positive_phase = ceil(maxsat_formula->occurance_list[2 * (variable - 1)] - maxsat_formula->temp_occurance_list[2 * (variable - 1)]);
                 negative_phase = ceil(maxsat_formula->occurance_list[2 * (variable - 1) + 1] - maxsat_formula->temp_occurance_list[2 * (variable - 1) + 1]);

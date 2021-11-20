@@ -239,12 +239,17 @@ int main(int argc, char **argv) {
                         "the value of ep "
                         "\n",
                         0.25);
+    Glucose::DoubleOption hp("Open-WBO", "heparam",
+                        "the value of heparam "
+                        "\n",
+                        0.05);
     BoolOption sampling("WBO", "sampling", "Symmetry breaking.\n", false);
     parseOptions(argc, argv, true);
     R = (int)R_value;
     K = (int)K_value;
     F = (int)F_value;
     eps = (double)epsilon;
+    heparam = (double) hp;
     TIMEOUT = (int) Timeout_value;
     SMALL_TIMEOUT = (int) Immediate_timeout_value;
 
