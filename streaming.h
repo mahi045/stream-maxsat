@@ -121,6 +121,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 gamma = (double) ((maxsat_formula->bias) / (2 * bias_thre));
                 gamma += 0.5;
             }
+            double alpha = pow(M_E, -0.05 * bucket_index);
             for (int variable = 1; variable <= maxsat_formula->nVars(); variable++) {
                 positive_phase = ceil(maxsat_formula->occurance_list[2 * (variable - 1)] - maxsat_formula->temp_occurance_list[2 * (variable - 1)]);
                 negative_phase = ceil(maxsat_formula->occurance_list[2 * (variable - 1) + 1] - maxsat_formula->temp_occurance_list[2 * (variable - 1) + 1]);
@@ -152,19 +153,19 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                     //     }
                     // }
                     // disable assignment heuristic
-                    // if (maxsat_formula->bias > bias_thre) {
-                    //     if (maxsat_formula->assignment[variable] == l_True) {
-                    //         if (maxsat_formula->var_bias[variable - 1] > 0) {
-                    //             myfile << static_cast<uint64_t>(positive_phase) << " " << variable << " " << 0 << endl;
-                    //         // myfile << static_cast<uint64_t>(negative_phase) << " " << -variable << " " << 0 << endl;
-                    //         }
-                    //     } else if (maxsat_formula->assignment[variable] == l_False) {
-                    //         if (maxsat_formula->var_bias[variable - 1] < 0) {
-                    //             // myfile << static_cast<uint64_t>(positive_phase) << " " << variable << " " << 0 << endl;
-                    //             myfile << static_cast<uint64_t>(negative_phase) << " " << -variable << " " << 0 << endl;
-                    //         }
-                    //     }
-                    // }
+                    if (maxsat_formula->bias > bias_thre) {
+                        if (maxsat_formula->assignment[variable] == l_True) {
+                            if (maxsat_formula->var_bias[variable - 1] > 0) {
+                                myfile << static_cast<uint64_t>(positive_phase * alpha) << " " << variable << " " << 0 << endl;
+                            // myfile << static_cast<uint64_t>(negative_phase) << " " << -variable << " " << 0 << endl;
+                            }
+                        } else if (maxsat_formula->assignment[variable] == l_False) {
+                            if (maxsat_formula->var_bias[variable - 1] < 0) {
+                                // myfile << static_cast<uint64_t>(positive_phase) << " " << variable << " " << 0 << endl;
+                                myfile << static_cast<uint64_t>(negative_phase * alpha) << " " << -variable << " " << 0 << endl;
+                            }
+                        }
+                    }
                     // else {
                     //     if (maxsat_formula->assignment[variable] == l_True) {
                     //         if (maxsat_formula->var_bias[variable - 1] > 0) {
