@@ -136,10 +136,10 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
       }
     }
   }
-  if (!sampling_maxsat && maxsat_formula->nSoft() % BUCKET_SIZE > 0) {
-    printf("%d-th bucket !! \n", (maxsat_formula->nSoft() / BUCKET_SIZE) + 1);
-    streaming_maxsat(maxsat_formula);
-  }
+  // if (!sampling_maxsat && maxsat_formula->nSoft() % BUCKET_SIZE > 0) {
+  //   printf("%d-th bucket !! \n", (maxsat_formula->nSoft() / BUCKET_SIZE) + 1);
+  //   streaming_maxsat(maxsat_formula);
+  // }
   printf("Sum of weight: %s\n", mpz_get_str (NULL, 10, maxsat_formula->clause_weight_sum));
   // assert(maxsat_formula->nSoft() == maxsat_formula->weight_sampler.size());
 }
