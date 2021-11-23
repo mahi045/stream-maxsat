@@ -131,7 +131,7 @@ void MaxSATFormula::updatePoolClause(uint64_t weight, vec<Lit> &lits, int pos) {
   lits.copyTo(copy_lits);
   weight_pool[pos] = weight;
 
-  new (&soft_clauses[pos])
+  new (&pool_clauses[pos])
       Soft(copy_lits, weight, assump, vars);
 }
 
@@ -398,4 +398,22 @@ unordered_set<uint32_t> MaxSATFormula::pick_k_clauses_from_pool(int k) {
         }
     }
   return sampled;
+}
+
+void MaxSATFormula::status_pool() {
+  std::unordered_map<int, int> weight_map;
+  weight_map.clear();
+  for (int cla_index = 0; cla_index < nPool(); cla_index++) {
+    int weight = getPoolClause(cla_index).weight;
+    if (weight_map.find(weight) == weight_map.end()) {
+      weight_map[weight] = 1;
+    }
+    else {
+      weight_map[weight] = weight_map[weight] + 1;
+    }
+  }
+  std::cout << "Here is the clause pool: " << std::endl;
+  for (auto& x: weight_map)
+    std::cout << x.first << ": " << x.second << ", ";
+  std::cout << "Pool size: " << nPool() << std::endl;
 }

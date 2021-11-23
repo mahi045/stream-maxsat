@@ -244,6 +244,7 @@ int main(int argc, char **argv) {
                         "\n",
                         0.05);
     BoolOption sampling("WBO", "sampling", "Symmetry breaking.\n", false);
+    BoolOption print_verbose("WBO", "print-verbose", "Printing the verbose.\n", false);
     parseOptions(argc, argv, true);
     R = (int)R_value;
     K = (int)K_value;
@@ -314,6 +315,7 @@ int main(int argc, char **argv) {
     maxsat_formula = new MaxSATFormula();
     file_name = std::string(argv[1]);   
     sampling_maxsat = sampling;
+    verbose = print_verbose;
     // if ((int)formula == _FORMAT_MAXSAT_) {
       parseMaxSATFormula(in, maxsat_formula);
       maxsat_formula->setFormat(_FORMAT_MAXSAT_);

@@ -58,7 +58,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     int bucket_start;
     int index_bucket, index_pool;
     double positive_phase, negative_phase;
-    maxsat_formula->weight_sampler.clear();
+    // maxsat_formula->weight_sampler.clear();
     std::string stream_maxsat_file = "streaming_" + file_name;
     debugfile.open("debug_" + file_name);
     double w, w_adj;
@@ -340,8 +340,11 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                     // index_bucket = *start_itr2 + maxsat_formula->clause_seen_so_far - 1;
                     index_bucket = *start_itr2;
                     index_pool = *start_itr1;
+                    // debugfile << maxsat_formula->getSoftClause(index_bucket).weight << " is replacing " << maxsat_formula->getPoolClause(index_pool).weight << endl;
+                    // debugfile << "Before update: " << maxsat_formula->getPoolClause(index_pool).weight << " ";
                     maxsat_formula->updatePoolClause(maxsat_formula->getSoftClause(index_bucket).weight, 
                         maxsat_formula->getSoftClause(index_bucket).clause, index_pool);
+                    // debugfile << "After update: " << maxsat_formula->getPoolClause(index_pool+1).weight << " ";
                 }
                 // for (auto cla_index = 0; cla_index < clause_need_replace; cla_index++) {
                 //     // cout << " Bucket " << index_bucket << "'th clause replace pool " << index_pool << "'th clause" << endl;
@@ -363,6 +366,8 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             maxsat_formula->clause_seen_so_far += (i + 1);
             mpz_init(maxsat_formula->bucket_clause_weight);
             maxsat_formula->weight_sampler.clear();
+            if (verbose)
+                maxsat_formula->status_pool();
         }
     }
 }
