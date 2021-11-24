@@ -125,7 +125,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             for (int variable = 1; variable <= maxsat_formula->nVars(); variable++) {
                 positive_phase = ceil(maxsat_formula->occurance_list[2 * (variable - 1)] - maxsat_formula->temp_occurance_list[2 * (variable - 1)]);
                 negative_phase = ceil(maxsat_formula->occurance_list[2 * (variable - 1) + 1] - maxsat_formula->temp_occurance_list[2 * (variable - 1) + 1]);
-                if (maxsat_formula->temp_occurance_list[2 * (variable - 1)] <= 1 && maxsat_formula->temp_occurance_list[2 * (variable - 1) + 1] <= 1) {
+                if (maxsat_formula->temp_occurance_list[2 * (variable - 1)] <= 1e-5 && maxsat_formula->temp_occurance_list[2 * (variable - 1) + 1] <= 1e-5) {
                     if (maxsat_formula->assignment[variable] == l_True) {
                         // if (positive_phase > negative_phase) {
                             myfile << static_cast<uint64_t>(positive_phase) << " " << variable << " " << 0 << endl;
@@ -153,19 +153,19 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                     //     }
                     // }
                     // disable assignment heuristic
-                    if (maxsat_formula->bias > bias_thre) {
-                        if (maxsat_formula->assignment[variable] == l_True) {
-                            if (maxsat_formula->var_bias[variable - 1] > 0) {
-                                myfile << static_cast<uint64_t>(positive_phase * alpha) << " " << variable << " " << 0 << endl;
-                            // myfile << static_cast<uint64_t>(negative_phase) << " " << -variable << " " << 0 << endl;
-                            }
-                        } else if (maxsat_formula->assignment[variable] == l_False) {
-                            if (maxsat_formula->var_bias[variable - 1] < 0) {
-                                // myfile << static_cast<uint64_t>(positive_phase) << " " << variable << " " << 0 << endl;
-                                myfile << static_cast<uint64_t>(negative_phase * alpha) << " " << -variable << " " << 0 << endl;
-                            }
-                        }
-                    }
+                    // if (maxsat_formula->bias > bias_thre) {
+                    //     if (maxsat_formula->assignment[variable] == l_True) {
+                    //         if (maxsat_formula->var_bias[variable - 1] > 0) {
+                    //             myfile << static_cast<uint64_t>(positive_phase * alpha) << " " << variable << " " << 0 << endl;
+                    //         // myfile << static_cast<uint64_t>(negative_phase) << " " << -variable << " " << 0 << endl;
+                    //         }
+                    //     } else if (maxsat_formula->assignment[variable] == l_False) {
+                    //         if (maxsat_formula->var_bias[variable - 1] < 0) {
+                    //             // myfile << static_cast<uint64_t>(positive_phase) << " " << variable << " " << 0 << endl;
+                    //             myfile << static_cast<uint64_t>(negative_phase * alpha) << " " << -variable << " " << 0 << endl;
+                    //         }
+                    //     }
+                    // }
                     // else {
                     //     if (maxsat_formula->assignment[variable] == l_True) {
                     //         if (maxsat_formula->var_bias[variable - 1] > 0) {
@@ -335,6 +335,9 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 cout << " From bucket index " << bucket_start + bucket_index * BUCKET_SIZE << " to " << i + bucket_index * BUCKET_SIZE << " => ";
                 auto start_itr1 = replaced_clause_pool.begin();
                 auto start_itr2 = replaced_clause_bucket.begin();
+                // cout << "replaced_clause_pool.size(): " << replaced_clause_pool.size() << endl;
+                // cout << "replaced_clause_bucket.size(): " << replaced_clause_bucket.size() << endl;
+                // cout << "clause_need_replace: " << clause_need_replace << endl;
                 assert(replaced_clause_pool.size() == replaced_clause_bucket.size());
                 for (;start_itr1 != replaced_clause_pool.end(); start_itr1++, start_itr2++) {
                     // index_bucket = *start_itr2 + maxsat_formula->clause_seen_so_far - 1;

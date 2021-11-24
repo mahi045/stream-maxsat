@@ -131,7 +131,7 @@ public:
   void status_pool();
   uint32_t clause_seen_so_far = 0;
   mpz_t clause_weight_sum, bucket_clause_weight;
-  uint64_t hard_clause_identifier = 0;
+  uint64_t hard_clause_identifier = 0, max_weight_pool=0;
   uint64_t bias = 0;
 
   /*! Add a new hard clause. */

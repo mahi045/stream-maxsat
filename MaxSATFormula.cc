@@ -73,10 +73,14 @@ void MaxSATFormula::addSoftClause(uint64_t weight, vec<Lit> &lits) {
   vec<Lit> vars;
   Lit assump = lit_Undef;
   mpz_add_ui(clause_weight_sum, clause_weight_sum, weight); // update the weight sum
-  mpz_add_ui(bucket_clause_weight, bucket_clause_weight, weight); // update the weight sum
+  uint64_t w = weight / pow(2, lits.size() - 1);
+  if (w < 1) {
+    w = 1;
+  }
+  mpz_add_ui(bucket_clause_weight, bucket_clause_weight, w); // update the weight sum
   vec<Lit> copy_lits;
   lits.copyTo(copy_lits);
-  weight_sampler.push_back(weight);
+  weight_sampler.push_back(w);
   new (&soft_clauses[soft_clauses.size() - 1])
       Soft(copy_lits, weight, assump, vars);
   n_soft++;
@@ -91,7 +95,10 @@ void MaxSATFormula::addPoolClause(uint64_t weight, vec<Lit> &lits) {
   Lit assump = lit_Undef;
   vec<Lit> copy_lits;
   lits.copyTo(copy_lits);
-  weight_pool.push_back(weight);
+  uint64_t w = weight / pow(2, lits.size() - 1);
+  w = (w < 1) ? 1 : w;
+  weight_pool.push_back(w);
+  max_weight_pool = max(max_weight_pool, weight);
   new (&pool_clauses[pool_clauses.size() - 1])
       Soft(copy_lits, weight, assump, vars);
   n_pool++;
@@ -129,8 +136,10 @@ void MaxSATFormula::updatePoolClause(uint64_t weight, vec<Lit> &lits, int pos) {
   Lit assump = lit_Undef;
   vec<Lit> copy_lits;
   lits.copyTo(copy_lits);
-  weight_pool[pos] = weight;
-
+  uint64_t w = weight / pow(2, lits.size() - 1);
+  w = (w < 1) ? 1 : w;
+  weight_pool[pos] = w;
+  max_weight_pool = max(max_weight_pool, weight);
   new (&pool_clauses[pos])
       Soft(copy_lits, weight, assump, vars);
 }
@@ -142,10 +151,12 @@ void MaxSATFormula::addSoftClause(uint64_t weight, vec<Lit> &lits,
   soft_clauses.push();
   Lit assump = lit_Undef;
   mpz_add_ui(clause_weight_sum, clause_weight_sum, weight); // update the weight sum
-  mpz_add_ui(bucket_clause_weight, bucket_clause_weight, weight); // update the weight sum
+  uint64_t w = weight / pow(2, lits.size() - 1);
+  w = (w < 1) ? 1 : w;
+  mpz_add_ui(bucket_clause_weight, bucket_clause_weight, w); // update the weight sum
   vec<Lit> copy_lits;
   lits.copyTo(copy_lits);
-  weight_sampler.push_back(weight);
+  weight_sampler.push_back(w);
   new (&soft_clauses[soft_clauses.size() - 1])
       Soft(copy_lits, weight, assump, vars);
   n_soft++;
@@ -349,7 +360,7 @@ unordered_set<uint32_t> MaxSATFormula::pick_k_clauses(int k, bool reverse = fals
   return sampled;
 }
 unordered_set<uint32_t> MaxSATFormula::pick_k_clauses_from_pool(int k) {
-  int rnd_max = weight_sampler.size();
+  int rnd_max = weight_pool.size();
     int ntake = k;
 
     /* determine smallest power of two that is larger than N */
@@ -361,7 +372,7 @@ unordered_set<uint32_t> MaxSATFormula::pick_k_clauses_from_pool(int k) {
     /* compute sums for the tree leaves at each node */
     int offset = pow2(tree_levels) - 1;
     for (int ix = 0; ix < rnd_max; ix++) {
-        tree_weights[ix + offset] = hard_clause_identifier - weight_pool[ix];
+        tree_weights[ix + offset] = max_weight_pool - weight_pool[ix];
         assert(tree_weights[ix + offset] >= 0);
     }
     for (int ix = pow2(tree_levels+1) - 1; ix > 0; ix--) {
@@ -401,19 +412,21 @@ unordered_set<uint32_t> MaxSATFormula::pick_k_clauses_from_pool(int k) {
 }
 
 void MaxSATFormula::status_pool() {
-  std::unordered_map<int, int> weight_map;
+  // std::unordered_map<int, int> weight_map;
+  std::map<std::pair<int,int>, int> weight_map;
   weight_map.clear();
   for (int cla_index = 0; cla_index < nPool(); cla_index++) {
     int weight = getPoolClause(cla_index).weight;
-    if (weight_map.find(weight) == weight_map.end()) {
-      weight_map[weight] = 1;
+    int len = getPoolClause(cla_index).clause.size();
+    if (weight_map.find(std::make_pair(weight,len)) == weight_map.end()) {
+      weight_map[std::make_pair(weight,len)] = 1;
     }
     else {
-      weight_map[weight] = weight_map[weight] + 1;
+      weight_map[std::make_pair(weight,len)] = weight_map[std::make_pair(weight,len)] + 1;
     }
   }
   std::cout << "Here is the clause pool: " << std::endl;
   for (auto& x: weight_map)
-    std::cout << x.first << ": " << x.second << ", ";
+    std::cout << "(" <<x.first.first << ", " << x.first.second << "):" << x.second << ", ";
   std::cout << "Pool size: " << nPool() << std::endl;
 }
