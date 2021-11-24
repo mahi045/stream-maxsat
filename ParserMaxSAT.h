@@ -117,6 +117,7 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
   mpz_init_set_ui(maxsat_formula->bucket_clause_weight, 0);
   maxsat_formula->weight_sampler.clear();
   double w;
+  maxsat_formula->weight_map.clear();
   for (;;) {
     skipWhitespace(in);
     if (*in == EOF)
@@ -152,7 +153,13 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
       {
         maxsat_formula->m[lits.size()] += weight;
       }
-      
+      int len = lits.size();
+      if (maxsat_formula->weight_map.find(std::make_pair(weight,len)) == maxsat_formula->weight_map.end()) {
+        maxsat_formula->weight_map[std::make_pair(weight,len)] = 1;
+      } 
+      else {
+        maxsat_formula->weight_map[std::make_pair(weight,len)] = maxsat_formula->weight_map[std::make_pair(weight,len)] + 1;
+      }
       for (int j = 0; j < lits.size(); j++)
       {
         w = (double) weight / pow(2, lits.size() - 1);
@@ -243,6 +250,11 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
   //   streaming_maxsat(maxsat_formula);
   // }
   printf("Sum of weight: %s\n", mpz_get_str (NULL, 10, maxsat_formula->clause_weight_sum));
+  std::cout << "Here is the clause pool: " << std::endl;
+  for (auto &x : maxsat_formula->weight_map) {
+    std::cout << "(weight:" << x.first.first << ", len:" << x.first.second
+              << "):" << x.second << ", ";
+  }
   // assert(maxsat_formula->nSoft() == maxsat_formula->weight_sampler.size());
 }
 
