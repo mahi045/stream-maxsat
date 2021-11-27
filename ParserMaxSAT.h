@@ -106,7 +106,42 @@ vector<uint32_t> sample_k_vars(int n, double k)
   }
   return b;
 }
-
+void get_assignment(MaxSATFormula *maxsat_formula) {
+  string line, variable;
+  string delim = " ";
+  int lit;
+  ifstream resultfile2(result_file_name);
+  int assigned_variable = 0;
+  if (resultfile2.good()) {
+    bool no_assign = false;
+    while (getline(resultfile2, line)) {
+      if (line.rfind("v ") == 0) {
+        no_assign = true;
+        auto start = 0U;
+        auto end = line.find(delim);
+        while (end != std::string::npos) {
+          variable = line.substr(start, end - start);
+          start = end + delim.length();
+          end = line.find(delim, start);
+          if (variable != "v") {
+            lit = stoi(variable);
+            if (lit < 0) {
+              maxsat_formula->assignment[abs(lit)] = l_False;
+              assigned_variable++;
+            } else {
+              maxsat_formula->assignment[lit] = l_True;
+              assigned_variable++;
+            }
+          }
+        }
+      }
+    }
+    std::cout << "Total number of assigned variables: " << assigned_variable << std::endl;
+  }
+  else {
+    std::cout << "No assignment is given !!!" << std::endl;
+  }
+}
 template <class B, class MaxSATFormula>
 static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
   vec<Lit> lits;
@@ -115,6 +150,7 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
   uint64_t num_var, num_cla;
   mpz_init_set_ui(maxsat_formula->clause_weight_sum, 0);
   mpz_init_set_ui(maxsat_formula->bucket_clause_weight, 0);
+  mpz_init_set_ui(maxsat_formula->unsat_weight, 0);
   maxsat_formula->weight_sampler.clear();
   double w;
   maxsat_formula->weight_map.clear();
@@ -139,6 +175,7 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
       } else
         printf("c PARSE ERROR! Unexpected char: %c\n", *in),
             printf("s UNKNOWN\n"), exit(_ERROR_);
+      get_assignment(maxsat_formula);
     } else if (*in == 'c' || *in == 'p')
       skipLine(in);
     else {
@@ -160,12 +197,26 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
       else {
         maxsat_formula->weight_map[std::make_pair(weight,len)] = maxsat_formula->weight_map[std::make_pair(weight,len)] + 1;
       }
+      bool unsat = true;
       for (int j = 0; j < lits.size(); j++)
       {
         w = (double) weight / pow(2, lits.size() - 1);
         if (sign(lits[j])) w *= -1;
         maxsat_formula->bias += (abs(maxsat_formula->var_bias[var(lits[j])] + w) - abs(maxsat_formula->var_bias[var(lits[j])]));
         maxsat_formula->var_bias[var(lits[j])] += w;
+        if (sign(lits[j])) {
+          if (maxsat_formula->assignment[var(lits[j]) + 1] == l_False) {
+            unsat = false;
+          }
+        }
+        else {
+          if (maxsat_formula->assignment[var(lits[j]) + 1] == l_True) {
+            unsat = false;
+          }
+        }
+      }
+      if (unsat) {
+        mpz_add_ui(maxsat_formula->unsat_weight, maxsat_formula->unsat_weight, weight);
       }
       // if (weight < hard_weight ||
       //     maxsat_formula->getProblemType() == _UNWEIGHTED_) {
@@ -250,6 +301,7 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
   //   streaming_maxsat(maxsat_formula);
   // }
   printf("Sum of weight: %s\n", mpz_get_str (NULL, 10, maxsat_formula->clause_weight_sum));
+  printf("Sum of unsat weight: %s\n", mpz_get_str (NULL, 10, maxsat_formula->unsat_weight));
   std::cout << "Here is the clause pool: " << std::endl;
   for (auto &x : maxsat_formula->weight_map) {
     std::cout << "(weight:" << x.first.first << ", len:" << x.first.second

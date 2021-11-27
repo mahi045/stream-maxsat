@@ -235,6 +235,7 @@ int main(int argc, char **argv) {
                         "the value of ep "
                         "\n",
                         0.25);
+    StringOption assignment("Open-WBO", "assign", "assignment file \n", NULL);
     BoolOption sampling("WBO", "sampling", "Symmetry breaking.\n", false);
     parseOptions(argc, argv, true);
     R = (int)R_value;
@@ -249,7 +250,8 @@ int main(int argc, char **argv) {
 //     printf("Streaming: %d\n", (int)sampling);
     printf("Timeout for complete maxsat: %d\n", (int)TIMEOUT);
     printf("Timeout for partition maxsat: %d\n", (int)SMALL_TIMEOUT);
-
+    result_file_name = (const char *)assignment;
+    // std::cout << "result_file_name: " << result_file_name << std::endl;
     
     // // Try to set resource limits:
     // if (cpu_lim != 0) limitTime(cpu_lim);
