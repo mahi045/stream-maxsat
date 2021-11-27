@@ -154,6 +154,7 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
   maxsat_formula->weight_sampler.clear();
   double w;
   maxsat_formula->weight_map.clear();
+  maxsat_formula->unsat_clauses.clear();
   for (;;) {
     skipWhitespace(in);
     if (*in == EOF)
@@ -216,7 +217,16 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
         }
       }
       if (unsat) {
-        mpz_add_ui(maxsat_formula->unsat_weight, maxsat_formula->unsat_weight, weight);
+        len = lits.size();
+        if (maxsat_formula->unsat_clauses.find(std::make_pair(weight, len)) ==
+            maxsat_formula->unsat_clauses.end()) {
+          maxsat_formula->unsat_clauses[std::make_pair(weight, len)] = 1;
+        } else {
+          maxsat_formula->unsat_clauses[std::make_pair(weight, len)] =
+              maxsat_formula->unsat_clauses[std::make_pair(weight, len)] + 1;
+        }
+        mpz_add_ui(maxsat_formula->unsat_weight, maxsat_formula->unsat_weight,
+                   weight);
       }
       // if (weight < hard_weight ||
       //     maxsat_formula->getProblemType() == _UNWEIGHTED_) {
@@ -304,6 +314,11 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
   printf("Sum of unsat weight: %s\n", mpz_get_str (NULL, 10, maxsat_formula->unsat_weight));
   std::cout << "Here is the clause pool: " << std::endl;
   for (auto &x : maxsat_formula->weight_map) {
+    std::cout << "(weight:" << x.first.first << ", len:" << x.first.second
+              << "):" << x.second << ", ";
+  }
+  std::cout << "\nHere is the unsat clause statistic: " << std::endl;
+  for (auto &x : maxsat_formula->unsat_clauses) {
     std::cout << "(weight:" << x.first.first << ", len:" << x.first.second
               << "):" << x.second << ", ";
   }

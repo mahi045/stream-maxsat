@@ -123,6 +123,7 @@ public:
   vec<double> temp_occurance_list;
   vec<double> var_bias;
   std::map<std::pair<int,int>, int> weight_map;
+  std::map<std::pair<int,int>, int> unsat_clauses;
   vector<uint64_t> m;
   vec<lbool> assignment;
   vector<uint32_t> weight_sampler;
