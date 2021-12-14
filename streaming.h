@@ -50,7 +50,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     string delim = " ";
     int lit;
     maxsat_formula->temp_occurance_list.growTo(2 * maxsat_formula->nVars() + 1, 0.0);
-    ofstream myfile, assignfile, debugfile;
+    ofstream myfile, poolfile, assignfile, debugfile;
     ifstream resultfile;
     string result_file_name;
     vec<int> incompatible;
@@ -60,6 +60,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     double positive_phase, negative_phase;
     // maxsat_formula->weight_sampler.clear();
     std::string stream_maxsat_file = "streaming_" + file_name;
+    std::string pool_stream_maxsat_file = "pool_streaming_" + file_name;
     debugfile.open("debug_" + file_name);
     double w, w_adj;
     int var_ind = 0;
@@ -98,22 +99,28 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
         if (!(i % BUCKET_SIZE)) {
             bucket_start = i;
             myfile.open(stream_maxsat_file);
-
+            poolfile.open(pool_stream_maxsat_file);
         }
         if (!((i + 1) % BUCKET_SIZE) || i + 1 == bound) {
             myfile << "p wcnf " + to_string(maxsat_formula->nVars()) + " " + to_string(BUCKET_SIZE) + " " + to_string(maxsat_formula->hard_clause_identifier) << endl;
+            poolfile << "p wcnf " + to_string(maxsat_formula->nVars()) + " " + to_string(BUCKET_SIZE) + " " + to_string(maxsat_formula->hard_clause_identifier) << endl;
             for (auto start_index = bucket_start; start_index <= i;
                  start_index++) {
                 myfile << maxsat_formula->getSoftClause(start_index).weight << " ";
+                poolfile << maxsat_formula->getSoftClause(start_index).weight << " ";
                 for (int j = 0;
                     j < maxsat_formula->getSoftClause(start_index).clause.size(); j++) {
                         if (sign(maxsat_formula->getSoftClause(start_index).clause[j])) {
                         myfile << "-";
+                        poolfile << "-";
                         }
                         myfile << var(maxsat_formula->getSoftClause(start_index).clause[j]) + 1
                             << " ";
+                        poolfile << var(maxsat_formula->getSoftClause(start_index).clause[j]) + 1
+                            << " ";
                 }
                 myfile << "0" << endl;
+                poolfile << "0" << endl;
             }
             bias_thre = bias_threshold(maxsat_formula);
             gamma = 0;
@@ -240,17 +247,17 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             
             if (incompatible.size() > 0) {
                 // now invoking maxsat query again
-                myfile.open(stream_maxsat_file, std::ios_base::app);
+                // myfile.open(stream_maxsat_file, std::ios_base::app);
                 for (int cla_index = 0; cla_index < maxsat_formula->nPool();
                      cla_index++) {
-                    myfile << maxsat_formula->getPoolClause(cla_index).weight << " ";
+                    poolfile << maxsat_formula->getPoolClause(cla_index).weight << " ";
                     for (int j = 0; j < maxsat_formula->getPoolClause(cla_index).clause.size(); j++) {
                         if (sign(maxsat_formula->getPoolClause(cla_index).clause[j])) {
-                            myfile << "-";
+                            poolfile << "-";
                         }
-                        myfile << var(maxsat_formula->getPoolClause(cla_index).clause[j]) + 1 << " ";
+                        poolfile << var(maxsat_formula->getPoolClause(cla_index).clause[j]) + 1 << " ";
                     }
-                    myfile << "0" << endl;
+                    poolfile << "0" << endl;
                 }
             }
             int c = 0;
@@ -262,20 +269,25 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                         // debugfile << agreed[lit_index] << " ";
                         // debugfile << maxsat_formula->occurance_list[var_ind + 1] << " ";
                         // debugfile << maxsat_formula->occurance_list[var_ind] << endl;
-                        myfile << maxsat_formula->hard_clause_identifier << " " << agreed[lit_index] << " 0" << endl;
+                        poolfile << maxsat_formula->hard_clause_identifier << " " << agreed[lit_index] << " 0" << endl;
                         c++;
                     }
                     else if (agreed[lit_index] > 0 && maxsat_formula->occurance_list[var_ind] >= F * maxsat_formula->occurance_list[var_ind + 1]) {
                         // debugfile << agreed[lit_index] << " ";
                         // debugfile << maxsat_formula->occurance_list[var_ind] << " ";
                         // debugfile << maxsat_formula->occurance_list[var_ind + 1] << endl;
-                        myfile << maxsat_formula->hard_clause_identifier << " " << agreed[lit_index] << " 0" << endl;
+                        poolfile << maxsat_formula->hard_clause_identifier << " " << agreed[lit_index] << " 0" << endl;
                         c++;
                     }
                 }
             }
             cout << "Total " << incompatible.size() + (agreed.size() - c) << " (" << c << ") literals are incompatible (compatibles)" << endl;
-            myfile.close();
+            poolfile.close();
+            // file renaming
+            stringStream.str("");
+            stringStream << "mv " + pool_stream_maxsat_file + " " + stream_maxsat_file;
+            system(stringStream.str().c_str());
+                // calling the new maxsat query
             if (incompatible.size() > 0) {
                 stringStream.str("");
                 stringStream << "./open-wbo_static -print-model -cpu-lim=" << SMALL_TIMEOUT << " " <<
