@@ -28,6 +28,8 @@
 #include "MaxSAT.h"
 
 #include <sstream>
+#include <iostream>
+#include <fstream>
 
 using namespace openwbo;
 
@@ -136,12 +138,24 @@ lbool MaxSAT::searchSATSolver(Solver *S, bool pre) {
 void MaxSAT::saveModel(vec<lbool> &currentModel) {
   assert(maxsat_formula->nInitialVars() != 0);
   assert(currentModel.size() != 0);
-
+  std::ofstream myfile;
+  myfile.open("result_open_wbo_" + maxsat_formula->file_name);
+  myfile << "v ";
   model.clear();
   // Only store the value of the variables that belong to the
   // original MaxSAT formula.
-  for (int i = 0; i < maxsat_formula->nInitialVars(); i++)
+
+  for (int i = 0; i < maxsat_formula->nInitialVars(); i++) {
+    if (currentModel[i] == l_False) {
+      myfile << "-" << (i+1) << " "; 
+    }
+    else if (currentModel[i] == l_True) {
+      myfile << (i+1) << " "; 
+    }
     model.push(currentModel[i]);
+  }
+  myfile << std::endl;
+  myfile.close();  
 }
 
 /*_________________________________________________________________________________________________

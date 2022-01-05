@@ -96,6 +96,7 @@ public:
         max_soft_weight(0) {
     objective_function = NULL;
     format = _FORMAT_MAXSAT_;
+    file_name.clear();
   }
 
   ~MaxSATFormula() {
@@ -186,7 +187,7 @@ public:
   int getFormat() { return format; }
 
   indexMap &getIndexToName() { return _indexToName; }
-
+  std::string file_name;
 protected:
   // MaxSAT database
   //

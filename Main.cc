@@ -273,7 +273,10 @@ int main(int argc, char **argv) {
           printf("s UNKNOWN\n"), exit(_ERROR_);
 
     MaxSATFormula *maxsat_formula = new MaxSATFormula();
-
+    maxsat_formula->file_name.append(argv[1]);
+    ofstream myfile;
+    myfile.open("result_open_wbo_" + maxsat_formula->file_name);
+    myfile.close();
     if ((int)formula == _FORMAT_MAXSAT_) {
       parseMaxSATFormula(in, maxsat_formula);
       maxsat_formula->setFormat(_FORMAT_MAXSAT_);
