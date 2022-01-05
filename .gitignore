@@ -11,3 +11,4 @@ depend.mk
 
 # backup files
 *~
+*.wcnf
