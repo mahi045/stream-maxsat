@@ -93,6 +93,7 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
   mpz_init_set_ui(maxsat_formula->clause_weight_sum, 0);
   mpz_init_set_ui(maxsat_formula->bucket_clause_weight, 0);
   printf("Running bias heuristic with modified weight !!!\n");
+  start_time = std::chrono::high_resolution_clock::now();
   maxsat_formula->weight_sampler.clear();
   for (;;) {
     skipWhitespace(in);
@@ -112,6 +113,8 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
           maxsat_formula->setHardWeight(hard_weight);
         }
         init_stream(maxsat_formula, num_var, num_cla);
+        nbuckets = (num_cla / BUCKET_SIZE) + ((num_cla % BUCKET_SIZE) != 0);
+        printf("The number of buckets: %d\n", nbuckets);
       } else
         printf("c PARSE ERROR! Unexpected char: %c\n", *in),
             printf("s UNKNOWN\n"), exit(_ERROR_);
@@ -141,6 +144,8 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
     streaming_maxsat(maxsat_formula);
   }
   printf("Sum of weight: %s\n", mpz_get_str (NULL, 10, maxsat_formula->clause_weight_sum));
+  auto current_time = std::chrono::high_resolution_clock::now();
+  cout << " Stream maxsat execution time: " <<  duration_cast<std::chrono::microseconds>(current_time - start_time).count() / pow(10, 6) << endl;
   // assert(maxsat_formula->nSoft() == maxsat_formula->weight_sampler.size());
 }
 

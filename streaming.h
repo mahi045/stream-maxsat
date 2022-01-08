@@ -61,6 +61,10 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     // maxsat_formula->weight_sampler.clear();
     std::string stream_maxsat_file = "streaming_" + file_name;
     std::string pool_stream_maxsat_file = "pool_streaming_" + file_name;
+    std::chrono::high_resolution_clock::time_point current_time;
+    uint32_t remaining_buckets;
+    std::chrono::duration<double> remaining_time;
+    uint32_t remaining_time_second, timeout;
     debugfile.open("debug_" + file_name);
     double w, w_adj;
     int var_ind = 0;
@@ -194,8 +198,13 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             }
             myfile.close();
             stringStream.str("");
+            current_time = std::chrono::high_resolution_clock::now();
+            remaining_buckets = (nbuckets - maxsat_formula->nSoft() / BUCKET_SIZE + 1);
+            remaining_time =  current_time - start_time;
+            remaining_time_second = ceil((TIMEOUT - remaining_time.count()) / (remaining_buckets + remaining_buckets));
+            timeout = min(SMALL_TIMEOUT, remaining_time_second);
             cout << "Calling maxsat query from clause = " << bucket_start + bucket_index * BUCKET_SIZE << " to clause = " << i + bucket_index * BUCKET_SIZE << endl;
-            stringStream << "./open-wbo_static -print-model -cpu-lim=" << SMALL_TIMEOUT << " " + stream_maxsat_file + " > " + "result_" + stream_maxsat_file;
+            stringStream << "./open-wbo_static -print-model -cpu-lim=" << timeout << " " + stream_maxsat_file + " > " + "result_" + stream_maxsat_file;
             // calling the smapled maxsat query
             system(stringStream.str().c_str());
 
@@ -289,8 +298,13 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             system(stringStream.str().c_str());
                 // calling the new maxsat query
             if (incompatible.size() > 0) {
+                current_time = std::chrono::high_resolution_clock::now();
+                remaining_buckets = (nbuckets - maxsat_formula->nSoft() / BUCKET_SIZE + 1);
+                remaining_time =  current_time - start_time;
+                remaining_time_second = ceil((TIMEOUT - remaining_time.count()) / (remaining_buckets + remaining_buckets - 1));
+                timeout = min(SMALL_TIMEOUT, remaining_time_second);
                 stringStream.str("");
-                stringStream << "./open-wbo_static -print-model -cpu-lim=" << SMALL_TIMEOUT << " " <<
+                stringStream << "./open-wbo_static -print-model -cpu-lim=" << timeout << " " <<
                                   stream_maxsat_file + " > " + "result_" + stream_maxsat_file;
                 // calling the new maxsat query
                 system(stringStream.str().c_str());
