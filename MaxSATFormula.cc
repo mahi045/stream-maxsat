@@ -372,7 +372,7 @@ unordered_set<uint32_t> MaxSATFormula::pick_k_clauses_from_pool(int k) {
     /* compute sums for the tree leaves at each node */
     int offset = pow2(tree_levels) - 1;
     for (int ix = 0; ix < rnd_max; ix++) {
-        tree_weights[ix + offset] = max_weight_pool - weight_pool[ix];
+        tree_weights[ix + offset] = max_weight_pool + 1 - weight_pool[ix];
         assert(tree_weights[ix + offset] >= 0);
     }
     for (int ix = pow2(tree_levels+1) - 1; ix > 0; ix--) {
