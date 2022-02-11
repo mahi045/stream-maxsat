@@ -4,6 +4,7 @@
 int K;
 int R;
 double eps;
+double Gamma = 0.1;
 int BUCKET_SIZE;
 int POOL_SIZE;
 int nbuckets;

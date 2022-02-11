@@ -45,6 +45,12 @@ void sample_clauses(MaxSATFormula *maxsat_formula) {
         cout << "the number of sampled clauses: " << POOL_SIZE << " (less than original clauses " << maxsat_formula->nSoft() << ")" << endl;
     }
     vector<int> b = vector<int>(maxsat_formula->nSoft());
+    int beta = ceil(log(maxsat_formula->nSoft()) / Gamma);
+    cout << "the value of beta: " << beta << endl;
+    int iter = ceil(log(maxsat_formula->nSoft()) / (log (10) * eps));
+    cout << "the value of iterations: " << iter << endl;
+    uint64_t nlong_clause = 0;
+    
     unordered_set<uint32_t> in_pool;
     if (POOL_SIZE == maxsat_formula->nSoft()) {
         std::iota(b.begin(), b.end(), 0);
@@ -64,12 +70,18 @@ void sample_clauses(MaxSATFormula *maxsat_formula) {
         assert(b.size() == POOL_SIZE);
     }
     else {
-        b.clear();
-        in_pool = maxsat_formula->pick_k_clauses(POOL_SIZE, true);
-        for (auto itr = in_pool.begin(); itr != in_pool.end(); ++itr) {
-            b.push_back(*itr);
+      b.clear();
+      for (int j = 0; j < maxsat_formula->nSoft(); j++) {
+        if (maxsat_formula->getSoftClause(j).clause.size() >= beta) {
+          maxsat_formula->weight_sampler[j] = 0;
+          nlong_clause++;
         }
-        assert(b.size() == POOL_SIZE);
+      }
+      in_pool = maxsat_formula->pick_k_clauses(POOL_SIZE, true);
+      for (auto itr = in_pool.begin(); itr != in_pool.end(); ++itr) {
+        b.push_back(*itr);
+      }
+      assert(b.size() == POOL_SIZE);
     }
     // b = sample_k_items(maxsat_formula->nSoft(), POOL_SIZE);
     ofstream myfile;
