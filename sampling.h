@@ -93,7 +93,7 @@ void sample_clauses(MaxSATFormula *maxsat_formula) {
         cout << "We need postprocessing algorithm" << endl;
     // b = sample_k_items(maxsat_formula->nSoft(), POOL_SIZE);
     ofstream myfile, assignfile;
-    std::string sampled_maxsat_file = "sampled_" + file_name;
+    std::string sampled_maxsat_file = "hoa_sampled_" + file_name;
     myfile.open(sampled_maxsat_file);
     myfile << "p wcnf " + to_string(maxsat_formula->nVars()) + " " + to_string(POOL_SIZE) + " " + to_string(maxsat_formula->getHardWeight()) << endl;
     for (auto index: b) {
