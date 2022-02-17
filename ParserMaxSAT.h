@@ -288,7 +288,7 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
     int in = 0;
     for (uint32_t k = 1; k <= maxsat_formula->nVars(); k++) {
       if (maxsat_formula->var_bias[k] >= 0) {
-        if(var[in] == k) {
+        if(in < var.size() && var[in] == k) {
           assignfile << "-" << k << " ";
           in++;
         }
@@ -296,7 +296,7 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
           assignfile << k << " ";
       }
       else {
-        if(var[in] == k) {
+        if(in < var.size() && var[in] == k) {
           assignfile << k << " ";
           in++;
         }
