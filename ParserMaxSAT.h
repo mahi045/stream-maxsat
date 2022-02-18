@@ -37,7 +37,7 @@
 #include "MaxSATFormula.h"
 #include "core/SolverTypes.h"
 #include "utils/ParseUtils.h"
-#include "constants.h"
+// #include "constants.h"
 #include "streaming.h"
 
 #ifdef HAS_EXTRA_STREAMBUFFER

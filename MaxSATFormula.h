@@ -38,6 +38,7 @@
 
 #include "FormulaPB.h"
 #include "MaxTypes.h"
+#include "constants.h"
 
 #include <map>
 #include <string>

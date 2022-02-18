@@ -1,20 +1,22 @@
 #ifndef CONSTANTS_h
 #define CONSTANTS_h
 #include <chrono>
-int K;
-int R;
-double eps;
-int BUCKET_SIZE;
-int POOL_SIZE;
-int nbuckets;
-std::string file_name;
-bool sampling_maxsat;
-int F;
-double heparam = 0;
+static int K;
+static int R;
+static double eps;
+static const double alpha = 0.1;
+static int BUCKET_SIZE;
+static int POOL_SIZE;
+static int nbuckets;
+static std::string file_name;
+static bool sampling_maxsat;
+static int F;
+static double heparam = 0;
+static int clause_policy = 2;
 
-unsigned TIMEOUT = 9990;
-unsigned SMALL_TIMEOUT = 1000;
-bool verbose = false;
+static unsigned TIMEOUT = 9990;
+static unsigned SMALL_TIMEOUT = 1000;
+static bool verbose = false;
 
-std::chrono::high_resolution_clock::time_point start_time;
+static std::chrono::high_resolution_clock::time_point start_time;
 #endif
