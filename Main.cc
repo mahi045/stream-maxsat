@@ -243,13 +243,28 @@ int main(int argc, char **argv) {
                         "the value of heparam "
                         "\n",
                         0.05);
+    Glucose::DoubleOption al("Open-WBO", "alpha",
+                        "the value of alpha "
+                        "\n",
+                        0.1);
+    IntOption c_p("Open-WBO", "clause_policy",
+                        "the selection of clause policy "
+                        "\n",
+                        2, IntRange(0, 2));                    
     BoolOption sampling("WBO", "sampling", "Symmetry breaking.\n", false);
     BoolOption print_verbose("WBO", "print-verbose", "Printing the verbose.\n", false);
+    BoolOption pool_c("WBO", "pool", "use pool.\n", true);
+    BoolOption hard_c("WBO", "conflict", "adding the non-conflict variables.\n", true);
     parseOptions(argc, argv, true);
     R = (int)R_value;
     K = (int)K_value;
     F = (int)F_value;
     eps = (double)epsilon;
+    alpha = (double)al;
+    clause_policy = (int)c_p; 
+    use_hard = (bool) hard_c;
+    use_pool = (bool) pool_c;
+
     heparam = (double) hp;
     TIMEOUT = (int) Timeout_value;
     SMALL_TIMEOUT = (int) Immediate_timeout_value;

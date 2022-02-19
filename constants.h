@@ -4,7 +4,7 @@
 static int K;
 static int R;
 static double eps;
-static const double alpha = 0.1;
+static double alpha = 0.1;
 static int BUCKET_SIZE;
 static int POOL_SIZE;
 static int nbuckets;
@@ -17,6 +17,8 @@ static int clause_policy = 2;
 static unsigned TIMEOUT = 9990;
 static unsigned SMALL_TIMEOUT = 1000;
 static bool verbose = false;
+static bool use_pool = true;
+static bool use_hard = true;
 
 static std::chrono::high_resolution_clock::time_point start_time;
 #endif
