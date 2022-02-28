@@ -226,7 +226,7 @@ int main(int argc, char **argv) {
     IntOption F_value("Open-WBO", "Fvalue",
                         "the value of F "
                         "\n",
-                        20, IntRange(1, 10000));
+                        2, IntRange(0, 10000));
        IntOption Timeout_value("Open-WBO", "timeout",
                             "the value of timeout "
                             "\n",
