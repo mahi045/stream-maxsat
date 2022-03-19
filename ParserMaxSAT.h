@@ -35,6 +35,7 @@
 #include <stdio.h>
 
 #include "MaxSATFormula.h"
+#include "constants.h"
 #include "core/SolverTypes.h"
 #include "utils/ParseUtils.h"
 // #include "constants.h"
@@ -145,6 +146,10 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
   }
   printf("Sum of weight: %s\n", mpz_get_str (NULL, 10, maxsat_formula->clause_weight_sum));
   auto current_time = std::chrono::high_resolution_clock::now();
+  std::ostringstream stringStream;
+  stringStream << "./stream-maxksat_static -assign=result_streaming_" << file_name << " " + file_name;
+            // calling the smapled maxsat query
+  system(stringStream.str().c_str());
   // cout << " Stream maxsat execution time: " <<  duration_cast<std::chrono::microseconds>(current_time - start_time).count() / pow(10, 6) << endl;
   // assert(maxsat_formula->nSoft() == maxsat_formula->weight_sampler.size());
 }
