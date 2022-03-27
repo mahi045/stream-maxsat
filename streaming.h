@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <sstream>
 #include <unordered_set>
+#include <algorithm>
 
 using NSPACE::vec;
 using namespace openwbo;
@@ -21,6 +22,7 @@ void init_stream(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
     POOL_SIZE = min((uint64_t) (K * var / (eps * eps)), cla);
     BUCKET_SIZE = POOL_SIZE / R;
     maxsat_formula->occurance_list.growTo(2 * var + 1, 0.0);
+    maxsat_formula->occurance_F.resize(var + 1, 0.0);
     maxsat_formula->assignment.growTo(var + 1, l_Undef);
     maxsat_formula->var_bias.growTo(var + 1, 0);
     printf("Size of occurance list: %d\n", maxsat_formula->occurance_list.size());
@@ -95,6 +97,33 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             maxsat_formula->var_bias[var_ind/2] += w;
             if (maxsat_formula->hard_clause_identifier <= static_cast<uint64_t>(ceil(maxsat_formula->occurance_list[var_ind]))) {
                 maxsat_formula->hard_clause_identifier = static_cast<uint64_t>(ceil(maxsat_formula->occurance_list[var_ind]) + 2);
+            }
+            if (var_ind % 2 == 0) {
+                double f = maxsat_formula->occurance_list[var_ind] >= maxsat_formula->occurance_list[var_ind + 1] ? 
+                    (maxsat_formula->occurance_list[var_ind] / maxsat_formula->occurance_list[var_ind + 1]) :
+                    maxsat_formula->occurance_list[var_ind + 1] / maxsat_formula->occurance_list[var_ind];
+                maxsat_formula->occurance_F[var_ind/2] = f;
+                if (isinf(f))  {
+                    maxsat_formula->occurance_F[var_ind/2] = 
+                    maxsat_formula->occurance_list[var_ind] >= maxsat_formula->occurance_list[var_ind + 1] ? 
+                    maxsat_formula->occurance_list[var_ind] : maxsat_formula->occurance_list[var_ind + 1];
+                }
+                else {
+                    maxsat_formula->occurance_F[var_ind/2] = f;
+                }
+            }
+            else {
+                double f = maxsat_formula->occurance_list[var_ind] >= maxsat_formula->occurance_list[var_ind - 1] ? 
+                    (maxsat_formula->occurance_list[var_ind] / maxsat_formula->occurance_list[var_ind - 1]) :
+                    maxsat_formula->occurance_list[var_ind - 1] / maxsat_formula->occurance_list[var_ind];
+                if (isinf(f))  {
+                    maxsat_formula->occurance_F[var_ind/2] = 
+                    maxsat_formula->occurance_list[var_ind] >= maxsat_formula->occurance_list[var_ind - 1] ? 
+                    maxsat_formula->occurance_list[var_ind] : maxsat_formula->occurance_list[var_ind - 1];
+                }
+                else {
+                    maxsat_formula->occurance_F[var_ind/2] = f;
+                }
             }
             // if (maxsat_formula->hard_clause_identifier <= ceil(maxsat_formula->occurance_list[var(maxsat_formula->getSoftClause(i).clause[j])])) {
             //     assert(false);
@@ -273,6 +302,11 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 }
             }
             int c = 0;
+            vector<double> temp_f(maxsat_formula->occurance_F);
+            sort(temp_f.begin(), temp_f.end());
+            double f = temp_f[temp_f.size() * 0.75];
+            // cout << "Median value: " << f << endl; 
+            F = ceil(f);
             if (agreed.size() > 0 && use_hard) {
                 // adding agreed literals as hard clauses
                 for (auto lit_index = 0; lit_index < agreed.size(); lit_index++) {
