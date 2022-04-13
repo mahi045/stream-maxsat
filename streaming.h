@@ -429,6 +429,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                     maxsat_formula->addPoolClause(maxsat_formula->getSoftClause(cla_index).weight, 
                         maxsat_formula->getSoftClause(cla_index).clause);
                 }
+                // cout << "POOL_SIZE: " << POOL_SIZE << " " << "maxsat_formula->clause_seen_so_far: " << maxsat_formula->clause_seen_so_far << endl;
             }
             maxsat_formula->clause_seen_so_far += (i + 1);
             mpz_init(maxsat_formula->bucket_clause_weight);

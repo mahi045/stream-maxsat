@@ -90,9 +90,11 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
   vec<Lit> lits;
   uint64_t hard_weight = UINT64_MAX;
   uint64_t num_var, num_cla;
+  bool call_group_maxsat = false;
+  uint64_t group_number = 0;
   mpz_init_set_ui(maxsat_formula->clause_weight_sum, 0);
   mpz_init_set_ui(maxsat_formula->bucket_clause_weight, 0);
-  printf("Running bias heuristic with modified weight !!!\n");
+  printf("Running the group variant of stream maxsat !!!\n");
   start_time = std::chrono::high_resolution_clock::now();
   maxsat_formula->weight_sampler.clear();
   for (;;) {
@@ -118,9 +120,17 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
       } else
         printf("c PARSE ERROR! Unexpected char: %c\n", *in),
             printf("s UNKNOWN\n"), exit(_ERROR_);
-    } else if (*in == 'c' || *in == 'p')
+    } 
+    else if (eagerMatch(in, "c new group")) {
+      printf("A new group found: %d-th group !!!\n", ++group_number);
+      call_group_maxsat = true;
+      streaming_maxsat(maxsat_formula);
+      maxsat_formula->clearBucket();
+    }
+    else if (*in == 'c' || *in == 'p')
       skipLine(in);
     else {
+      call_group_maxsat = false;
       uint64_t weight = readClause(in, maxsat_formula, lits);
       if (weight < hard_weight ||
           maxsat_formula->getProblemType() == _UNWEIGHTED_) {
@@ -132,15 +142,19 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
         maxsat_formula->addSoftClause(weight, lits);
       } else
         maxsat_formula->addHardClause(lits);
-      if (!sampling_maxsat && (maxsat_formula->nSoft() > 0) && (maxsat_formula->nSoft() % BUCKET_SIZE == 0)) {
-        printf("%d-th bucket !! \n", maxsat_formula->nSoft() / BUCKET_SIZE);
-        streaming_maxsat(maxsat_formula);
-        maxsat_formula->clearBucket();
-      }
+      // if (!sampling_maxsat && (maxsat_formula->nSoft() > 0) && (maxsat_formula->nSoft() % BUCKET_SIZE == 0)) {
+      //   printf("%d-th bucket !! \n", maxsat_formula->nSoft() / BUCKET_SIZE);
+      //   streaming_maxsat(maxsat_formula);
+      //   maxsat_formula->clearBucket();
+      // }
     }
   }
-  if (!sampling_maxsat && maxsat_formula->nSoft() % BUCKET_SIZE > 0) {
-    printf("%d-th bucket !! \n", (maxsat_formula->nSoft() / BUCKET_SIZE) + 1);
+  // if (!sampling_maxsat && maxsat_formula->nSoft() % BUCKET_SIZE > 0) {
+  //   printf("%d-th bucket !! \n", (maxsat_formula->nSoft() / BUCKET_SIZE) + 1);
+  //   streaming_maxsat(maxsat_formula);
+  // }
+  if (!call_group_maxsat && maxsat_formula->nSoft() > 0) {
+    printf("A new group found: %d-th (last) group !!!\n", ++group_number);
     streaming_maxsat(maxsat_formula);
   }
   printf("Sum of weight: %s\n", mpz_get_str (NULL, 10, maxsat_formula->clause_weight_sum));
