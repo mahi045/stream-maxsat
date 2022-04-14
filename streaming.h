@@ -305,11 +305,11 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 }
             }
             int c = 0;
-            vector<double> temp_f(maxsat_formula->occurance_F);
-            sort(temp_f.begin(), temp_f.end());
-            double f = temp_f[temp_f.size() * 0.75];
+            // vector<double> temp_f(maxsat_formula->occurance_F);
+            // sort(temp_f.begin(), temp_f.end());
+            // double f = temp_f[temp_f.size() * 0.75];
             // cout << "Median value: " << f << endl; 
-            F = ceil(f);
+            // F = ceil(f);
             if (agreed.size() > 0 && use_hard) {
                 // adding agreed literals as hard clauses
                 for (auto lit_index = 0; lit_index < agreed.size(); lit_index++) {
@@ -383,13 +383,26 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 }
             } 
             assignfile.close();
-
-            if (maxsat_formula->clause_seen_so_far + BUCKET_SIZE > POOL_SIZE) {
+            cout << "maxsat_formula->nSoft(): " << maxsat_formula->nSoft() << " POOL_SIZE: " << POOL_SIZE << endl;
+            if (maxsat_formula->nSoft() > POOL_SIZE) {
                 // this clauses will be replaced
                 // int clause_need_replace = ((double) (BUCKET_SIZE) / (BUCKET_SIZE + maxsat_formula->clause_seen_so_far)) * maxsat_formula->nPool();
+                uint64_t clauses_added_pool = 0;
+                if (maxsat_formula->nSoft() - maxsat_formula->numberOfGroupClauses() < POOL_SIZE) {
+                    cout << "remaining clauses: " << POOL_SIZE + maxsat_formula->numberOfGroupClauses() - maxsat_formula->nSoft() << endl;
+                    for (auto cla_index = 0; cla_index != POOL_SIZE + maxsat_formula->numberOfGroupClauses() - maxsat_formula->nSoft() + 1; cla_index++) {
+                        maxsat_formula->addPoolClause(maxsat_formula->getSoftClause(cla_index).weight, 
+                            maxsat_formula->getSoftClause(cla_index).clause);
+                        // need some update as the clauses goes to pool
+                        mpz_sub_ui(maxsat_formula->bucket_clause_weight, maxsat_formula->bucket_clause_weight, 
+                            maxsat_formula->getSoftClause(cla_index).weight);
+                        clauses_added_pool++;
+                    }
+                }
+                
                 int clause_need_replace = ceil(((double) (mpz_get_d(maxsat_formula->bucket_clause_weight)) / (mpz_get_d(maxsat_formula->clause_weight_sum))) 
                     * maxsat_formula->nPool());
-                int remaining_clause = BUCKET_SIZE;
+                int remaining_clause = bound - clauses_added_pool;
                 // cout << "clause_need_replace: " << clause_need_replace << endl;
                 clause_need_replace = min(clause_need_replace, bound);
                 // cout << "clause_need_replace: " << clause_need_replace << endl;
