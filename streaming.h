@@ -395,7 +395,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                             maxsat_formula->getSoftClause(cla_index).clause);
                         // need some update as the clauses goes to pool
                         mpz_sub_ui(maxsat_formula->bucket_clause_weight, maxsat_formula->bucket_clause_weight, 
-                            maxsat_formula->getSoftClause(cla_index).weight);
+                            maxsat_formula->getSoftClause(cla_index).weight/pow(1 + alpha, maxsat_formula->getSoftClause(cla_index).clause.size() - 1));
                         clauses_added_pool++;
                     }
                 }
