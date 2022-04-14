@@ -144,6 +144,8 @@ public:
 
   /*! clear the bucket. */
   void clearBucket();
+  /*! number of group clauses. */
+  int numberOfGroupClauses();
 
   /*! Add a new pool clause. */
   void addPoolClause(uint64_t weight, vec<Lit> &lits);

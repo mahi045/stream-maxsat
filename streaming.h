@@ -72,7 +72,8 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     int var_ind = 0;
     double bias_thre, gamma;
     int bucket_index = maxsat_formula->nSoft() / BUCKET_SIZE - 1;
-    int bound = (maxsat_formula->nSoft() % BUCKET_SIZE) ? maxsat_formula->nSoft() % BUCKET_SIZE : BUCKET_SIZE;
+    int bound = maxsat_formula->numberOfGroupClauses();  // it is special case for group maxsat
+    cout << "maxsat_formula->nSoft(): " << maxsat_formula->numberOfGroupClauses() << endl;
     for (int i = 0; i < bound; i++) {
         for (int j = 0; j < maxsat_formula->getSoftClause(i).clause.size(); j++) {
             w = (double) maxsat_formula->getSoftClause(i).weight / pow(2, maxsat_formula->getSoftClause(i).clause.size() - 1);
@@ -129,14 +130,16 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             //     assert(false);
             // }
         }
-        if (!(i % BUCKET_SIZE)) {
+        if (i == 0) {
             bucket_start = i;
             myfile.open(stream_maxsat_file);
             poolfile.open(pool_stream_maxsat_file);
         }
-        if (!((i + 1) % BUCKET_SIZE) || i + 1 == bound) {
-            myfile << "p wcnf " + to_string(maxsat_formula->nVars()) + " " + to_string(BUCKET_SIZE) + " " + to_string(maxsat_formula->hard_clause_identifier) << endl;
-            poolfile << "p wcnf " + to_string(maxsat_formula->nVars()) + " " + to_string(BUCKET_SIZE) + " " + to_string(maxsat_formula->hard_clause_identifier) << endl;
+        if (i + 1 == bound) {
+            myfile << "p wcnf " + to_string(maxsat_formula->nVars()) + " " + to_string(maxsat_formula->numberOfGroupClauses()) + " " + to_string(maxsat_formula->hard_clause_identifier) << endl;
+            poolfile << "p wcnf " + to_string(maxsat_formula->nVars()) + " " + to_string(maxsat_formula->numberOfGroupClauses()) + " " + to_string(maxsat_formula->hard_clause_identifier) << endl;
+            // it cout is ok !!
+            // cout << "bucket_start: " << bucket_start << " , i: " << i << endl;
             for (auto start_index = bucket_start; start_index <= i;
                  start_index++) {
                 myfile << maxsat_formula->getSoftClause(start_index).weight << " ";
@@ -229,13 +232,13 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             }
             myfile.close();
             stringStream.str("");
-            current_time = std::chrono::high_resolution_clock::now();
-            remaining_buckets = (nbuckets - maxsat_formula->nSoft() / BUCKET_SIZE + 1);
-            remaining_time =  current_time - start_time;
-            remaining_time_second = ceil((TIMEOUT - remaining_time.count()) / (remaining_buckets + remaining_buckets));
-            timeout = min(SMALL_TIMEOUT, remaining_time_second);
-            timeout = (timeout == 0) ? 10 : timeout;
-            cout << "Calling maxsat query from clause = " << bucket_start + bucket_index * BUCKET_SIZE << " to clause = " << i + bucket_index * BUCKET_SIZE << endl;
+            // current_time = std::chrono::high_resolution_clock::now();
+            // remaining_buckets = (nbuckets - maxsat_formula->nSoft() / BUCKET_SIZE + 1);
+            // remaining_time =  current_time - start_time;
+            // remaining_time_second = ceil((TIMEOUT - remaining_time.count()) / (remaining_buckets + remaining_buckets));
+            // timeout = min(SMALL_TIMEOUT, remaining_time_second);
+            timeout = SMALL_TIMEOUT;
+            cout << "Calling maxsat query from clause = " << maxsat_formula->nSoft() - i << " to clause = " << maxsat_formula->nSoft() << endl;
             stringStream << "./open-wbo_static -print-model -cpu-lim=" << timeout << " " + stream_maxsat_file + " > " + "result_" + stream_maxsat_file;
             // calling the smapled maxsat query
             system(stringStream.str().c_str());
