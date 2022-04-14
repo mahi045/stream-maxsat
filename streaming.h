@@ -235,7 +235,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             remaining_time_second = ceil((TIMEOUT - remaining_time.count()) / (remaining_buckets + remaining_buckets));
             timeout = min(SMALL_TIMEOUT, remaining_time_second);
             timeout = (timeout == 0) ? 10 : timeout;
-            cout << "Calling maxsat query from clause = " << bucket_start + bucket_index * BUCKET_SIZE << " to clause = " << i + bucket_index * BUCKET_SIZE << endl;
+            cout << "Calling maxsat query from clause = " << bucket_start + bucket_index * BUCKET_SIZE << " to clause = " << i + bucket_index * BUCKET_SIZE << " timeout:" << timeout << endl;
             stringStream << "./open-wbo_static -print-model -cpu-lim=" << timeout << " " + stream_maxsat_file + " > " + "result_" + stream_maxsat_file;
             // calling the smapled maxsat query
             system(stringStream.str().c_str());
@@ -341,6 +341,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 remaining_time_second = ceil((TIMEOUT - remaining_time.count()) / (remaining_buckets + remaining_buckets - 1));
                 timeout = min(SMALL_TIMEOUT, remaining_time_second);
                 timeout = (timeout == 0) ? 10 : timeout;
+                cout << "The timeout for second maxsat: " << timeout << endl;
                 stringStream.str("");
                 stringStream << "./open-wbo_static -print-model -cpu-lim=" << timeout << " " <<
                                   stream_maxsat_file + " > " + "result_" + stream_maxsat_file;
