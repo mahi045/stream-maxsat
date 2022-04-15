@@ -246,6 +246,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             result_file_name = "result_" + stream_maxsat_file;
             ifstream resultfile2(result_file_name);
             bool no_assign = false;
+            cout << "It enters the loop !!!" << endl;
             while (getline(resultfile2, line)) {
                 if (line.rfind("v ") == 0) {
                     no_assign = true;
