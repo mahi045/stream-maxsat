@@ -230,7 +230,7 @@ int main(int argc, char **argv) {
        IntOption Timeout_value("Open-WBO", "timeout",
                             "the value of timeout "
                             "\n",
-                            10, IntRange(1, 10000));
+                            10, IntRange(1, 20000));
        IntOption Immediate_timeout_value("Open-WBO", "small-timeout",
                             "the value of small timeout "
                             "\n",
