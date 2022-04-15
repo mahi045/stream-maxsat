@@ -322,8 +322,9 @@ void MaxSATFormula::convertPBtoMaxSAT() {
   else
     setProblemType(_WEIGHTED_);
 }
-unordered_set<uint32_t> MaxSATFormula::pick_k_clauses(int k, bool reverse = false) {
+unordered_set<uint32_t> MaxSATFormula::pick_k_clauses(int k, bool reverse = false, uint64_t off = 0) {
   int rnd_max = weight_sampler.size();
+  cout << rnd_max << " " << k << endl;
     int ntake = k;
 
     if (reverse == false) {
@@ -333,14 +334,14 @@ unordered_set<uint32_t> MaxSATFormula::pick_k_clauses(int k, bool reverse = fals
     }
 
     /* determine smallest power of two that is larger than N */
-    int tree_levels = ceil(log2((double) rnd_max));
+    int tree_levels = ceil(log2((double) (rnd_max - off + 1)));
 
     /* initialize vector with place-holders for perfectly-balanced tree */
     std::vector<double> tree_weights(pow2(tree_levels + 1));
 
     /* compute sums for the tree leaves at each node */
     int offset = pow2(tree_levels) - 1;
-    for (int ix = 0; ix < rnd_max; ix++) {
+    for (int ix = off; ix < rnd_max; ix++) {
         tree_weights[ix + offset] = weight_sampler[ix];
     }
     for (int ix = pow2(tree_levels+1) - 1; ix > 0; ix--) {

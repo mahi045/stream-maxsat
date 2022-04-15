@@ -52,7 +52,7 @@ void sample_clauses(MaxSATFormula *maxsat_formula) {
     else if (maxsat_formula->nSoft() - POOL_SIZE < POOL_SIZE) {
         std::iota(b.begin(), b.end(), 0);
         vector<int> temp_b = vector<int>();
-        in_pool = maxsat_formula->pick_k_clauses(maxsat_formula->nSoft() - POOL_SIZE, false);
+        in_pool = maxsat_formula->pick_k_clauses(maxsat_formula->nSoft() - POOL_SIZE, false, 0);
         // cout << in_pool.size() << " " << b.size() << " ";
         for (auto itr = b.begin(); itr != b.end(); ++itr) {
             if (in_pool.find(*itr) == in_pool.end()) {
@@ -65,7 +65,7 @@ void sample_clauses(MaxSATFormula *maxsat_formula) {
     }
     else {
         b.clear();
-        in_pool = maxsat_formula->pick_k_clauses(POOL_SIZE, true);
+        in_pool = maxsat_formula->pick_k_clauses(POOL_SIZE, true, 0);
         for (auto itr = in_pool.begin(); itr != in_pool.end(); ++itr) {
             b.push_back(*itr);
         }

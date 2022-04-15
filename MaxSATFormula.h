@@ -128,7 +128,7 @@ public:
   vec<lbool> assignment;
   vector<uint32_t> weight_sampler;
   vector<uint32_t> weight_pool;
-  unordered_set<uint32_t> pick_k_clauses(int k, bool reversed);
+  unordered_set<uint32_t> pick_k_clauses(int k, bool reversed, uint64_t off);
   unordered_set<uint32_t> pick_k_clauses_from_pool(int k);
   void status_pool();
   uint32_t clause_seen_so_far = 0;

@@ -411,13 +411,13 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                     clause_need_replace = ((double) (remaining_clause) / (remaining_clause + maxsat_formula->clause_seen_so_far)) * maxsat_formula->nPool();
                 }
                 unordered_set<uint32_t> replaced_clause_pool = maxsat_formula->pick_k_clauses_from_pool(clause_need_replace);
-                unordered_set<uint32_t> replaced_clause_bucket = maxsat_formula->pick_k_clauses(clause_need_replace, true);
+                unordered_set<uint32_t> replaced_clause_bucket = maxsat_formula->pick_k_clauses(clause_need_replace, true, clauses_added_pool);
                 cout << " From bucket index " << bound - maxsat_formula->numberOfGroupClauses() << " to " << bound << " => ";
                 auto start_itr1 = replaced_clause_pool.begin();
                 auto start_itr2 = replaced_clause_bucket.begin();
-                // cout << "replaced_clause_pool.size(): " << replaced_clause_pool.size() << endl;
-                // cout << "replaced_clause_bucket.size(): " << replaced_clause_bucket.size() << endl;
-                // cout << "clause_need_replace: " << clause_need_replace << endl;
+                cout << "replaced_clause_pool.size(): " << replaced_clause_pool.size() << endl;
+                cout << "replaced_clause_bucket.size(): " << replaced_clause_bucket.size() << endl;
+                cout << "clause_need_replace: " << clause_need_replace << endl;
                 assert(replaced_clause_pool.size() == replaced_clause_bucket.size());
                 for (;start_itr1 != replaced_clause_pool.end(); start_itr1++, start_itr2++) {
                     // index_bucket = *start_itr2 + maxsat_formula->clause_seen_so_far - 1;
