@@ -412,7 +412,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 }
                 unordered_set<uint32_t> replaced_clause_pool = maxsat_formula->pick_k_clauses_from_pool(clause_need_replace);
                 unordered_set<uint32_t> replaced_clause_bucket = maxsat_formula->pick_k_clauses(clause_need_replace, true);
-                cout << " From bucket index " << bucket_start + bucket_index * BUCKET_SIZE << " to " << i + bucket_index * BUCKET_SIZE << " => ";
+                cout << " From bucket index " << bound - maxsat_formula->numberOfGroupClauses() << " to " << bound << " => ";
                 auto start_itr1 = replaced_clause_pool.begin();
                 auto start_itr2 = replaced_clause_bucket.begin();
                 // cout << "replaced_clause_pool.size(): " << replaced_clause_pool.size() << endl;
