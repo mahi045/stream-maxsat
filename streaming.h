@@ -235,10 +235,9 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             remaining_time_second = ceil((TIMEOUT - remaining_time.count()) / (remaining_buckets + remaining_buckets));
             timeout = min(SMALL_TIMEOUT, remaining_time_second);
             timeout = (timeout == 0) ? 10 : timeout;
-            cout << "Calling maxsat query from clause = " << bucket_start + bucket_index * BUCKET_SIZE << " to clause = " << i + bucket_index * BUCKET_SIZE << " timeout:" << timeout << endl;
+            cout << "Calling maxsat query from clause = " << bucket_start + bucket_index * BUCKET_SIZE << " to clause = " << i + bucket_index * BUCKET_SIZE << endl;
             stringStream << "./open-wbo_static -print-model -cpu-lim=" << timeout << " " + stream_maxsat_file + " > " + "result_" + stream_maxsat_file;
             // calling the smapled maxsat query
-            cout << stringStream.str() << endl;
             system(stringStream.str().c_str());
 
             // reading the recent maxsat call
@@ -247,7 +246,6 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             result_file_name = "result_" + stream_maxsat_file;
             ifstream resultfile2(result_file_name);
             bool no_assign = false;
-            cout << "It enters the loop !!!" << endl;
             while (getline(resultfile2, line)) {
                 if (line.rfind("v ") == 0) {
                     no_assign = true;
@@ -282,7 +280,6 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 }
             }
             resultfile2.close();
-            cout << " Come out from this loop !!!" << endl;
             if (!no_assign) {
                 cout << " I found no assignment";
                 exit(1);
@@ -344,7 +341,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 remaining_time_second = ceil((TIMEOUT - remaining_time.count()) / (remaining_buckets + remaining_buckets - 1));
                 timeout = min(SMALL_TIMEOUT, remaining_time_second);
                 timeout = (timeout == 0) ? 10 : timeout;
-                cout << "The timeout for second maxsat: " << timeout << endl;
+                // cout << "The timeout for second maxsat: " << timeout << endl;
                 stringStream.str("");
                 stringStream << "./open-wbo_static -print-model -cpu-lim=" << timeout << " " <<
                                   stream_maxsat_file + " > " + "result_" + stream_maxsat_file;
