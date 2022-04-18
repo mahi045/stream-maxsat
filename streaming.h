@@ -302,11 +302,11 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 }
             }
             int c = 0;
-            // vector<double> temp_f(maxsat_formula->occurance_F);
-            // sort(temp_f.begin(), temp_f.end());
-            // double f = temp_f[temp_f.size() * 0.75];
+            vector<double> temp_f(maxsat_formula->occurance_F);
+            sort(temp_f.begin(), temp_f.end());
+            double f = temp_f[temp_f.size() * 0.75];
             // cout << "Median value: " << f << endl; 
-            // F = ceil(f);
+            F = ceil(f);
             if (agreed.size() > 0 && use_hard) {
                 // adding agreed literals as hard clauses
                 for (auto lit_index = 0; lit_index < agreed.size(); lit_index++) {
