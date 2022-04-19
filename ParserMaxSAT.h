@@ -272,6 +272,8 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
   printf("Lower bound of MaxSAT: %ju\n", sum);
   assignfile.open("result_k_maxsat_" + file_name);
   assignfile << "v ";
+  printf("Sum of weight: %s\n", mpz_get_str (NULL, 10, maxsat_formula->clause_weight_sum));
+  printf("Sum of unsat weight: %s\n", mpz_get_str (NULL, 10, maxsat_formula->unsat_weight));
   // printf("v");
   if (maxsat_formula->bias > bias_thre) {
     for (uint32_t k = 1; k <= maxsat_formula->nVars(); k++) {
@@ -290,7 +292,7 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
     int in = 0;
     for (uint32_t k = 1; k <= maxsat_formula->nVars(); k++) {
       if (maxsat_formula->var_bias[k] >= 0) {
-        if(var[in] == k) {
+        if(in < var.size() && var[in] == k) {
           assignfile << "-" << k << " ";
           in++;
         }
@@ -298,7 +300,7 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
           assignfile << k << " ";
       }
       else {
-        if(var[in] == k) {
+        if(in < var.size() && var[in] == k) {
           assignfile << k << " ";
           in++;
         }
@@ -312,8 +314,7 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
   //   printf("%d-th bucket !! \n", (maxsat_formula->nSoft() / BUCKET_SIZE) + 1);
   //   streaming_maxsat(maxsat_formula);
   // }
-  printf("Sum of weight: %s\n", mpz_get_str (NULL, 10, maxsat_formula->clause_weight_sum));
-  printf("Sum of unsat weight: %s\n", mpz_get_str (NULL, 10, maxsat_formula->unsat_weight));
+  
   std::cout << "Here is the clause pool: " << std::endl;
   for (auto &x : maxsat_formula->weight_map) {
     std::cout << "(weight:" << x.first.first << ", len:" << x.first.second

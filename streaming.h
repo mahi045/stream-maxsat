@@ -35,8 +35,8 @@ double bias_threshold(MaxSATFormula *maxsat_formula) {
         if (maxsat_formula->m[k] == 0) {
             continue;
         }
-        coff = (double) (pow(2, k) - k - 1) / (pow(2, k-2));
-        sum += coff * maxsat_formula->m[k];
+        // coff = (double) (pow(2, k) - k - 1) / (pow(2, k-2));
+        sum += 4 * maxsat_formula->m[k]; // simplication done
     }
     return sum;
 }
