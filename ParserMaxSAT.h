@@ -181,7 +181,7 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
       skipLine(in);
     else {
       uint64_t weight = readClause(in, maxsat_formula, lits);
-      if (weight < hard_weight - 1)
+      if (!ignore_hard || weight < hard_weight - 1)
         mpz_add_ui(maxsat_formula->clause_weight_sum, maxsat_formula->clause_weight_sum, weight);
       if (maxsat_formula->m.size() < lits.size() + 1)
       {
@@ -226,7 +226,7 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
           maxsat_formula->unsat_clauses[std::make_pair(weight, len)] =
               maxsat_formula->unsat_clauses[std::make_pair(weight, len)] + 1;
         }
-        if (weight < hard_weight - 1)
+        if (!ignore_hard || weight < hard_weight - 1)
           mpz_add_ui(maxsat_formula->unsat_weight, maxsat_formula->unsat_weight,
                     weight);
       }

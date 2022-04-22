@@ -10,5 +10,6 @@ std::string result_file_name;
 
 unsigned TIMEOUT = 9990;
 unsigned SMALL_TIMEOUT = 1000;
+bool ignore_hard = false;
 
 #endif

@@ -237,12 +237,14 @@ int main(int argc, char **argv) {
                         0.25);
     StringOption assignment("Open-WBO", "assign", "assignment file \n", NULL);
     BoolOption sampling("WBO", "sampling", "Symmetry breaking.\n", false);
+    BoolOption ignoreHardWeight("WBO", "hard-ignore", "Ignore the hard clauses.\n", false);
     parseOptions(argc, argv, true);
     R = (int)R_value;
     K = (int)K_value;
     eps = (double)epsilon;
     TIMEOUT = (int) Timeout_value;
     SMALL_TIMEOUT = (int) Immediate_timeout_value;
+    ignore_hard = (bool) ignoreHardWeight;
 
     printf("R_value: %d\n", R);
     printf("K_value: %d\n", K);
