@@ -247,6 +247,10 @@ int main(int argc, char **argv) {
                         "the value of alpha "
                         "\n",
                         0.1);
+    Glucose::DoubleOption percentile("Open-WBO", "percentile",
+                        "the value of npercentile "
+                        "\n",
+                        0.75);                    
     IntOption c_p("Open-WBO", "clause_policy",
                         "the selection of clause policy "
                         "\n",
@@ -255,6 +259,7 @@ int main(int argc, char **argv) {
     BoolOption print_verbose("WBO", "print-verbose", "Printing the verbose.\n", false);
     BoolOption pool_c("WBO", "pool", "use pool.\n", true);
     BoolOption hard_c("WBO", "conflict", "adding the non-conflict variables.\n", true);
+    BoolOption use_median("WBO", "median", "use median as F.\n", true);
     parseOptions(argc, argv, true);
     R = (int)R_value;
     K = (int)K_value;
@@ -266,6 +271,9 @@ int main(int argc, char **argv) {
     use_pool = (bool) pool_c;
 
     heparam = (double) hp;
+    npercentile = (double) percentile;
+    median_heu = (bool) use_median;
+
     TIMEOUT = (int) Timeout_value;
     SMALL_TIMEOUT = (int) Immediate_timeout_value;
 
