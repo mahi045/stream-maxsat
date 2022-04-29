@@ -25,7 +25,9 @@ void init_stream(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
     if (median_heu)
         maxsat_formula->occurance_F.resize(var + 1, 0.0);
     maxsat_formula->assignment.growTo(var + 1, l_Undef);
-    maxsat_formula->var_bias.growTo(var + 1, 0);
+    if (decision_heu) {
+        maxsat_formula->var_bias.growTo(var + 1, 0);
+    }
     printf("Size of occurance list: %d\n", maxsat_formula->occurance_list.size());
     printf("Size of assignment list: %d\n", maxsat_formula->assignment.size());
     maxsat_formula->weight_pool.clear();
@@ -76,14 +78,16 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     int bound = (maxsat_formula->nSoft() % BUCKET_SIZE) ? maxsat_formula->nSoft() % BUCKET_SIZE : BUCKET_SIZE;
     for (int i = 0; i < bound; i++) {
         for (int j = 0; j < maxsat_formula->getSoftClause(i).clause.size(); j++) {
-            w = (double) maxsat_formula->getSoftClause(i).weight / pow(2, maxsat_formula->getSoftClause(i).clause.size() - 1);
-            w_adj = (double) maxsat_formula->getSoftClause(i).weight / pow(1.1, maxsat_formula->getSoftClause(i).clause.size() - 1);
-            if (maxsat_formula->m.size() < maxsat_formula->getSoftClause(i).clause.size() + 1) {
-                maxsat_formula->m.resize(maxsat_formula->getSoftClause(i).clause.size() + 1, 0);
-                maxsat_formula->m[maxsat_formula->getSoftClause(i).clause.size()] = maxsat_formula->getSoftClause(i).weight;
-            }
-            else {
-                maxsat_formula->m[maxsat_formula->getSoftClause(i).clause.size()] += maxsat_formula->getSoftClause(i).weight;
+            // w = (double) maxsat_formula->getSoftClause(i).weight / pow(2, maxsat_formula->getSoftClause(i).clause.size() - 1);
+            // w_adj = (double) maxsat_formula->getSoftClause(i).weight / pow(1.1, maxsat_formula->getSoftClause(i).clause.size() - 1);
+            if (decision_heu) {
+                if (maxsat_formula->m.size() < maxsat_formula->getSoftClause(i).clause.size() + 1) {
+                    maxsat_formula->m.resize(maxsat_formula->getSoftClause(i).clause.size() + 1, 0);
+                    maxsat_formula->m[maxsat_formula->getSoftClause(i).clause.size()] = maxsat_formula->getSoftClause(i).weight;
+                }
+                else {
+                    maxsat_formula->m[maxsat_formula->getSoftClause(i).clause.size()] += maxsat_formula->getSoftClause(i).weight;
+                }
             }
             var_ind = var(maxsat_formula->getSoftClause(i).clause[j]) * 2;
             if (sign(maxsat_formula->getSoftClause(i).clause[j])) {
@@ -94,10 +98,15 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             if (sign(maxsat_formula->getSoftClause(i).clause[j])) {
                 w *= -1;
             }
-            maxsat_formula->bias += (abs(maxsat_formula->var_bias[var_ind/2] + w) - abs(maxsat_formula->var_bias[var_ind/2]));
-            maxsat_formula->var_bias[var_ind/2] += w;
+            if (decision_heu) {
+                maxsat_formula->bias += (abs(maxsat_formula->var_bias[var_ind/2] + w) - abs(maxsat_formula->var_bias[var_ind/2]));
+                maxsat_formula->var_bias[var_ind/2] += w;
+            }
             if (maxsat_formula->hard_clause_identifier <= static_cast<uint64_t>(ceil(maxsat_formula->occurance_list[var_ind]))) {
                 maxsat_formula->hard_clause_identifier = static_cast<uint64_t>(ceil(maxsat_formula->occurance_list[var_ind]) + 2);
+            }
+            if (maxsat_formula->hard_clause_identifier <= maxsat_formula->getSoftClause(i).weight) {
+                maxsat_formula->hard_clause_identifier = maxsat_formula->getSoftClause(i).weight + 1;
             }
             // the median heuristic was here
             if (median_heu) {
@@ -241,7 +250,8 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             remaining_time =  current_time - start_time;
             remaining_time_second = ceil((TIMEOUT - remaining_time.count()) / (remaining_buckets + remaining_buckets));
             timeout = min(SMALL_TIMEOUT, remaining_time_second);
-            timeout = (timeout == 0) ? 10 : timeout;
+            timeout = (timeout < 0) ? 25 : timeout;
+            cout << "timeout: " << timeout << endl;
             cout << "Calling maxsat query from clause = " << bucket_start + bucket_index * BUCKET_SIZE << " to clause = " << i + bucket_index * BUCKET_SIZE << endl;
             stringStream << "./open-wbo_static -print-model -cpu-lim=" << timeout << " " + stream_maxsat_file + " > " + "result_" + stream_maxsat_file;
             // calling the smapled maxsat query
