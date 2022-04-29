@@ -24,4 +24,5 @@ static bool use_pool = true;
 static bool use_hard = true;
 
 static std::chrono::high_resolution_clock::time_point start_time;
+static int number_of_no_assignment = 0;
 #endif

@@ -301,7 +301,9 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             resultfile2.close();
             if (!no_assign) {
                 cout << " I found no assignment";
-                exit(1);
+                // exit(1);
+                number_of_no_assignment++;
+                cout << "c The number of no assignment is: " << number_of_no_assignment << endl;
             }
             if (!use_pool) {
                 maxsat_formula->clause_seen_so_far += (i + 1);
