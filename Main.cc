@@ -259,6 +259,7 @@ int main(int argc, char **argv) {
     BoolOption print_verbose("WBO", "print-verbose", "Printing the verbose.\n", false);
     BoolOption pool_c("WBO", "pool", "use pool.\n", true);
     BoolOption hard_c("WBO", "conflict", "adding the non-conflict variables.\n", true);
+    BoolOption decision_c("WBO", "decision", "enable decision heuristic.\n", false);
     BoolOption use_median("WBO", "median", "use median as F.\n", true);
     parseOptions(argc, argv, true);
     R = (int)R_value;
@@ -269,6 +270,7 @@ int main(int argc, char **argv) {
     clause_policy = (int)c_p; 
     use_hard = (bool) hard_c;
     use_pool = (bool) pool_c;
+    decision_heu = (bool) decision_c;
 
     heparam = (double) hp;
     npercentile = (double) percentile;

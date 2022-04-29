@@ -141,30 +141,32 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
         }
         if (!((i + 1) % BUCKET_SIZE) || i + 1 == bound) {
             myfile << "p wcnf " + to_string(maxsat_formula->nVars()) + " " + to_string(BUCKET_SIZE) + " " + to_string(maxsat_formula->hard_clause_identifier) << endl;
-            poolfile << "p wcnf " + to_string(maxsat_formula->nVars()) + " " + to_string(BUCKET_SIZE) + " " + to_string(maxsat_formula->hard_clause_identifier) << endl;
+            if (use_pool) poolfile << "p wcnf " + to_string(maxsat_formula->nVars()) + " " + to_string(BUCKET_SIZE) + " " + to_string(maxsat_formula->hard_clause_identifier) << endl;
             for (auto start_index = bucket_start; start_index <= i;
                  start_index++) {
                 myfile << maxsat_formula->getSoftClause(start_index).weight << " ";
-                poolfile << maxsat_formula->getSoftClause(start_index).weight << " ";
+                if (use_pool) poolfile << maxsat_formula->getSoftClause(start_index).weight << " ";
                 for (int j = 0;
                     j < maxsat_formula->getSoftClause(start_index).clause.size(); j++) {
                         if (sign(maxsat_formula->getSoftClause(start_index).clause[j])) {
                         myfile << "-";
-                        poolfile << "-";
+                        if (use_pool) poolfile << "-";
                         }
                         myfile << var(maxsat_formula->getSoftClause(start_index).clause[j]) + 1
                             << " ";
-                        poolfile << var(maxsat_formula->getSoftClause(start_index).clause[j]) + 1
+                        if (use_pool) poolfile << var(maxsat_formula->getSoftClause(start_index).clause[j]) + 1
                             << " ";
                 }
                 myfile << "0" << endl;
-                poolfile << "0" << endl;
+                if (use_pool) poolfile << "0" << endl;
             }
-            bias_thre = bias_threshold(maxsat_formula);
-            gamma = 0;
-            if (maxsat_formula->bias <= bias_thre) {
-                gamma = (double) ((maxsat_formula->bias) / (2 * bias_thre));
-                gamma += 0.5;
+            if (decision_heu) {
+                bias_thre = bias_threshold(maxsat_formula);
+                gamma = 0;
+                if (maxsat_formula->bias <= bias_thre) {
+                    gamma = (double) ((maxsat_formula->bias) / (2 * bias_thre));
+                    gamma += 0.5;
+                }
             }
             double alpha = pow(M_E, -heparam * bucket_index);
             for (int variable = 1; variable <= maxsat_formula->nVars(); variable++) {
@@ -198,7 +200,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                     //     }
                     // }
                     // disable assignment heuristic
-                    if (!use_pool) {
+                    if (!use_pool && decision_heu) {
                         if (maxsat_formula->bias > bias_thre) {
                             if (maxsat_formula->assignment[variable] == l_True) {
                                 if (maxsat_formula->var_bias[variable - 1] > 0) {
@@ -263,21 +265,23 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                         if (variable != "v") {
                             lit = stoi(variable);
                             if (lit < 0) {
-                                if (maxsat_formula->assignment[abs(lit)] == l_True) {
+                                if (use_pool && maxsat_formula->assignment[abs(lit)] == l_True) {
                                     incompatible.push(lit);
                                 }
                                 else {
                                     maxsat_formula->assignment[abs(lit)] = l_False;
-                                    agreed.push(lit);
+                                    if (use_pool)
+                                        agreed.push(lit);
                                 }
                             }
                             else {
-                                if (maxsat_formula->assignment[lit] == l_False) {
+                                if (use_pool && maxsat_formula->assignment[lit] == l_False) {
                                     incompatible.push(lit);
                                 }
                                 else {
                                     maxsat_formula->assignment[lit] = l_True;
-                                    agreed.push(lit);
+                                    if (use_pool)
+                                        agreed.push(lit);
                                 }
                             }
                         }
@@ -289,8 +293,22 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 cout << " I found no assignment";
                 exit(1);
             }
-            
-            
+            if (!use_pool) {
+                maxsat_formula->clause_seen_so_far += (i + 1);
+                assignfile.open("result_" + stream_maxsat_file);
+                assignfile << "v ";
+                for (int variable = 1; variable <= maxsat_formula->nVars(); variable++) {
+                    if (maxsat_formula->assignment[variable] == l_True) {
+                        assignfile << variable << " ";
+                    } else if (maxsat_formula->assignment[variable] == l_False) {
+                        assignfile << -variable << " ";
+                    }
+                }
+                assignfile.close();
+                cout << " Not using the pool " << endl;
+                return;
+            }
+
             if (incompatible.size() > 0) {
                 // now invoking maxsat query again
                 // myfile.open(stream_maxsat_file, std::ios_base::app);

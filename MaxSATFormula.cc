@@ -81,13 +81,13 @@ void MaxSATFormula::addSoftClause(uint64_t weight, vec<Lit> &lits) {
   vec<Lit> copy_lits;
   lits.copyTo(copy_lits);
   if (clause_policy == 0) {
-    weight_sampler.push_back(1);
+    if (use_pool) weight_sampler.push_back(1);
   }
   else if (clause_policy == 1) {
-    weight_sampler.push_back(weight);
+    if (use_pool) weight_sampler.push_back(weight);
   }
   else {
-    weight_sampler.push_back(w);
+    if (use_pool) weight_sampler.push_back(w);
   }
   new (&soft_clauses[soft_clauses.size() - 1])
       Soft(copy_lits, weight, assump, vars);
@@ -165,13 +165,13 @@ void MaxSATFormula::addSoftClause(uint64_t weight, vec<Lit> &lits,
   vec<Lit> copy_lits;
   lits.copyTo(copy_lits);
   if (clause_policy == 0) {
-    weight_sampler.push_back(1);
+    if (use_pool) weight_sampler.push_back(1);
   }
   else if (clause_policy == 1) {
-    weight_sampler.push_back(weight);
+    if (use_pool) weight_sampler.push_back(weight);
   }
   else {
-    weight_sampler.push_back(w);
+    if (use_pool) weight_sampler.push_back(w);
   }
   new (&soft_clauses[soft_clauses.size() - 1])
       Soft(copy_lits, weight, assump, vars);
