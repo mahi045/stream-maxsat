@@ -15,7 +15,7 @@ static double heparam = 0;
 static int clause_policy = 2;
 static bool median_heu = true;
 static bool decision_heu = true;
-static double npercentile = 0.75;
+static double npercentile = 0.5;
 
 static unsigned TIMEOUT = 9990;
 static unsigned SMALL_TIMEOUT = 1000;
