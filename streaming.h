@@ -18,6 +18,31 @@ using NSPACE::vec;
 using namespace openwbo;
 using namespace std;
 
+int parseLine(char* line){
+    // This assumes that a digit will be found and the line ends in " Kb".
+    int i = strlen(line);
+    const char* p = line;
+    while (*p <'0' || *p > '9') p++;
+    line[i-3] = '\0';
+    i = atoi(p);
+    return i;
+}
+
+int currentUsedSizeinVM(){ //Note: this value is in KB!
+    FILE* file = fopen("/proc/self/status", "r");
+    int result = -1;
+    char line[128];
+
+    while (fgets(line, 128, file) != NULL){
+        if (strncmp(line, "VmSize:", 7) == 0){
+            result = parseLine(line);
+            break;
+        }
+    }
+    fclose(file);
+    return result;
+}
+
 void init_stream(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
     POOL_SIZE = min((uint64_t) (K * var / (eps * eps)), cla);
     BUCKET_SIZE = POOL_SIZE / R;
@@ -78,13 +103,13 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
         for (int j = 0; j < maxsat_formula->getSoftClause(i).clause.size(); j++) {
             w = (double) maxsat_formula->getSoftClause(i).weight / pow(2, maxsat_formula->getSoftClause(i).clause.size() - 1);
             w_adj = (double) maxsat_formula->getSoftClause(i).weight / pow(1.1, maxsat_formula->getSoftClause(i).clause.size() - 1);
-            if (maxsat_formula->m.size() < maxsat_formula->getSoftClause(i).clause.size() + 1) {
-                maxsat_formula->m.resize(maxsat_formula->getSoftClause(i).clause.size() + 1, 0);
-                maxsat_formula->m[maxsat_formula->getSoftClause(i).clause.size()] = maxsat_formula->getSoftClause(i).weight;
-            }
-            else {
-                maxsat_formula->m[maxsat_formula->getSoftClause(i).clause.size()] += maxsat_formula->getSoftClause(i).weight;
-            }
+            // if (maxsat_formula->m.size() < maxsat_formula->getSoftClause(i).clause.size() + 1) {
+            //     maxsat_formula->m.resize(maxsat_formula->getSoftClause(i).clause.size() + 1, 0);
+            //     maxsat_formula->m[maxsat_formula->getSoftClause(i).clause.size()] = maxsat_formula->getSoftClause(i).weight;
+            // }
+            // else {
+            //     maxsat_formula->m[maxsat_formula->getSoftClause(i).clause.size()] += maxsat_formula->getSoftClause(i).weight;
+            // }
             var_ind = var(maxsat_formula->getSoftClause(i).clause[j]) * 2;
             if (sign(maxsat_formula->getSoftClause(i).clause[j])) {
                 var_ind += 1;
@@ -242,8 +267,15 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             remaining_time_second = ceil((TIMEOUT - remaining_time.count()) / (remaining_buckets + remaining_buckets));
             timeout = min(SMALL_TIMEOUT, remaining_time_second);
             timeout = (timeout == 0) ? 10 : timeout;
+            int available_memory = total_memory;
+            if (use_fixed_memory)
+            {
+                int used_memory = currentUsedSizeinVM() / 1024;
+                available_memory = (available_memory > used_memory) ? (available_memory - used_memory) : available_memory;
+            }
+            cout << "The available memory (1st maxsat call): " << available_memory << endl;
             cout << "Calling maxsat query from clause = " << bucket_start + bucket_index * BUCKET_SIZE << " to clause = " << i + bucket_index * BUCKET_SIZE << endl;
-            stringStream << "./open-wbo_static -print-model -cpu-lim=" << timeout << " " + stream_maxsat_file + " > " + "result_" + stream_maxsat_file;
+            stringStream << "./open-wbo_static -print-model -cpu-lim=" << timeout << " -mem-lim=" << available_memory << " " << stream_maxsat_file + " > " + "result_" + stream_maxsat_file;
             // calling the smapled maxsat query
             system(stringStream.str().c_str());
 
@@ -291,7 +323,9 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             resultfile2.close();
             if (!no_assign) {
                 cout << " I found no assignment";
-                exit(1);
+                // exit(1);
+                number_of_no_assignment++;
+                cout << "c The number of no assignment is: " << number_of_no_assignment << endl;
             }
             if (!use_pool) {
                 maxsat_formula->clause_seen_so_far += (i + 1);
@@ -368,8 +402,14 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 timeout = (timeout == 0) ? 10 : timeout;
                 // cout << "The timeout for second maxsat: " << timeout << endl;
                 stringStream.str("");
-                stringStream << "./open-wbo_static -print-model -cpu-lim=" << timeout << " " <<
-                                  stream_maxsat_file + " > " + "result_" + stream_maxsat_file;
+                available_memory = total_memory;
+                if (use_fixed_memory)
+                {
+                    int used_memory = currentUsedSizeinVM() / 1024;
+                    available_memory = (available_memory > used_memory) ? (available_memory - used_memory) : available_memory;
+                }
+                cout << "The available memory (2nd maxsat call): " << available_memory << endl;
+                stringStream << "./open-wbo_static -print-model -cpu-lim=" << timeout << " -mem-lim=" << available_memory << " " << stream_maxsat_file + " > " + "result_" + stream_maxsat_file;
                 // calling the new maxsat query
                 system(stringStream.str().c_str());
                 result_file_name = "result_" + stream_maxsat_file;

@@ -254,23 +254,31 @@ int main(int argc, char **argv) {
     IntOption c_p("Open-WBO", "clause_policy",
                         "the selection of clause policy "
                         "\n",
-                        2, IntRange(0, 2));                    
+                        2, IntRange(0, 2));    
+    // the default is 4GB           
+    IntOption fixed_memory("Open-WBO", "maximum memory limit",
+                        "the size of memory "
+                        "\n",
+                        4000, IntRange(0, 8000));       
     BoolOption sampling("WBO", "sampling", "Symmetry breaking.\n", false);
     BoolOption print_verbose("WBO", "print-verbose", "Printing the verbose.\n", false);
     BoolOption pool_c("WBO", "pool", "use pool.\n", true);
     BoolOption hard_c("WBO", "conflict", "adding the non-conflict variables.\n", true);
     BoolOption decision_c("WBO", "decision", "enable decision heuristic.\n", false);
     BoolOption use_median("WBO", "median", "use median as F.\n", true);
+    BoolOption check_memory("WBO", "lim-mem", "Use limited memory.\n", true);
     parseOptions(argc, argv, true);
     R = (int)R_value;
     K = (int)K_value;
     F = (int)F_value;
+    total_memory = (int) fixed_memory;
     eps = (double)epsilon;
     alpha = (double)al;
     clause_policy = (int)c_p; 
     use_hard = (bool) hard_c;
     use_pool = (bool) pool_c;
     decision_heu = (bool) decision_c;
+    use_fixed_memory = (bool) check_memory;
 
     heparam = (double) hp;
     npercentile = (double) percentile;
