@@ -256,7 +256,7 @@ int main(int argc, char **argv) {
                         "\n",
                         2, IntRange(0, 2));    
     // the default is 4GB           
-    IntOption fixed_memory("Open-WBO", "maximum memory limit",
+    IntOption fixed_memory("Open-WBO", "memlim",
                         "the size of memory "
                         "\n",
                         4000, IntRange(0, 8000));       
