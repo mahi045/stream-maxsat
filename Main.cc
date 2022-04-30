@@ -266,6 +266,7 @@ int main(int argc, char **argv) {
     BoolOption hard_c("WBO", "conflict", "adding the non-conflict variables.\n", true);
     BoolOption decision_c("WBO", "decision", "enable decision heuristic.\n", false);
     BoolOption use_median("WBO", "median", "use median as F.\n", true);
+    BoolOption use_filter("WBO", "filtering", "use filtering on hard clause inclusion.\n", true);
     BoolOption check_memory("WBO", "lim-mem", "Use limited memory.\n", true);
     parseOptions(argc, argv, true);
     R = (int)R_value;
@@ -279,6 +280,7 @@ int main(int argc, char **argv) {
     use_pool = (bool) pool_c;
     decision_heu = (bool) decision_c;
     use_fixed_memory = (bool) check_memory;
+    use_filtering_condition = (bool) use_filter;
 
     heparam = (double) hp;
     npercentile = (double) percentile;

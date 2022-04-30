@@ -27,4 +27,5 @@ static std::chrono::high_resolution_clock::time_point start_time;
 static int number_of_no_assignment = 0;
 static bool use_fixed_memory = true;
 static int total_memory = 4000;
+static bool use_filtering_condition = true;
 #endif

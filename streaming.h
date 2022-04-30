@@ -359,7 +359,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 }
             }
             int c = 0;
-            if (median_heu) {
+            if (median_heu && use_filtering_condition) {
                 vector<double> temp_f(maxsat_formula->occurance_F);
                 sort(temp_f.begin(), temp_f.end());
                 double f = temp_f[temp_f.size() * npercentile];
