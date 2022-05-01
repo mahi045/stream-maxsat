@@ -45,7 +45,7 @@ MaxSATFormula *MaxSATFormula::copyMaxSATFormula() {
     copymx->newVar();
 
   for (int i = 0; i < nSoft(); i++)
-    copymx->addSoftClause(getSoftClause(i).weight, getSoftClause(i).clause);
+    copymx->addSoftClause(getSoftClause(i).weight, getSoftClause(i).clause, 1, true);
 
   for (int i = 0; i < nHard(); i++)
     copymx->addHardClause(getHardClause(i).clause);
@@ -68,22 +68,33 @@ void MaxSATFormula::addHardClause(vec<Lit> &lits) {
 }
 
 // Adds a new soft clause to the hard clause database.
-void MaxSATFormula::addSoftClause(uint64_t weight, vec<Lit> &lits) {
+void MaxSATFormula::addSoftClause(uint64_t weight, vec<Lit> &lits, int variant, bool add=true) {
   soft_clauses.push();
   vec<Lit> vars;
   Lit assump = lit_Undef;
-  mpz_add_ui(clause_weight_sum, clause_weight_sum, weight); // update the weight sum
+  if (!add) {
+    mpz_add_ui(clause_weight_sum, clause_weight_sum, weight); // update the weight sum
+    n_soft++;
+  }
   uint64_t w = weight / pow(1.1, lits.size() - 1);
   if (w < 1) {
     w = 1;
   }
   mpz_add_ui(bucket_clause_weight, bucket_clause_weight, w); // update the weight sum
   vec<Lit> copy_lits;
-  lits.copyTo(copy_lits);
-  weight_sampler.push_back(weight);
-  new (&soft_clauses[soft_clauses.size() - 1])
+  if (!add) {
+    if (variant == 1) {
+      weight_sampler.push_back(weight);
+    }
+    else if (variant == 2) {
+      weight_sampler.push_back(w);
+    }
+  }
+  if (add) {
+    lits.copyTo(copy_lits);
+    new (&soft_clauses[soft_clauses.size() - 1])
       Soft(copy_lits, weight, assump, vars);
-  n_soft++;
+  }
 }
 
 void MaxSATFormula::clearBucket() {
@@ -290,7 +301,7 @@ void MaxSATFormula::convertPBtoMaxSAT() {
   for (int i = 0; i < objective_function->_lits.size(); i++) {
     assert(objective_function->_coeffs[i] > 0);
     unit_soft[0] = ~objective_function->_lits[i];
-    addSoftClause(objective_function->_coeffs[i], unit_soft);
+    addSoftClause(objective_function->_coeffs[i], unit_soft, true);
 
     // Updates the maximum weight of soft clauses.
     setMaximumWeight(objective_function->_coeffs[i]);

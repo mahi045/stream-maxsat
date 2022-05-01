@@ -138,7 +138,7 @@ public:
   void addHardClause(vec<Lit> &lits);
 
   /*! Add a new soft clause. */
-  void addSoftClause(uint64_t weight, vec<Lit> &lits);
+  void addSoftClause(uint64_t weight, vec<Lit> &lits, int variant, bool add);
 
   /*! clear the bucket. */
   void clearBucket();

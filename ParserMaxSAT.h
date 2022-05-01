@@ -39,6 +39,7 @@
 #include "utils/ParseUtils.h"
 #include "constants.h"
 #include "streaming.h"
+#include "sampling.h"
 
 #ifdef HAS_EXTRA_STREAMBUFFER
 #include "utils/StreamBuffer.h"
@@ -86,7 +87,7 @@ static uint64_t readClause(B &in, MaxSATFormula *maxsat_formula,
 }
 
 template <class B, class MaxSATFormula>
-static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
+static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula, bool save_clause=true) {
   vec<Lit> lits;
   uint64_t hard_weight = UINT64_MAX;
   uint64_t num_var, num_cla;
@@ -95,6 +96,10 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
   printf("Running bias heuristic with modified weight !!!\n");
   start_time = std::chrono::high_resolution_clock::now();
   maxsat_formula->weight_sampler.clear();
+  int clause_index = 0;
+  int index = 0;
+  int clause_sampled = 0;
+  maxsat_formula->clearBucket();
   for (;;) {
     skipWhitespace(in);
     if (*in == EOF)
@@ -129,7 +134,15 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
         maxsat_formula->setMaximumWeight(weight);
         // Updates the sum of the weights of soft clauses.
         maxsat_formula->updateSumWeights(weight);
-        maxsat_formula->addSoftClause(weight, lits);
+        if (!save_clause) {
+          maxsat_formula->addSoftClause(weight, lits, variant, save_clause);
+        }
+        else if (b.size() > clause_index && b[clause_index] == index) {
+          maxsat_formula->addSoftClause(weight, lits, variant, save_clause);
+          clause_index++;
+          clause_sampled++;
+        }
+        index++;
       } else
         maxsat_formula->addHardClause(lits);
       if (!sampling_maxsat && (maxsat_formula->nSoft() > 0) && (maxsat_formula->nSoft() % BUCKET_SIZE == 0)) {
@@ -144,6 +157,7 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
     streaming_maxsat(maxsat_formula);
   }
   printf("Sum of weight: %s\n", mpz_get_str (NULL, 10, maxsat_formula->clause_weight_sum));
+  cout << "Clause sampled from stream: " << clause_sampled << endl;
   auto current_time = std::chrono::high_resolution_clock::now();
   // cout << " Stream maxsat execution time: " <<  duration_cast<std::chrono::microseconds>(current_time - start_time).count() / pow(10, 6) << endl;
   // assert(maxsat_formula->nSoft() == maxsat_formula->weight_sampler.size());
@@ -153,9 +167,9 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
 //
 template <class MaxSATFormula>
 static void parseMaxSATFormula(gzFile input_stream,
-                               MaxSATFormula *maxsat_formula) {
+                               MaxSATFormula *maxsat_formula, bool save_clause = true) {
   StreamBuffer in(input_stream);
-  parseMaxSAT(in, maxsat_formula);
+  parseMaxSAT(in, maxsat_formula, save_clause);
   if (maxsat_formula->getMaximumWeight() == 1)
     maxsat_formula->setProblemType(_UNWEIGHTED_);
   else

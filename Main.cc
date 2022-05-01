@@ -244,6 +244,7 @@ int main(int argc, char **argv) {
                         "\n",
                         0.05);
     BoolOption sampling("WBO", "sampling", "Symmetry breaking.\n", false);
+    BoolOption run_hoa("WBO", "hoa", "Run hoa sampling.\n", true);
     BoolOption print_verbose("WBO", "print-verbose", "Printing the verbose.\n", false);
     parseOptions(argc, argv, true);
     R = (int)R_value;
@@ -253,6 +254,14 @@ int main(int argc, char **argv) {
     heparam = (double) hp;
     TIMEOUT = (int) Timeout_value;
     SMALL_TIMEOUT = (int) Immediate_timeout_value;
+    if ((bool) run_hoa) {
+      variant = 1;
+      printf("Running Hoa version of sampled maxsat.\n");
+    }
+    else {
+      variant = 2;
+      printf("Running prob version of sampled maxsat.\n");
+    }
 
     printf("R_value: %d\n", R);
     printf("K_value: %d\n", K);
@@ -317,7 +326,7 @@ int main(int argc, char **argv) {
     sampling_maxsat = sampling;
     verbose = print_verbose;
     // if ((int)formula == _FORMAT_MAXSAT_) {
-      parseMaxSATFormula(in, maxsat_formula);
+      parseMaxSATFormula(in, maxsat_formula, false);
       maxsat_formula->setFormat(_FORMAT_MAXSAT_);
     // } else {
     //   ParserPB *parser_pb = new ParserPB();
@@ -328,6 +337,11 @@ int main(int argc, char **argv) {
     if (sampling) {
        printf("Running sampling version of maxsat!!!\n");
        sample_clauses(maxsat_formula);
+       cout << "Number of sampled clauses: " << b.size() << endl;
+       gzFile in = (argc == 1) ? gzdopen(0, "rb") : gzopen(argv[1], "rb");
+       parseMaxSATFormula(in, maxsat_formula);
+       run_sampled_maxsat(maxsat_formula);
+       gzclose(in);
     }
     else {
        printf("Running streaming version of maxsat!!!\n");
