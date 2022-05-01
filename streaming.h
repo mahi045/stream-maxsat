@@ -249,6 +249,21 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             remaining_buckets = (nbuckets - maxsat_formula->nSoft() / BUCKET_SIZE + 1);
             remaining_time =  current_time - start_time;
             remaining_time_second = ceil((TIMEOUT - remaining_time.count()) / (remaining_buckets + remaining_buckets));
+            // if we are close to timelimit, then print the assignment and finish the program
+            if (remaining_time_second < 50) {
+                assignfile.open("result_" + stream_maxsat_file);
+                assignfile << "v ";
+                for (int variable = 1; variable <= maxsat_formula->nVars(); variable++) {
+                    if (maxsat_formula->assignment[variable] == l_True) {
+                        assignfile << variable << " ";
+                    } else if (maxsat_formula->assignment[variable] == l_False) {
+                        assignfile << -variable << " ";
+                    }
+                }
+                assignfile.close();
+                cout << "Timeouted" << endl;
+                exit(1);
+            }
             timeout = min(SMALL_TIMEOUT, remaining_time_second);
             timeout = (timeout < 25) ? 25 : timeout;
             cout << "timeout: " << timeout << endl;
