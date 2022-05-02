@@ -69,7 +69,7 @@ void MaxSATFormula::addHardClause(vec<Lit> &lits) {
 
 // Adds a new soft clause to the hard clause database.
 void MaxSATFormula::addSoftClause(uint64_t weight, vec<Lit> &lits, int variant, bool add=true) {
-  soft_clauses.push();
+  
   vec<Lit> vars;
   Lit assump = lit_Undef;
   if (!add) {
@@ -91,6 +91,7 @@ void MaxSATFormula::addSoftClause(uint64_t weight, vec<Lit> &lits, int variant, 
     }
   }
   if (add) {
+    soft_clauses.push();
     lits.copyTo(copy_lits);
     new (&soft_clauses[soft_clauses.size() - 1])
       Soft(copy_lits, weight, assump, vars);

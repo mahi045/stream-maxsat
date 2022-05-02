@@ -76,12 +76,12 @@ void sample_clauses(MaxSATFormula *maxsat_formula) {
     else {
       b.clear();
       postprocess = true;
-      for (int j = 0; j < maxsat_formula->nSoft(); j++) {
-        if (maxsat_formula->getSoftClause(j).clause.size() >= beta) {
-          maxsat_formula->weight_sampler[j] = 0;
-          nlong_clause++;
-        }
-      }
+    //   for (int j = 0; j < maxsat_formula->nSoft(); j++) {
+    //     if (maxsat_formula->getSoftClause(j).clause.size() >= beta) {
+    //       maxsat_formula->weight_sampler[j] = 0;
+    //       nlong_clause++;
+    //     }
+    //   }
       in_pool = maxsat_formula->pick_k_clauses(POOL_SIZE, true);
       for (auto itr = in_pool.begin(); itr != in_pool.end(); ++itr) {
         b.push_back(*itr);
