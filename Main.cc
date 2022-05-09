@@ -138,6 +138,31 @@ void limitTime(uint32_t /*max_cpu_time*/)
 //=================================================================================================
 // Main:
 
+int parseLine(char* line){
+    // This assumes that a digit will be found and the line ends in " Kb".
+    int i = strlen(line);
+    const char* p = line;
+    while (*p <'0' || *p > '9') p++;
+    line[i-3] = '\0';
+    i = atoi(p);
+    return i;
+}
+
+int currentUsedSizeinVM(){ //Note: this value is in KB!
+    FILE* file = fopen("/proc/self/status", "r");
+    int result = -1;
+    char line[128];
+
+    while (fgets(line, 128, file) != NULL){
+        if (strncmp(line, "VmSize:", 7) == 0){
+            result = parseLine(line);
+            break;
+        }
+    }
+    fclose(file);
+    return result;
+}
+
 int main(int argc, char **argv) {
   printf(
       "c\nc Open-WBO:\t a Modular MaxSAT Solver -- based on %s (%s version)\n",
@@ -364,7 +389,8 @@ int main(int argc, char **argv) {
     S->setInitialTime(initial_time);
     mxsolver = S;
     mxsolver->setPrint(true);
-
+    int used_memory = ceil(currentUsedSizeinVM() / 1024);
+    cout << "The already used memory is: " << used_memory << endl;
     int ret = (int)mxsolver->search();
     delete S;
     return ret;
