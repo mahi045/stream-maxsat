@@ -147,6 +147,8 @@ public:
 
   /*! Add a new pool clause. */
   void addPoolClause(uint64_t weight, vec<Lit> &lits);
+  void PoolCapacity(); 
+  void PrintPoolClause(int index); 
   void updatePoolClause(uint64_t weight, vec<Lit> &lits, int pos);
 
   /*! Add a new soft clause with predefined relaxation variables. */

@@ -112,6 +112,24 @@ void MaxSATFormula::addPoolClause(uint64_t weight, vec<Lit> &lits) {
   n_pool++;
 }
 
+void MaxSATFormula::PoolCapacity() {
+  cout << "pool_clauses.capacity(): " << pool_clauses.capacity() * sizeof(pool_clauses) << endl;
+}
+
+void MaxSATFormula::PrintPoolClause(int index) {
+  cout << "Printing pool clause" << endl;
+  cout << getPoolClause(index).weight << " ";
+  for (int j = 0; j < getPoolClause(index).clause.size();
+       j++) {
+    if (sign(getPoolClause(index).clause[j])) {
+      cout << "-";
+    }
+    cout << var(getPoolClause(index).clause[j]) + 1
+             << " ";
+  }
+  cout << "0" << endl;
+}
+
 // void test_update_function(MaxSATFormula *maxsat_formula) {
 //     cout << "Before update" << endl;
 //     cout << maxsat_formula->getSoftClause(11).weight << " ";
