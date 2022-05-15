@@ -49,7 +49,7 @@ void init_stream(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
     maxsat_formula->occurance_list.growTo(2 * var + 1, 0.0);
     if (median_heu)
         maxsat_formula->occurance_F.resize(var + 1, 0.0);
-    if (random_sat_of_beta) {
+    if (!random_sat_of_beta) {
         int k = 1;
         for (; ; k++) {
             if (var * pow(2, k) > k * cla) {
@@ -59,7 +59,7 @@ void init_stream(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
         maxsat_formula->beta = k;
         cout << "The k of random k sat is: " << k << endl;
     }
-    if (!log_of_beta) {
+    if (log_of_beta) {
         maxsat_formula->beta = ceil(log2(maxsat_formula->number_of_clauses));
         cout << "The log clauses is: log2(" << cla << ") = " << maxsat_formula->beta << endl;
     }
@@ -72,7 +72,7 @@ void init_stream(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
         maxsat_formula->beta =  3 * ceil(exp);
         cout << "The expected clause lenght is: E[clause_lenght] = " << maxsat_formula->beta << endl;
     }
-    int p = (3000 * fraction_of_memory * 1000 * 1000) / (4 * (maxsat_formula->beta+1));
+    int p = (3000 * fraction_of_memory * 1000 * 1000) / (4 * (maxsat_formula->beta) + sizeof(Soft));
     cout << p << endl;
     cout << "It is " << (double) p / var << " factor of n" << endl;
     maxsat_formula->assignment.growTo(var + 1, l_Undef);
@@ -125,6 +125,8 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     double bias_thre, gamma;
     int bucket_index = maxsat_formula->nSoft() / BUCKET_SIZE - 1;
     int bound = (maxsat_formula->nSoft() % BUCKET_SIZE) ? maxsat_formula->nSoft() % BUCKET_SIZE : BUCKET_SIZE;
+    cout << "sizeof(maxsat_formula->getSoftClause(0).weight) => " << sizeof(Soft) << endl;
+    cout << "sizeof(maxsat_formula->getSoftClause(0).weight) => " << maxsat_formula->getSoftClause(0).clause.size() << endl;
     for (int i = 0; i < bound; i++) {
         for (int j = 0; j < maxsat_formula->getSoftClause(i).clause.size(); j++) {
             w = (double) maxsat_formula->getSoftClause(i).weight / pow(2, maxsat_formula->getSoftClause(i).clause.size() - 1);
