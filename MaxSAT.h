@@ -152,12 +152,12 @@ public:
 
   Soft &getSoftClause(int i) { return maxsat_formula->getSoftClause(i); }
   Hard &getHardClause(int i) { return maxsat_formula->getHardClause(i); }
-  Lit getAssumptionLit(int soft) {
-    return maxsat_formula->getSoftClause(soft).assumption_var;
-  }
-  Lit getRelaxationLit(int soft, int i = 0) {
-    return maxsat_formula->getSoftClause(soft).relaxation_vars[i];
-  }
+  // Lit getAssumptionLit(int soft) {
+  //   return maxsat_formula->getSoftClause(soft).assumption_var;
+  // }
+  // Lit getRelaxationLit(int soft, int i = 0) {
+  //   return maxsat_formula->getSoftClause(soft).relaxation_vars[i];
+  // }
 
   int64_t getOffSet() { return off_set; }
 

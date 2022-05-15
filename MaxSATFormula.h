@@ -66,20 +66,20 @@ public:
        const vec<Lit> &relax) {
     soft.copyTo(clause);
     weight = soft_weight;
-    assumption_var = assump_var;
-    relax.copyTo(relaxation_vars);
+    // assumption_var = assump_var;
+    // relax.copyTo(relaxation_vars);
   }
 
   Soft() {}
   ~Soft() {
     clause.clear();
-    relaxation_vars.clear();
+    // relaxation_vars.clear();
   }
 
   vec<Lit> clause;    //!< Soft clause
   uint64_t weight;    //!< Weight of the soft clause
-  Lit assumption_var; //!< Assumption variable used for retrieving the core
-  vec<Lit> relaxation_vars; //!< Relaxation variables that will be added to the
+  // Lit assumption_var; //!< Assumption variable used for retrieving the core
+  // vec<Lit> relaxation_vars; //!< Relaxation variables that will be added to the
                             //! soft clause
 };
 
@@ -109,7 +109,7 @@ public:
   ~MaxSATFormula() {
     for (int i = 0; i < nSoft(); i++) {
       soft_clauses[i].clause.clear();
-      soft_clauses[i].relaxation_vars.clear();
+      // soft_clauses[i].relaxation_vars.clear();
     }
     soft_clauses.clear();
     pool_clauses.clear();
@@ -133,8 +133,10 @@ public:
   void status_pool();
   uint32_t clause_seen_so_far = 0;
   mpz_t clause_weight_sum, bucket_clause_weight;
-  uint64_t hard_clause_identifier = 0, max_weight_pool=0;
+  uint64_t hard_clause_identifier = 0, max_weight_pool=0, number_of_clauses = 0;
   uint64_t bias = 0;
+  uint32_t beta;
+  std::map<std::pair<uint32_t, uint32_t>, uint32_t> clause_map;
 
   /*! Add a new hard clause. */
   void addHardClause(vec<Lit> &lits);

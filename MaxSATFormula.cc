@@ -95,6 +95,10 @@ void MaxSATFormula::addSoftClause(uint64_t weight, vec<Lit> &lits) {
 }
 
 void MaxSATFormula::clearBucket() {
+  for (int i = 0; i < nSoft(); i++)
+  {
+    soft_clauses[i].clause.clear();
+  }
   soft_clauses.clear();
 }
 void MaxSATFormula::addPoolClause(uint64_t weight, vec<Lit> &lits) {

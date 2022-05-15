@@ -90,6 +90,7 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
   vec<Lit> lits;
   uint64_t hard_weight = UINT64_MAX;
   uint64_t num_var, num_cla;
+  uint32_t wght, len, count;
   mpz_init_set_ui(maxsat_formula->clause_weight_sum, 0);
   mpz_init_set_ui(maxsat_formula->bucket_clause_weight, 0);
   printf("Running bias heuristic with modified weight !!!\n");
@@ -103,11 +104,13 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
       if (eagerMatch(in, "p cnf")) {
         num_var = parseInt(in); // Variables
         num_cla = parseInt(in); // Clauses
+        maxsat_formula->number_of_clauses = num_cla;
         init_stream(maxsat_formula, num_var, num_cla);
       } else if (eagerMatch(in, "wcnf")) {
         maxsat_formula->setProblemType(_WEIGHTED_);
         num_var = parseInt(in); // Variables
         num_cla = parseInt(in); // Clauses
+        maxsat_formula->number_of_clauses = num_cla;
         if (*in != '\r' && *in != '\n') {
           hard_weight = parseWeight(in);
           maxsat_formula->setHardWeight(hard_weight);
@@ -118,8 +121,19 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
       } else
         printf("c PARSE ERROR! Unexpected char: %c\n", *in),
             printf("s UNKNOWN\n"), exit(_ERROR_);
-    } else if (*in == 'c' || *in == 'p')
-      skipLine(in);
+    } else if (*in == 'c' || *in == 'p') {
+       if (eagerMatch(in, "c stat")) {
+         // there are 3 integers here
+         // the format is weight, len, count
+          wght = parseInt(in);
+          len = parseInt(in);
+          count = parseInt(in);
+          maxsat_formula->clause_map[std::make_pair(wght, len)] = count;
+       }
+       else {
+         skipLine(in);
+       }
+    }
     else {
       uint64_t weight = readClause(in, maxsat_formula, lits);
       if (weight < hard_weight ||

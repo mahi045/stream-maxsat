@@ -509,9 +509,9 @@ uint64_t MaxSAT::getUB() {
     clause.clear();
     maxsat_formula->getSoftClause(i).clause.copyTo(clause);
 
-    for (int j = 0; j < maxsat_formula->getSoftClause(i).relaxation_vars.size();
-         j++)
-      clause.push(maxsat_formula->getSoftClause(i).relaxation_vars[j]);
+    // for (int j = 0; j < maxsat_formula->getSoftClause(i).relaxation_vars.size();
+    //      j++)
+    //   clause.push(maxsat_formula->getSoftClause(i).relaxation_vars[j]);
 
     clause.push(relaxation_vars[i]);
 

@@ -28,4 +28,8 @@ static int number_of_no_assignment = 0;
 static bool use_fixed_memory = true;
 static int total_memory = 4000;
 static bool use_filtering_condition = true;
+static bool log_of_beta = true;
+static bool random_sat_of_beta = true;
+static bool expectation_of_clause = true;
+static double fraction_of_memory = 0.1;
 #endif

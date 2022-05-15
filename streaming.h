@@ -49,6 +49,32 @@ void init_stream(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
     maxsat_formula->occurance_list.growTo(2 * var + 1, 0.0);
     if (median_heu)
         maxsat_formula->occurance_F.resize(var + 1, 0.0);
+    if (random_sat_of_beta) {
+        int k = 1;
+        for (; ; k++) {
+            if (var * pow(2, k) > k * cla) {
+                break;
+            }
+        }
+        maxsat_formula->beta = k;
+        cout << "The k of random k sat is: " << k << endl;
+    }
+    if (!log_of_beta) {
+        maxsat_formula->beta = ceil(log2(maxsat_formula->number_of_clauses));
+        cout << "The log clauses is: log2(" << cla << ") = " << maxsat_formula->beta << endl;
+    }
+    if (!expectation_of_clause) {
+        double exp = 0;
+        for (auto &x : maxsat_formula->clause_map)
+        {
+            exp += ((double) x.first.second * x.second / cla);
+        }
+        maxsat_formula->beta =  3 * ceil(exp);
+        cout << "The expected clause lenght is: E[clause_lenght] = " << maxsat_formula->beta << endl;
+    }
+    int p = (3000 * fraction_of_memory * 1000 * 1000) / (4 * (maxsat_formula->beta+1));
+    cout << p << endl;
+    cout << "It is " << (double) p / var << " factor of n" << endl;
     maxsat_formula->assignment.growTo(var + 1, l_Undef);
     maxsat_formula->var_bias.growTo(var + 1, 0);
     printf("Size of occurance list: %d\n", maxsat_formula->occurance_list.size());
