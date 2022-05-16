@@ -77,17 +77,27 @@ void MaxSATFormula::addSoftClause(uint64_t weight, vec<Lit> &lits) {
   if (w < 1) {
     w = 1;
   }
-  mpz_add_ui(bucket_clause_weight, bucket_clause_weight, w); // update the weight sum
+  if (lits.size() <= beta) {
+    mpz_add_ui(bucket_clause_weight, bucket_clause_weight, weight); // update the weight sum
+  }
   vec<Lit> copy_lits;
   lits.copyTo(copy_lits);
-  if (clause_policy == 0) {
-    if (use_pool) weight_sampler.push_back(1);
-  }
-  else if (clause_policy == 1) {
-    if (use_pool) weight_sampler.push_back(weight);
-  }
-  else {
-    if (use_pool) weight_sampler.push_back(w);
+  // if (clause_policy == 0) {
+  //   if (use_pool) weight_sampler.push_back(1);
+  // }
+  // else if (clause_policy == 1) {
+  //   if (use_pool) weight_sampler.push_back(weight);
+  // }
+  // else {
+  //   if (use_pool) weight_sampler.push_back(w);
+  // }
+  if (use_pool) {
+    if (lits.size() <= beta) {
+      weight_sampler.push_back(weight);
+    }
+    else {
+      weight_sampler.push_back(0);
+    }
   }
   new (&soft_clauses[soft_clauses.size() - 1])
       Soft(copy_lits, weight, assump, vars);
@@ -103,9 +113,9 @@ void MaxSATFormula::addPoolClause(uint64_t weight, vec<Lit> &lits) {
   Lit assump = lit_Undef;
   vec<Lit> copy_lits;
   lits.copyTo(copy_lits);
-  uint64_t w = weight / pow(1 + alpha, lits.size() - 1);
-  w = (w < 1) ? 1 : w;
-  weight_pool.push_back(w);
+  // uint64_t w = weight / pow(1 + alpha, lits.size() - 1);
+  // w = (w < 1) ? 1 : w;
+  weight_pool.push_back(weight);
   max_weight_pool = max(max_weight_pool, weight);
   new (&pool_clauses[pool_clauses.size() - 1])
       Soft(copy_lits, weight, assump, vars);
@@ -163,9 +173,14 @@ void MaxSATFormula::updatePoolClause(uint64_t weight, vec<Lit> &lits, int pos) {
   Lit assump = lit_Undef;
   vec<Lit> copy_lits;
   lits.copyTo(copy_lits);
-  uint64_t w = weight / pow(1 + alpha, lits.size() - 1);
-  w = (w < 1) ? 1 : w;
-  weight_pool[pos] = w;
+  // uint64_t w = weight / pow(1 + alpha, lits.size() - 1);
+  // w = (w < 1) ? 1 : w;
+  if (lits.size() <= beta) {
+    weight_pool[pos] = weight;
+  }
+  else {
+    weight_pool[pos] = 0;
+  }
   max_weight_pool = max(max_weight_pool, weight);
   new (&pool_clauses[pos])
       Soft(copy_lits, weight, assump, vars);
@@ -180,17 +195,27 @@ void MaxSATFormula::addSoftClause(uint64_t weight, vec<Lit> &lits,
   mpz_add_ui(clause_weight_sum, clause_weight_sum, weight); // update the weight sum
   uint64_t w = weight / pow(1 + alpha, lits.size() - 1);
   w = (w < 1) ? 1 : w;
-  mpz_add_ui(bucket_clause_weight, bucket_clause_weight, w); // update the weight sum
+  if (lits.size() <= beta) {
+    mpz_add_ui(bucket_clause_weight, bucket_clause_weight, weight); // update the weight sum
+  }
   vec<Lit> copy_lits;
   lits.copyTo(copy_lits);
-  if (clause_policy == 0) {
-    if (use_pool) weight_sampler.push_back(1);
-  }
-  else if (clause_policy == 1) {
-    if (use_pool) weight_sampler.push_back(weight);
-  }
-  else {
-    if (use_pool) weight_sampler.push_back(w);
+  // if (clause_policy == 0) {
+  //   if (use_pool) weight_sampler.push_back(1);
+  // }
+  // else if (clause_policy == 1) {
+  //   if (use_pool) weight_sampler.push_back(weight);
+  // }
+  // else {
+  //   if (use_pool) weight_sampler.push_back(w);
+  // }
+  if (use_pool) {
+    if (lits.size() <= beta) {
+      weight_sampler.push_back(weight);
+    }
+    else {
+      weight_sampler.push_back(0);
+    }
   }
   new (&soft_clauses[soft_clauses.size() - 1])
       Soft(copy_lits, weight, assump, vars);
