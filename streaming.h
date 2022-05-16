@@ -125,12 +125,11 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     double bias_thre, gamma;
     int bucket_index = maxsat_formula->nSoft() / BUCKET_SIZE - 1;
     int bound = (maxsat_formula->nSoft() % BUCKET_SIZE) ? maxsat_formula->nSoft() % BUCKET_SIZE : BUCKET_SIZE;
-    cout << "sizeof(maxsat_formula->getSoftClause(0).weight) => " << sizeof(Soft) << endl;
-    cout << "sizeof(maxsat_formula->getSoftClause(0).weight) => " << maxsat_formula->getSoftClause(0).clause.size() << endl;
+    // cout << "sizeof(maxsat_formula->getSoftClause(0).weight) => " << sizeof(Soft) << endl;
+    // cout << "sizeof(maxsat_formula->getSoftClause(0).weight) => " << maxsat_formula->getSoftClause(0).clause.size() << endl;
     for (int i = 0; i < bound; i++) {
         for (int j = 0; j < maxsat_formula->getSoftClause(i).clause.size(); j++) {
             w = (double) maxsat_formula->getSoftClause(i).weight / pow(2, maxsat_formula->getSoftClause(i).clause.size() - 1);
-            w_adj = (double) maxsat_formula->getSoftClause(i).weight / pow(1.1, maxsat_formula->getSoftClause(i).clause.size() - 1);
             // if (maxsat_formula->m.size() < maxsat_formula->getSoftClause(i).clause.size() + 1) {
             //     maxsat_formula->m.resize(maxsat_formula->getSoftClause(i).clause.size() + 1, 0);
             //     maxsat_formula->m[maxsat_formula->getSoftClause(i).clause.size()] = maxsat_formula->getSoftClause(i).weight;
@@ -144,11 +143,11 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             }
             maxsat_formula->occurance_list[var_ind] += w; 
             maxsat_formula->temp_occurance_list[var_ind] += w; 
-            if (sign(maxsat_formula->getSoftClause(i).clause[j])) {
-                w *= -1;
-            }
-            maxsat_formula->bias += (abs(maxsat_formula->var_bias[var_ind/2] + w) - abs(maxsat_formula->var_bias[var_ind/2]));
-            maxsat_formula->var_bias[var_ind/2] += w;
+            // if (sign(maxsat_formula->getSoftClause(i).clause[j])) {
+            //     w *= -1;
+            // }
+            // maxsat_formula->bias += (abs(maxsat_formula->var_bias[var_ind/2] + w) - abs(maxsat_formula->var_bias[var_ind/2]));
+            // maxsat_formula->var_bias[var_ind/2] += w;
             if (maxsat_formula->hard_clause_identifier <= static_cast<uint64_t>(ceil(maxsat_formula->occurance_list[var_ind]))) {
                 maxsat_formula->hard_clause_identifier = static_cast<uint64_t>(ceil(maxsat_formula->occurance_list[var_ind]) + 2);
             }
@@ -158,7 +157,6 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                     double f = maxsat_formula->occurance_list[var_ind] >= maxsat_formula->occurance_list[var_ind + 1] ? 
                         (maxsat_formula->occurance_list[var_ind] / maxsat_formula->occurance_list[var_ind + 1]) :
                         maxsat_formula->occurance_list[var_ind + 1] / maxsat_formula->occurance_list[var_ind];
-                    maxsat_formula->occurance_F[var_ind/2] = f;
                     if (isinf(f))  {
                         maxsat_formula->occurance_F[var_ind/2] = 
                         maxsat_formula->occurance_list[var_ind] >= maxsat_formula->occurance_list[var_ind + 1] ? 
@@ -213,14 +211,14 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 myfile << "0" << endl;
                 if (use_pool) poolfile << "0" << endl;
             }
-            if (decision_heu) {
-                bias_thre = bias_threshold(maxsat_formula);
-                gamma = 0;
-                if (maxsat_formula->bias <= bias_thre) {
-                    gamma = (double) ((maxsat_formula->bias) / (2 * bias_thre));
-                    gamma += 0.5;
-                }
-            }
+            // if (decision_heu) {
+            //     bias_thre = bias_threshold(maxsat_formula);
+            //     gamma = 0;
+            //     if (maxsat_formula->bias <= bias_thre) {
+            //         gamma = (double) ((maxsat_formula->bias) / (2 * bias_thre));
+            //         gamma += 0.5;
+            //     }
+            // }
             double alpha = pow(M_E, -heparam * bucket_index);
             for (int variable = 1; variable <= maxsat_formula->nVars(); variable++) {
                 positive_phase = ceil(maxsat_formula->occurance_list[2 * (variable - 1)] - maxsat_formula->temp_occurance_list[2 * (variable - 1)]);
@@ -350,7 +348,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             }
             resultfile2.close();
             if (!no_assign) {
-                cout << " I found no assignment";
+                cout << " I found no assignment" << endl;
                 // exit(1);
                 number_of_no_assignment++;
                 cout << "c The number of no assignment is: " << number_of_no_assignment << endl;
