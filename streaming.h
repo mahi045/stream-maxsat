@@ -78,12 +78,13 @@ void init_stream(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
     int minimum = min(expectation, min(log_of_clause, random_k));
     int maximum = max(expectation, max(log_of_clause, random_k));
     // expectation + log_of_clause + random_k - minimum -
-    maxsat_formula->bias =  maximum;
-    cout << "median(" << expectation << "," << random_k << "," << log_of_clause << ")= " << maxsat_formula->bias << endl;
+    maxsat_formula->beta =  expectation + log_of_clause + random_k - minimum - maximum;
+    cout << "median(" << expectation << "," << random_k << "," << log_of_clause << ")= " << maxsat_formula->beta << endl;
     POOL_SIZE = (3000 * fraction_of_memory * 1000 * 1000) / (4 * (maxsat_formula->beta) + sizeof(Soft));
     POOL_SIZE = min(POOL_SIZE, cla);
     BUCKET_SIZE = POOL_SIZE / R;
     cout << "The pool size is: " << POOL_SIZE << ", which is " << (double) POOL_SIZE / var << " factor of n" << endl;
+    cout << "The number of clauses is " <<  (double) cla / var << " factor of n" << endl;
     maxsat_formula->assignment.growTo(var + 1, l_Undef);
     // maxsat_formula->var_bias.growTo(var + 1, 0);
     printf("Size of occurance list: %d\n", maxsat_formula->occurance_list.size());
@@ -91,18 +92,18 @@ void init_stream(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
     maxsat_formula->weight_pool.clear();
 }
 
-double bias_threshold(MaxSATFormula *maxsat_formula) {
-    double sum = 0;
-    double coff;
-    for (int k = 2; k <= maxsat_formula->m.size(); k++) {
-        if (maxsat_formula->m[k] == 0) {
-            continue;
-        }
-        coff = (double) (pow(2, k) - k - 1) / (pow(2, k-2));
-        sum += coff * maxsat_formula->m[k];
-    }
-    return sum;
-}
+// double bias_threshold(MaxSATFormula *maxsat_formula) {
+//     double sum = 0;
+//     double coff;
+//     for (int k = 2; k <= maxsat_formula->m.size(); k++) {
+//         if (maxsat_formula->m[k] == 0) {
+//             continue;
+//         }
+//         coff = (double) (pow(2, k) - k - 1) / (pow(2, k-2));
+//         sum += coff * maxsat_formula->m[k];
+//     }
+//     return sum;
+// }
 
 void streaming_maxsat(MaxSATFormula *maxsat_formula) { 
     // POOL_SIZE = min((int) (K * maxsat_formula->nVars() / (eps * eps)), maxsat_formula->nSoft());
@@ -435,7 +436,8 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 remaining_time =  current_time - start_time;
                 remaining_time_second = ceil((TIMEOUT - remaining_time.count()) / (remaining_buckets + remaining_buckets - 1));
                 timeout = min(SMALL_TIMEOUT, remaining_time_second);
-                timeout = (timeout < 0) ? 10 : timeout;
+                timeout = (timeout < 10) ? 10 : timeout;
+
                 // cout << "The timeout for second maxsat: " << timeout << endl;
                 stringStream.str("");
                 available_memory = total_memory;
@@ -447,7 +449,16 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 cout << "The available memory (2nd maxsat call): " << available_memory << endl;
                 stringStream << "./open-wbo_static -print-model -cpu-lim=" << timeout << " -mem-lim=" << available_memory << " " << stream_maxsat_file + " > " + "result_" + stream_maxsat_file;
                 // calling the new maxsat query
+
+
+                // auto start = std::chrono::high_resolution_clock::now();
                 system(stringStream.str().c_str());
+                // auto end = std::chrono::high_resolution_clock::now();
+
+                // auto int_s = std::chrono::duration_cast<std::chrono::seconds>(end - start);
+
+                // std::cout << "maxsat() elapsed time is " << int_s.count() << " seconds )" << std::endl;
+                // cout << "Get result !!!" << endl;
                 result_file_name = "result_" + stream_maxsat_file;
                 ifstream resultfile1(result_file_name);
                 while (getline(resultfile1, line)) {
@@ -470,6 +481,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                     }
                 }
                 resultfile1.close();
+                // cout << "Read result !!!" << endl;
             }
             assignfile.open("result_" + stream_maxsat_file);
             assignfile << "v ";

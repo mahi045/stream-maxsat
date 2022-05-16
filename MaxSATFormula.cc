@@ -35,28 +35,28 @@
 using namespace std;
 using namespace openwbo;
 
-MaxSATFormula *MaxSATFormula::copyMaxSATFormula() {
-  assert(format == _FORMAT_MAXSAT_);
+// MaxSATFormula *MaxSATFormula::copyMaxSATFormula() {
+//   assert(format == _FORMAT_MAXSAT_);
 
-  MaxSATFormula *copymx = new MaxSATFormula();
-  copymx->setInitialVars(nVars());
+//   MaxSATFormula *copymx = new MaxSATFormula();
+//   copymx->setInitialVars(nVars());
 
-  for (int i = 0; i < nVars(); i++)
-    copymx->newVar();
+//   for (int i = 0; i < nVars(); i++)
+//     copymx->newVar();
 
-  for (int i = 0; i < nSoft(); i++)
-    copymx->addSoftClause(getSoftClause(i).weight, getSoftClause(i).clause);
+//   for (int i = 0; i < nSoft(); i++)
+//     copymx->addSoftClause(getSoftClause(i).weight, getSoftClause(i).clause);
 
-  for (int i = 0; i < nHard(); i++)
-    copymx->addHardClause(getHardClause(i).clause);
+//   for (int i = 0; i < nHard(); i++)
+//     copymx->addHardClause(getHardClause(i).clause);
 
-  copymx->setProblemType(getProblemType());
-  copymx->updateSumWeights(getSumWeights());
-  copymx->setMaximumWeight(getMaximumWeight());
-  copymx->setHardWeight(getHardWeight());
+//   copymx->setProblemType(getProblemType());
+//   copymx->updateSumWeights(getSumWeights());
+//   copymx->setMaximumWeight(getMaximumWeight());
+//   copymx->setHardWeight(getHardWeight());
 
-  return copymx;
-}
+//   return copymx;
+// }
 
 // Adds a new hard clause to the hard clause database.
 void MaxSATFormula::addHardClause(vec<Lit> &lits) {
@@ -273,72 +273,74 @@ Soft &MaxSATFormula::getPoolClause(int pos) {
   return pool_clauses[pos];
 }
 
-void MaxSATFormula::addPBConstraint(PB *p) {
+// void MaxSATFormula::addPBConstraint(PB *p) {
 
-  // Add constraint to formula data structure.
-  if (p->isClause()) {
-    addHardClause(p->_lits);
-  } else if (p->isCardinality()) {
-    if (!p->_sign) {
-      p->changeSign();
-    }
-    cardinality_constraints.push(new Card(p->_lits, p->_rhs));
+//   // Add constraint to formula data structure.
+//   if (p->isClause()) {
+//     addHardClause(p->_lits);
+//   } else if (p->isCardinality()) {
+//     if (!p->_sign) {
+//       p->changeSign();
+//     }
+//     cardinality_constraints.push(new Card(p->_lits, p->_rhs));
 
-  } else {
-    if (!p->_sign) {
-      p->changeSign();
-    }
+//   } else {
+//     if (!p->_sign) {
+//       p->changeSign();
+//     }
 
-    pb_constraints.push(new PB(p->_lits, p->_coeffs, p->_rhs, p->_sign));
-  }
-}
+//     pb_constraints.push(new PB(p->_lits, p->_coeffs, p->_rhs, p->_sign));
+//   }
+// }
 
-int MaxSATFormula::newVarName(char *varName) {
-  int id = varID(varName);
-  if (id == var_Undef) {
-    id = nVars();
-    newVar();
-    std::string s(varName);
-    std::pair<std::string, int> nv(s, id);
-    std::pair<int, std::string> ni(id, s);
-    _nameToIndex.insert(nv);
-    _indexToName.insert(ni);
-  }
-  return id;
-}
+// int MaxSATFormula::newVarName(char *varName) {
+//   int id = varID(varName);
+//   if (id == var_Undef) {
+//     id = nVars();
+//     newVar();
+//     std::string s(varName);
+//     std::pair<std::string, int> nv(s, id);
+//     std::pair<int, std::string> ni(id, s);
+//     _nameToIndex.insert(nv);
+//     _indexToName.insert(ni);
+//   }
+//   return id;
+// }
 
-int MaxSATFormula::varID(char *varName) {
-  std::string s(varName);
+// int MaxSATFormula::varID(char *varName) {
+//   std::string s(varName);
 
-  nameMap::const_iterator iter = _nameToIndex.find(s);
-  if (iter != _nameToIndex.end()) {
-    return iter->second;
-  }
-  return var_Undef;
-}
+//   nameMap::const_iterator iter = _nameToIndex.find(s);
+//   if (iter != _nameToIndex.end()) {
+//     return iter->second;
+//   }
+//   return var_Undef;
+// }
 
-void MaxSATFormula::convertPBtoMaxSAT() {
-  assert(objective_function != NULL);
-  vec<Lit> unit_soft(1);
+// void MaxSATFormula::convertPBtoMaxSAT() {
+//   assert(objective_function != NULL);
+//   vec<Lit> unit_soft(1);
 
-  // Convert objective function to soft clauses
-  for (int i = 0; i < objective_function->_lits.size(); i++) {
-    assert(objective_function->_coeffs[i] > 0);
-    unit_soft[0] = ~objective_function->_lits[i];
-    addSoftClause(objective_function->_coeffs[i], unit_soft);
+//   // Convert objective function to soft clauses
+//   for (int i = 0; i < objective_function->_lits.size(); i++) {
+//     assert(objective_function->_coeffs[i] > 0);
+//     unit_soft[0] = ~objective_function->_lits[i];
+//     addSoftClause(objective_function->_coeffs[i], unit_soft);
 
-    // Updates the maximum weight of soft clauses.
-    setMaximumWeight(objective_function->_coeffs[i]);
-    // Updates the sum of the weights of soft clauses.
-    updateSumWeights(objective_function->_coeffs[i]);
-  }
+//     // Updates the maximum weight of soft clauses.
+//     setMaximumWeight(objective_function->_coeffs[i]);
+//     // Updates the sum of the weights of soft clauses.
+//     updateSumWeights(objective_function->_coeffs[i]);
+//   }
 
-  if (getMaximumWeight() == 1)
-    setProblemType(_UNWEIGHTED_);
-  else
-    setProblemType(_WEIGHTED_);
-}
+//   if (getMaximumWeight() == 1)
+//     setProblemType(_UNWEIGHTED_);
+//   else
+//     setProblemType(_WEIGHTED_);
+// }
 unordered_set<uint32_t> MaxSATFormula::pick_k_clauses(int k, bool reverse = false) {
+  // cout << " Entered function: pick_k_clauses !!!";
+  // auto start = std::chrono::high_resolution_clock::now();
   int rnd_max = weight_sampler.size();
     int ntake = k;
 
@@ -392,9 +394,14 @@ unordered_set<uint32_t> MaxSATFormula::pick_k_clauses(int k, bool reverse = fals
                                     + tree_weights[2 * curr_ix + 2];
         }
     }
+    // auto end = std::chrono::high_resolution_clock::now();
+    // auto int_s = std::chrono::duration_cast<std::chrono::seconds>(end - start);
+    // std::cout << "pick_k_clauses elapsed time is " << int_s.count() << " seconds )" << std::endl;
   return sampled;
 }
 unordered_set<uint32_t> MaxSATFormula::pick_k_clauses_from_pool(int k) {
+  // cout << " Entered function: pick_k_clauses_from_pool !!!";
+  // auto start = std::chrono::high_resolution_clock::now();
   int rnd_max = weight_pool.size();
     int ntake = k;
 
@@ -443,6 +450,9 @@ unordered_set<uint32_t> MaxSATFormula::pick_k_clauses_from_pool(int k) {
                                     + tree_weights[2 * curr_ix + 2];
         }
     }
+    // auto end = std::chrono::high_resolution_clock::now();
+    // auto int_s = std::chrono::duration_cast<std::chrono::seconds>(end - start);
+    // std::cout << "pick_k_clauses_from_pool elapsed time is " << int_s.count() << " seconds )" << std::endl;
   return sampled;
 }
 

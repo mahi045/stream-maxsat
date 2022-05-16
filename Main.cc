@@ -405,12 +405,12 @@ int main(int argc, char **argv) {
     printf("c |  Number of soft clauses:    %7d                                "
            "                                   |\n",
            maxsat_formula->nSoft());
-    printf("c |  Number of cardinality:     %7d                                "
-           "                                   |\n",
-           maxsat_formula->nCard());
-    printf("c |  Number of PB :             %7d                                "
-           "                                   |\n",
-           maxsat_formula->nPB());
+    // printf("c |  Number of cardinality:     %7d                                "
+    //        "                                   |\n",
+    //        maxsat_formula->nCard());
+    // printf("c |  Number of PB :             %7d                                "
+    //        "                                   |\n",
+    //        maxsat_formula->nPB());
     double parsed_time = cpuTime();
 
     printf("c |  Parse time:           %12.2f s                                "

@@ -102,7 +102,7 @@ public:
       : hard_weight(UINT64_MAX), problem_type(_UNWEIGHTED_), n_vars(0),
         n_soft(0), n_pool(0), n_hard(0), n_initial_vars(0), sum_soft_weight(0),
         max_soft_weight(0) {
-    objective_function = NULL;
+    // objective_function = NULL;
     format = _FORMAT_MAXSAT_;
   }
 
@@ -119,11 +119,11 @@ public:
     hard_clauses.clear();
   }
 
-  MaxSATFormula *copyMaxSATFormula();
+  // MaxSATFormula *copyMaxSATFormula();
   vec<double> occurance_list;
   vector<double> occurance_F;
   // vec<double> var_bias;
-  vector<uint64_t> m;
+  // vector<uint64_t> m;
   vec<double> temp_occurance_list;
   vec<lbool> assignment;
   vector<uint32_t> weight_sampler;
@@ -134,7 +134,7 @@ public:
   uint32_t clause_seen_so_far = 0;
   mpz_t clause_weight_sum, bucket_clause_weight;
   uint64_t hard_clause_identifier = 0, max_weight_pool=0, number_of_clauses = 0;
-  uint64_t bias = 0;
+  // uint64_t bias = 0;
   uint32_t beta;
   std::map<std::pair<uint32_t, uint32_t>, uint32_t> clause_map;
 
@@ -168,7 +168,7 @@ public:
   int getProblemType();          // Get problem type.
 
   void updateSumWeights(uint64_t weight); // Update initial 'ubCost'.
-  uint64_t getSumWeights() { return sum_soft_weight; }
+  // uint64_t getSumWeights() { return sum_soft_weight; }
 
   void setMaximumWeight(uint64_t weight); // Set initial 'currentWeight'.
   uint64_t getMaximumWeight();            // Get 'currentWeight'.
@@ -195,28 +195,28 @@ public:
   void addCardinalityConstraint(Card *card);
 
   /*! Return i-card constraint. */
-  Card *getCardinalityConstraint(int pos) {
-    return cardinality_constraints[pos];
-  }
+  // Card *getCardinalityConstraint(int pos) {
+  //   return cardinality_constraints[pos];
+  // }
 
   /*! Add a new PB constraint. */
-  void addPBConstraint(PB *pb);
+  // void addPBConstraint(PB *pb);
 
   /*! Return i-PB constraint. */
-  PB *getPBConstraint(int pos) { return pb_constraints[pos]; }
+  // PB *getPBConstraint(int pos) { return pb_constraints[pos]; }
 
   int newVarName(char *varName);
-  int varID(char *varName);
+  // int varID(char *varName);
 
-  void addObjFunction(PBObjFunction *of) {
-    objective_function = new PBObjFunction(of->_lits, of->_coeffs, of->_const);
-  }
+  // void addObjFunction(PBObjFunction *of) {
+  //   objective_function = new PBObjFunction(of->_lits, of->_coeffs, of->_const);
+  // }
 
-  PBObjFunction *getObjFunction() { return objective_function; }
+  // PBObjFunction *getObjFunction() { return objective_function; }
 
-  int nCard() { return cardinality_constraints.size(); }
+  // int nCard() { return cardinality_constraints.size(); }
 
-  int nPB() { return pb_constraints.size(); }
+  // int nPB() { return pb_constraints.size(); }
 
   void convertPBtoMaxSAT();
 
@@ -224,7 +224,7 @@ public:
 
   int getFormat() { return format; }
 
-  indexMap &getIndexToName() { return _indexToName; }
+  // indexMap &getIndexToName() { return _indexToName; }
 
 protected:
   // MaxSAT database
@@ -235,9 +235,9 @@ protected:
 
   // PB database
   //
-  PBObjFunction *objective_function;   //<! Objective function for PB.
-  vec<Card *> cardinality_constraints; //<! Stores the cardinality constraints.
-  vec<PB *> pb_constraints;            //<! Stores the PB constraints.
+  // PBObjFunction *objective_function;   //<! Objective function for PB.
+  // vec<Card *> cardinality_constraints; //<! Stores the cardinality constraints.
+  // vec<PB *> pb_constraints;            //<! Stores the PB constraints.
 
   // Properties of the MaxSAT formula
   //
@@ -253,8 +253,8 @@ protected:
 
   // Utils for PB formulas
   //
-  nameMap _nameToIndex;  //<! Map from variable name to variable id.
-  indexMap _indexToName; //<! Map from variable id to variable name.
+  // nameMap _nameToIndex;  //<! Map from variable name to variable id.
+  // indexMap _indexToName; //<! Map from variable id to variable name.
 
   // Format
   //

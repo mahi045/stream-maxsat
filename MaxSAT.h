@@ -136,12 +136,12 @@ public:
     maxsat_formula = maxsat;
     maxsat_formula->setInitialVars(maxsat_formula->nVars());
 
-    if (maxsat_formula->getObjFunction() != NULL) {
-      off_set = maxsat_formula->getObjFunction()->_const;
-      maxsat_formula->convertPBtoMaxSAT();
-    }
+    // if (maxsat_formula->getObjFunction() != NULL) {
+    //   off_set = maxsat_formula->getObjFunction()->_const;
+    //   maxsat_formula->convertPBtoMaxSAT();
+    // }
 
-    ubCost = maxsat_formula->getSumWeights();
+    // ubCost = maxsat_formula->getSumWeights();
   }
 
   void blockModel(Solver *solver);

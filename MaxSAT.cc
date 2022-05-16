@@ -328,14 +328,14 @@ void MaxSAT::blockModel(Solver *solver) {
   vec<Lit> blocking;
 
   printf("v ");
-  for (int i = 0; i < model.size(); i++) {
-    indexMap::const_iterator iter = maxsat_formula->getIndexToName().find(i);
-    if (iter != maxsat_formula->getIndexToName().end()) {
-      if (model[i] == l_False)
-        printf("-");
-      printf("%s ", iter->second.c_str());
-    }
-  }
+  // for (int i = 0; i < model.size(); i++) {
+  //   indexMap::const_iterator iter = maxsat_formula->getIndexToName().find(i);
+  //   if (iter != maxsat_formula->getIndexToName().end()) {
+  //     if (model[i] == l_False)
+  //       printf("-");
+  //     printf("%s ", iter->second.c_str());
+  //   }
+  // }
   printf("\n");
 
   for (int i = 0; i < model.size(); i++) {
@@ -362,12 +362,12 @@ void MaxSAT::printModel() {
 
   if (maxsat_formula->getFormat() == _FORMAT_PB_) {
     for (int i = 0; i < model.size(); i++) {
-      indexMap::const_iterator iter = maxsat_formula->getIndexToName().find(i);
-      if (iter != maxsat_formula->getIndexToName().end()) {
-        if (model[i] == l_False)
-          s << "-";
-        s << iter->second.c_str() << " ";
-      }
+      // indexMap::const_iterator iter = maxsat_formula->getIndexToName().find(i);
+      // if (iter != maxsat_formula->getIndexToName().end()) {
+      //   if (model[i] == l_False)
+      //     s << "-";
+      //   s << iter->second.c_str() << " ";
+      // }
     }
   } else {
     for (int i = 0; i < model.size(); i++) {
