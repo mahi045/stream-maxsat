@@ -122,7 +122,7 @@ public:
   MaxSATFormula *copyMaxSATFormula();
   vec<double> occurance_list;
   vector<double> occurance_F;
-  vec<double> var_bias;
+  // vec<double> var_bias;
   vector<uint64_t> m;
   vec<double> temp_occurance_list;
   vec<lbool> assignment;

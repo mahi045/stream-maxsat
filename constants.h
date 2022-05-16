@@ -1,12 +1,13 @@
 #ifndef CONSTANTS_h
 #define CONSTANTS_h
 #include <chrono>
+#include <cstdint>
 static int K;
 static int R;
 static double eps;
 static double alpha = 0.1;
 static int BUCKET_SIZE;
-static int POOL_SIZE;
+static uint64_t POOL_SIZE;
 static int nbuckets;
 static std::string file_name;
 static bool sampling_maxsat;
@@ -31,5 +32,5 @@ static bool use_filtering_condition = true;
 static bool log_of_beta = true;
 static bool random_sat_of_beta = true;
 static bool expectation_of_clause = true;
-static double fraction_of_memory = 0.1;
+static double fraction_of_memory = 0.05;
 #endif

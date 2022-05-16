@@ -95,11 +95,7 @@ void MaxSATFormula::addSoftClause(uint64_t weight, vec<Lit> &lits) {
 }
 
 void MaxSATFormula::clearBucket() {
-  for (int i = 0; i < nSoft(); i++)
-  {
-    soft_clauses[i].clause.clear();
-  }
-  soft_clauses.clear();
+  soft_clauses.clear(true);
 }
 void MaxSATFormula::addPoolClause(uint64_t weight, vec<Lit> &lits) {
   pool_clauses.push();
@@ -117,7 +113,8 @@ void MaxSATFormula::addPoolClause(uint64_t weight, vec<Lit> &lits) {
 }
 
 void MaxSATFormula::PoolCapacity() {
-  cout << "pool_clauses.capacity(): " << pool_clauses.capacity() * sizeof(pool_clauses) << endl;
+  cout << "soft_clauses.capacity(): " << soft_clauses.capacity() << endl;
+  cout << "sizeof(soft_clauses[0]): " << sizeof(soft_clauses[0]) << endl;
 }
 
 void MaxSATFormula::PrintPoolClause(int index) {

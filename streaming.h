@@ -44,39 +44,48 @@ int currentUsedSizeinVM(){ //Note: this value is in KB!
 }
 
 void init_stream(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
-    POOL_SIZE = min((uint64_t) (K * var / (eps * eps)), cla);
-    BUCKET_SIZE = POOL_SIZE / R;
+    // POOL_SIZE = min((uint64_t) (K * var / (eps * eps)), cla);
+    
     maxsat_formula->occurance_list.growTo(2 * var + 1, 0.0);
     if (median_heu)
         maxsat_formula->occurance_F.resize(var + 1, 0.0);
-    if (!random_sat_of_beta) {
+    int random_k = 0;
+    if (random_sat_of_beta) {
         int k = 1;
         for (; ; k++) {
             if (var * pow(2, k) > k * cla) {
                 break;
             }
         }
-        maxsat_formula->beta = k;
-        cout << "The k of random k sat is: " << k << endl;
+        random_k = k;
+        // cout << "The k of random k sat is: " << k << endl;
     }
+    int log_of_clause = 0;
     if (log_of_beta) {
-        maxsat_formula->beta = ceil(log2(maxsat_formula->number_of_clauses));
-        cout << "The log clauses is: log2(" << cla << ") = " << maxsat_formula->beta << endl;
+        log_of_clause = ceil(log2(maxsat_formula->number_of_clauses));
+        // cout << "The log clauses is: log2(" << cla << ") = " << maxsat_formula->beta << endl;
     }
-    if (!expectation_of_clause) {
+    int expectation = 0;
+    if (expectation_of_clause) {
         double exp = 0;
         for (auto &x : maxsat_formula->clause_map)
         {
             exp += ((double) x.first.second * x.second / cla);
         }
-        maxsat_formula->beta =  3 * ceil(exp);
-        cout << "The expected clause lenght is: E[clause_lenght] = " << maxsat_formula->beta << endl;
+        expectation =  4 * ceil(exp);
+        // cout << "The expected clause lenght is: E[clause_lenght] = " << maxsat_formula->beta << endl;
     }
-    int p = (3000 * fraction_of_memory * 1000 * 1000) / (4 * (maxsat_formula->beta) + sizeof(Soft));
-    cout << p << endl;
-    cout << "It is " << (double) p / var << " factor of n" << endl;
+    int minimum = min(expectation, min(log_of_clause, random_k));
+    int maximum = max(expectation, max(log_of_clause, random_k));
+    // expectation + log_of_clause + random_k - minimum -
+    maxsat_formula->bias =  maximum;
+    cout << "median(" << expectation << "," << random_k << "," << log_of_clause << ")= " << maxsat_formula->bias << endl;
+    POOL_SIZE = (3000 * fraction_of_memory * 1000 * 1000) / (4 * (maxsat_formula->beta) + sizeof(Soft));
+    POOL_SIZE = min(POOL_SIZE, cla);
+    BUCKET_SIZE = POOL_SIZE / R;
+    cout << "The pool size is: " << POOL_SIZE << ", which is " << (double) POOL_SIZE / var << " factor of n" << endl;
     maxsat_formula->assignment.growTo(var + 1, l_Undef);
-    maxsat_formula->var_bias.growTo(var + 1, 0);
+    // maxsat_formula->var_bias.growTo(var + 1, 0);
     printf("Size of occurance list: %d\n", maxsat_formula->occurance_list.size());
     printf("Size of assignment list: %d\n", maxsat_formula->assignment.size());
     maxsat_formula->weight_pool.clear();
@@ -122,7 +131,6 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     debugfile.open("debug_" + file_name);
     double w, w_adj;
     int var_ind = 0;
-    double bias_thre, gamma;
     int bucket_index = maxsat_formula->nSoft() / BUCKET_SIZE - 1;
     int bound = (maxsat_formula->nSoft() % BUCKET_SIZE) ? maxsat_formula->nSoft() % BUCKET_SIZE : BUCKET_SIZE;
     // cout << "sizeof(maxsat_formula->getSoftClause(0).weight) => " << sizeof(Soft) << endl;
@@ -252,32 +260,32 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                     // }
                     // disable assignment heuristic
                     if (!use_pool && decision_heu) {
-                        if (maxsat_formula->bias > bias_thre) {
+                        if (true) {
                             if (maxsat_formula->assignment[variable] == l_True) {
-                                if (maxsat_formula->var_bias[variable - 1] > 0) {
+                                if (maxsat_formula->occurance_list[2*(variable - 1)] > maxsat_formula->occurance_list[2*(variable - 1) + 1]) {
                                     myfile << static_cast<uint64_t>(positive_phase) << " " << variable << " " << 0 << endl;
                                 // myfile << static_cast<uint64_t>(negative_phase) << " " << -variable << " " << 0 << endl;
                                 }
                             } else if (maxsat_formula->assignment[variable] == l_False) {
-                                if (maxsat_formula->var_bias[variable - 1] < 0) {
+                                if (maxsat_formula->occurance_list[2*(variable - 1)] < maxsat_formula->occurance_list[2*(variable - 1) + 1]) {
                                     // myfile << static_cast<uint64_t>(positive_phase) << " " << variable << " " << 0 << endl;
                                     myfile << static_cast<uint64_t>(negative_phase) << " " << -variable << " " << 0 << endl;
                                 }
                             }
                         }
-                        else {
-                            if (maxsat_formula->assignment[variable] == l_True) {
-                                if (maxsat_formula->var_bias[variable - 1] > 0) {
-                                    myfile << static_cast<uint64_t>(gamma * positive_phase + 1) << " " << variable << " " << 0 << endl;
-                                    // myfile << static_cast<uint64_t>((1 - gamma) * negative_phase) << " " << -variable << " " << 0 << endl;
-                                }
-                            } else if (maxsat_formula->assignment[variable] == l_False) {
-                                if (maxsat_formula->var_bias[variable - 1] < 0) {
-                                    // myfile << static_cast<uint64_t>((1 - gamma) * positive_phase) << " " << variable << " " << 0 << endl;
-                                    myfile << static_cast<uint64_t>(gamma * negative_phase + 1) << " " << -variable << " " << 0 << endl;
-                                }
-                            }
-                        }
+                        // else {
+                        //     if (maxsat_formula->assignment[variable] == l_True) {
+                        //         if (maxsat_formula->var_bias[variable - 1] > 0) {
+                        //             myfile << static_cast<uint64_t>(gamma * positive_phase + 1) << " " << variable << " " << 0 << endl;
+                        //             // myfile << static_cast<uint64_t>((1 - gamma) * negative_phase) << " " << -variable << " " << 0 << endl;
+                        //         }
+                        //     } else if (maxsat_formula->assignment[variable] == l_False) {
+                        //         if (maxsat_formula->occurance_list[2*(variable - 1)] > maxsat_formula->occurance_list[2*(variable - 1) + 1]) {
+                        //             // myfile << static_cast<uint64_t>((1 - gamma) * positive_phase) << " " << variable << " " << 0 << endl;
+                        //             myfile << static_cast<uint64_t>(gamma * negative_phase + 1) << " " << -variable << " " << 0 << endl;
+                        //         }
+                        //     }
+                        // }
                     }
                     // here the heuristic stops
                 }
@@ -285,6 +293,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 maxsat_formula->temp_occurance_list[2 * (variable - 1)] = 0;
                 maxsat_formula->temp_occurance_list[2 * (variable - 1) + 1] = 0;
             }
+            maxsat_formula->temp_occurance_list.clear(true);
             myfile.close();
             stringStream.str("");
             current_time = std::chrono::high_resolution_clock::now();
@@ -292,7 +301,9 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             remaining_time =  current_time - start_time;
             remaining_time_second = ceil((TIMEOUT - remaining_time.count()) / (remaining_buckets + remaining_buckets));
             timeout = min(SMALL_TIMEOUT, remaining_time_second);
-            timeout = (timeout == 0) ? 10 : timeout;
+            timeout = (timeout < 10) ? 10 : timeout;
+            incompatible.clear(true);
+            agreed.clear(true);
             int available_memory = total_memory;
             if (use_fixed_memory)
             {
@@ -306,8 +317,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             system(stringStream.str().c_str());
 
             // reading the recent maxsat call
-            incompatible.clear();
-            agreed.clear();
+            
             result_file_name = "result_" + stream_maxsat_file;
             ifstream resultfile2(result_file_name);
             bool no_assign = false;
@@ -425,7 +435,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 remaining_time =  current_time - start_time;
                 remaining_time_second = ceil((TIMEOUT - remaining_time.count()) / (remaining_buckets + remaining_buckets - 1));
                 timeout = min(SMALL_TIMEOUT, remaining_time_second);
-                timeout = (timeout == 0) ? 10 : timeout;
+                timeout = (timeout < 0) ? 10 : timeout;
                 // cout << "The timeout for second maxsat: " << timeout << endl;
                 stringStream.str("");
                 available_memory = total_memory;
@@ -525,6 +535,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             maxsat_formula->clause_seen_so_far += (i + 1);
             mpz_init(maxsat_formula->bucket_clause_weight);
             maxsat_formula->weight_sampler.clear();
+            maxsat_formula->weight_sampler.shrink_to_fit();
             if (verbose)
                 maxsat_formula->status_pool();
         }
