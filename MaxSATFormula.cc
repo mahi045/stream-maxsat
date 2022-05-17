@@ -141,6 +141,12 @@ void MaxSATFormula::PrintPoolClause(int index) {
   cout << "0" << endl;
 }
 
+void MaxSATFormula::createPool(int capacity) {
+  pool_clauses.growTo(capacity+1);
+  weight_pool.resize(capacity+1);
+  last_index_in_pool = 0;
+}
+
 // void test_update_function(MaxSATFormula *maxsat_formula) {
 //     cout << "Before update" << endl;
 //     cout << maxsat_formula->getSoftClause(11).weight << " ";
@@ -237,7 +243,7 @@ int MaxSATFormula::nSoft() {
 } // Returns the number of soft clauses in the working MaxSAT formula.
 
 int MaxSATFormula::nPool() {
-  return n_pool;
+  return last_index_in_pool;
 } // Returns the number of pool clauses in the working MaxSAT formula.
 
 int MaxSATFormula::nHard() {

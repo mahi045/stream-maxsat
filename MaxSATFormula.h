@@ -133,7 +133,8 @@ public:
   void status_pool();
   uint32_t clause_seen_so_far = 0;
   mpz_t clause_weight_sum, bucket_clause_weight;
-  uint64_t hard_clause_identifier = 0, max_weight_pool=0, number_of_clauses = 0;
+  uint64_t hard_clause_identifier = 0, max_weight_pool=0;
+  uint32_t last_index_in_pool = 0;
   // uint64_t bias = 0;
   uint32_t beta;
   std::map<std::pair<uint32_t, uint32_t>, uint32_t> clause_map;
@@ -150,6 +151,7 @@ public:
   /*! Add a new pool clause. */
   void addPoolClause(uint64_t weight, vec<Lit> &lits);
   void PoolCapacity(); 
+  void createPool(int capacity);
   void PrintPoolClause(int index); 
   void updatePoolClause(uint64_t weight, vec<Lit> &lits, int pos);
 

@@ -62,7 +62,7 @@ void init_stream(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
     }
     int log_of_clause = 0;
     if (log_of_beta) {
-        log_of_clause = ceil(log2(maxsat_formula->number_of_clauses));
+        log_of_clause = ceil(log2(cla));
         // cout << "The log clauses is: log2(" << cla << ") = " << maxsat_formula->beta << endl;
     }
     int expectation = 0;
@@ -85,11 +85,13 @@ void init_stream(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
     BUCKET_SIZE = POOL_SIZE / R;
     cout << "The pool size is: " << POOL_SIZE << ", which is " << (double) POOL_SIZE / var << " factor of n" << endl;
     cout << "The number of clauses is " <<  (double) cla / var << " factor of n" << endl;
+    // setting the capacity of pool
+    maxsat_formula->createPool(POOL_SIZE);
     maxsat_formula->assignment.growTo(var + 1, l_Undef);
     // maxsat_formula->var_bias.growTo(var + 1, 0);
     printf("Size of occurance list: %d\n", maxsat_formula->occurance_list.size());
     printf("Size of assignment list: %d\n", maxsat_formula->assignment.size());
-    maxsat_formula->weight_pool.clear();
+    // maxsat_formula->weight_pool.clear();
 }
 
 // double bias_threshold(MaxSATFormula *maxsat_formula) {
@@ -263,14 +265,14 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                     if (!use_pool && decision_heu) {
                         if (true) {
                             if (maxsat_formula->assignment[variable] == l_True) {
-                                if (maxsat_formula->occurance_list[2*(variable - 1)] > maxsat_formula->occurance_list[2*(variable - 1) + 1]) {
-                                    myfile << static_cast<uint64_t>(positive_phase) << " " << variable << " " << 0 << endl;
+                                if (maxsat_formula->occurance_list[2*(variable - 1)] > F * maxsat_formula->occurance_list[2*(variable - 1) + 1]) {
+                                    myfile << static_cast<uint64_t>(positive_phase-negative_phase) << " " << variable << " " << 0 << endl;
                                 // myfile << static_cast<uint64_t>(negative_phase) << " " << -variable << " " << 0 << endl;
                                 }
                             } else if (maxsat_formula->assignment[variable] == l_False) {
-                                if (maxsat_formula->occurance_list[2*(variable - 1)] < maxsat_formula->occurance_list[2*(variable - 1) + 1]) {
+                                if (F * maxsat_formula->occurance_list[2*(variable - 1)] < maxsat_formula->occurance_list[2*(variable - 1) + 1]) {
                                     // myfile << static_cast<uint64_t>(positive_phase) << " " << variable << " " << 0 << endl;
-                                    myfile << static_cast<uint64_t>(negative_phase) << " " << -variable << " " << 0 << endl;
+                                    myfile << static_cast<uint64_t>(negative_phase-positive_phase) << " " << -variable << " " << 0 << endl;
                                 }
                             }
                         }
@@ -540,8 +542,9 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             }
             else {
                 for (auto cla_index = 0; cla_index != i + 1; cla_index++) {
-                    maxsat_formula->addPoolClause(maxsat_formula->getSoftClause(cla_index).weight, 
-                        maxsat_formula->getSoftClause(cla_index).clause);
+                    maxsat_formula->updatePoolClause(maxsat_formula->getSoftClause(cla_index).weight, 
+                        maxsat_formula->getSoftClause(cla_index).clause, maxsat_formula->last_index_in_pool);
+                    maxsat_formula->last_index_in_pool++; // increment the next position in pool (ESSENTIAL)
                 }
             }
             maxsat_formula->clause_seen_so_far += (i + 1);

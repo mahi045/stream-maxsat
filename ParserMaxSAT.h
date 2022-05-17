@@ -104,13 +104,11 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
       if (eagerMatch(in, "p cnf")) {
         num_var = parseInt(in); // Variables
         num_cla = parseInt(in); // Clauses
-        maxsat_formula->number_of_clauses = num_cla;
         init_stream(maxsat_formula, num_var, num_cla);
       } else if (eagerMatch(in, "wcnf")) {
         maxsat_formula->setProblemType(_WEIGHTED_);
         num_var = parseInt(in); // Variables
         num_cla = parseInt(in); // Clauses
-        maxsat_formula->number_of_clauses = num_cla;
         if (*in != '\r' && *in != '\n') {
           hard_weight = parseWeight(in);
           maxsat_formula->setHardWeight(hard_weight);
