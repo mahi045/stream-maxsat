@@ -38,7 +38,7 @@
 #include "core/SolverTypes.h"
 #include "utils/ParseUtils.h"
 // #include "constants.h"
-#include "streaming.h"
+#include "sampling.h"
 
 #ifdef HAS_EXTRA_STREAMBUFFER
 #include "utils/StreamBuffer.h"
@@ -104,7 +104,7 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
       if (eagerMatch(in, "p cnf")) {
         num_var = parseInt(in); // Variables
         num_cla = parseInt(in); // Clauses
-        init_stream(maxsat_formula, num_var, num_cla);
+        init_sampling(maxsat_formula, num_var, num_cla);
       } else if (eagerMatch(in, "wcnf")) {
         maxsat_formula->setProblemType(_WEIGHTED_);
         num_var = parseInt(in); // Variables
@@ -113,7 +113,7 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
           hard_weight = parseWeight(in);
           maxsat_formula->setHardWeight(hard_weight);
         }
-        init_stream(maxsat_formula, num_var, num_cla);
+        init_sampling(maxsat_formula, num_var, num_cla);
         nbuckets = (num_cla / BUCKET_SIZE) + ((num_cla % BUCKET_SIZE) != 0);
         printf("The number of buckets: %d\n", nbuckets);
       } else
@@ -146,16 +146,17 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
         maxsat_formula->addHardClause(lits);
       if (!sampling_maxsat && (maxsat_formula->nSoft() > 0) && (maxsat_formula->nSoft() % BUCKET_SIZE == 0)) {
         printf("%d-th bucket !! \n", maxsat_formula->nSoft() / BUCKET_SIZE);
-        streaming_maxsat(maxsat_formula);
+        modify_pool(maxsat_formula);
         maxsat_formula->clearBucket();
       }
     }
   }
   if (!sampling_maxsat && maxsat_formula->nSoft() % BUCKET_SIZE > 0) {
     printf("%d-th bucket !! \n", (maxsat_formula->nSoft() / BUCKET_SIZE) + 1);
-    streaming_maxsat(maxsat_formula);
+    modify_pool(maxsat_formula);
   }
   printf("Sum of weight: %s\n", mpz_get_str (NULL, 10, maxsat_formula->clause_weight_sum));
+  cout << "The number of pool clauses is: " << maxsat_formula->last_index_in_pool << endl;
   auto current_time = std::chrono::high_resolution_clock::now();
   // cout << " Stream maxsat execution time: " <<  duration_cast<std::chrono::microseconds>(current_time - start_time).count() / pow(10, 6) << endl;
   // assert(maxsat_formula->nSoft() == maxsat_formula->weight_sampler.size());

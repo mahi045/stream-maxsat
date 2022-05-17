@@ -93,7 +93,12 @@ void MaxSATFormula::addSoftClause(uint64_t weight, vec<Lit> &lits) {
   // }
   if (use_pool) {
     if (lits.size() <= beta) {
-      weight_sampler.push_back(weight);
+      if (hoa || L_1) {
+        weight_sampler.push_back(weight); // update the weight sum
+      }
+      else {
+        weight_sampler.push_back(1); // random sampling
+      }
     }
     else {
       weight_sampler.push_back(0);
@@ -217,7 +222,12 @@ void MaxSATFormula::addSoftClause(uint64_t weight, vec<Lit> &lits,
   // }
   if (use_pool) {
     if (lits.size() <= beta) {
-      weight_sampler.push_back(weight);
+      if (hoa || L_1) {
+        weight_sampler.push_back(weight); // update the weight sum
+      }
+      else {
+        weight_sampler.push_back(1); // random sampling
+      }
     }
     else {
       weight_sampler.push_back(0);

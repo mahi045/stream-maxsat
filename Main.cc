@@ -30,6 +30,7 @@
 #include "utils/Options.h"
 #include "utils/ParseUtils.h"
 #include "utils/System.h"
+#include <cstdio>
 #include <errno.h>
 #include <signal.h>
 #include <zlib.h>
@@ -52,7 +53,6 @@
 #include "ParserMaxSAT.h"
 #include "constants.h"
 #include "sampling.h"
-#include "streaming.h"
 
 #define VER1_(x) #x
 #define VER_(x) VER1_(x)
@@ -263,10 +263,12 @@ int main(int argc, char **argv) {
     BoolOption sampling("WBO", "sampling", "Symmetry breaking.\n", false);
     BoolOption print_verbose("WBO", "print-verbose", "Printing the verbose.\n", false);
     BoolOption pool_c("WBO", "pool", "use pool.\n", true);
-    BoolOption hard_c("WBO", "conflict", "adding the non-conflict variables.\n", true);
+    BoolOption l1_sampler("WBO", "l1", "probability proportion to weight.\n", true);
+    BoolOption hoa_sampler("WBO", "hoa", "run hoa sampling algorithm.\n", false);
+
     BoolOption decision_c("WBO", "decision", "enable decision heuristic.\n", false);
     BoolOption use_median("WBO", "median", "use median as F.\n", true);
-    BoolOption use_filter("WBO", "filtering", "use filtering on hard clause inclusion.\n", true);
+
     BoolOption check_memory("WBO", "lim-mem", "Use limited memory.\n", true);
     parseOptions(argc, argv, true);
     R = (int)R_value;
@@ -276,11 +278,13 @@ int main(int argc, char **argv) {
     eps = (double)epsilon;
     alpha = (double)al;
     clause_policy = (int)c_p; 
-    use_hard = (bool) hard_c;
+
     use_pool = (bool) pool_c;
     decision_heu = (bool) decision_c;
     use_fixed_memory = (bool) check_memory;
-    use_filtering_condition = (bool) use_filter;
+    L_1 = (bool) l1_sampler;
+    hoa = (bool) hoa_sampler;
+
 
     heparam = (double) hp;
     npercentile = (double) percentile;
@@ -360,14 +364,17 @@ int main(int argc, char **argv) {
     //   maxsat_formula->setFormat(_FORMAT_PB_);
     // }
     gzclose(in);
-    if (sampling) {
-       printf("Running sampling version of maxsat!!!\n");
-       sample_clauses(maxsat_formula);
+    if (L_1) {
+      printf("Running L_1 sampling maxsat. \n");
     }
     else {
-       printf("Running streaming version of maxsat!!!\n");
-      //  streaming_maxsat(maxsat_formula);
+      printf("Running random sampling maxsat. \n");
     }
+    if (hoa) {
+      printf("Running hoa sampling maxsat. \n");
+    }
+    printf("Running sampling version of maxsat!!!\n");
+    sample_clauses(maxsat_formula);
 
     printf("c |                                                                "
            "                                       |\n");
