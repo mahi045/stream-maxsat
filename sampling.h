@@ -111,19 +111,20 @@ void modify_pool(MaxSATFormula *maxsat_formula) {
                 // int clause_need_replace = ((double) (BUCKET_SIZE) / (BUCKET_SIZE + maxsat_formula->clause_seen_so_far)) * maxsat_formula->nPool();
                 int clause_need_replace = ceil(((double) (mpz_get_d(maxsat_formula->bucket_clause_weight)) / (mpz_get_d(maxsat_formula->clause_weight_sum))) 
                     * maxsat_formula->nPool());
-                int remaining_clause = BUCKET_SIZE;
+                int remaining_clause = min(bound, BUCKET_SIZE);
                 // cout << "clause_need_replace: " << clause_need_replace << endl;
-                clause_need_replace = min(clause_need_replace, bound);
+                clause_need_replace = min(clause_need_replace, remaining_clause);
                 // cout << "clause_need_replace: " << clause_need_replace << endl;
-                if (false && i + 1 == bound) {
-                    remaining_clause = i + 1;
-                    clause_need_replace = ((double) (remaining_clause) / (remaining_clause + maxsat_formula->clause_seen_so_far)) * maxsat_formula->nPool();
-                }
+                // if (false && i + 1 == bound) {
+                //     cout << "Now it is executed" << endl;
+                //     remaining_clause = i + 1;
+                //     clause_need_replace = ((double) (remaining_clause) / (remaining_clause + maxsat_formula->clause_seen_so_far)) * maxsat_formula->nPool();
+                // }
                 if (!hoa && !L_1) {
                     // it is special case for random sampling 
                     clause_need_replace = ((double) (remaining_clause) / (remaining_clause + maxsat_formula->clause_seen_so_far)) * maxsat_formula->nPool();
                 }
-                clause_need_replace = min(clause_need_replace, bound);
+                clause_need_replace = min(clause_need_replace, remaining_clause);
                 unordered_set<uint32_t> replaced_clause_pool = maxsat_formula->pick_k_clauses_from_pool(clause_need_replace);
                 unordered_set<uint32_t> replaced_clause_bucket = maxsat_formula->pick_k_clauses(clause_need_replace, true);
                 cout << " From bucket index " << bucket_start + bucket_index * BUCKET_SIZE << " to " << i + bucket_index * BUCKET_SIZE << " => ";
