@@ -19,6 +19,7 @@ static bool decision_heu = true;
 static double npercentile = 0.5;
 static bool L_1 = true;
 static bool hoa = false;
+static bool postprocessing = false;
 
 static unsigned TIMEOUT = 9990;
 static unsigned SMALL_TIMEOUT = 1000;
@@ -29,9 +30,11 @@ static std::chrono::high_resolution_clock::time_point start_time;
 static int number_of_no_assignment = 0;
 static bool use_fixed_memory = true;
 static int total_memory = 4000;
+static int iter = 10;
 
 static bool log_of_beta = true;
 static bool random_sat_of_beta = true;
 static bool expectation_of_clause = true;
 static double fraction_of_memory = 0.1;
+static double Gamma = 0.1;
 #endif

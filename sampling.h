@@ -11,12 +11,15 @@
 #include <random>
 #include <stdio.h>
 #include <sstream>
+#include <string>
 #include <unordered_set>
 #include <algorithm>
 
 using NSPACE::vec;
 using namespace openwbo;
 using namespace std;
+std::random_device rd;
+std::mt19937 gen(rd());
 
 int parseLine(char* line){
     // This assumes that a digit will be found and the line ends in " Kb".
@@ -41,6 +44,21 @@ int currentUsedSizeinVM(){ //Note: this value is in KB!
     }
     fclose(file);
     return result;
+}
+
+vector<int> sample_k_items(int n, int k) {
+    vector<int> b(k);
+    for(std::size_t i = 0; i != n; ++i) {
+        std::uniform_int_distribution<> dis(0, i);
+        std::size_t j = dis(gen);
+        if(j < b.size()) {
+            if (i < b.size()) {
+                b[i] = b[j];
+            }
+            b[j] = i;
+        }
+    }
+    return b;
 }
 
 void init_sampling(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
@@ -83,6 +101,11 @@ void init_sampling(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
     cout << "The number of clauses is " <<  (double) cla / var << " factor of n" << endl;
     // setting the capacity of pool
     maxsat_formula->createPool(POOL_SIZE);
+    if (hoa && POOL_SIZE < cla) {
+        postprocessing = true;
+        iter = ceil(log(cla) / (log (10) * 0.25));
+        cout << "the value of iterations: " << iter << endl;
+    }
     // maxsat_formula->assignment.growTo(var + 1, l_Undef);
     // maxsat_formula->var_bias.growTo(var + 1, 0);
     // maxsat_formula->weight_pool.clear();
@@ -164,8 +187,14 @@ void modify_pool(MaxSATFormula *maxsat_formula) {
 }
 
 void sample_clauses(MaxSATFormula *maxsat_formula) {
-    ofstream myfile;
+    ofstream myfile, assignfile;
+    string line, variable;
+    int lit;
+    string delim = " ";
     std::string sampled_maxsat_file = "sampled_" + file_name;
+    if (hoa) {
+        sampled_maxsat_file = "hoa_sampled_" + file_name;
+    }
     myfile.open(sampled_maxsat_file);
     myfile << "p wcnf " + to_string(maxsat_formula->nVars()) + " " +
                   to_string(POOL_SIZE) + " " +
@@ -196,8 +225,143 @@ void sample_clauses(MaxSATFormula *maxsat_formula) {
     cout << "The available memory: " << available_memory
          << endl;
     std::ostringstream stringStream;
-    stringStream << "./open-wbo_static -print-model -cpu-lim="<< TIMEOUT << " -mem-lim=" << available_memory << " " << sampled_maxsat_file + " > " + "result_" + sampled_maxsat_file;
+    stringStream << "./open-wbo_static -print-model -cpu-lim="<< to_string(TIMEOUT - 100) << " -mem-lim=" << available_memory << " " << sampled_maxsat_file + " > " + "result_" + sampled_maxsat_file;
+    
     system(stringStream.str().c_str());
+
+    
+    maxsat_formula->assignment.growTo(maxsat_formula->nVars() + 1, l_Undef);
+    string result_file_name = "result_" + sampled_maxsat_file;
+    ifstream resultfile(result_file_name);
+    while (getline(resultfile, line))
+    {
+        if (line.rfind("v ") == 0)
+        {
+            auto start = 0U;
+            auto end = line.find(delim);
+            while (end != std::string::npos)
+            {
+                variable = line.substr(start, end - start);
+                start = end + delim.length();
+                end = line.find(delim, start);
+                if (variable != "v")
+                {
+                    lit = stoi(variable);
+                    if (lit < 0)
+                    {
+                        maxsat_formula->assignment[abs(lit)] = l_False;
+                    }
+                    else
+                    {
+                        maxsat_formula->assignment[lit] = l_True;
+                    }
+                }
+            }
+        }
+    }
+    resultfile.close();
+    mpz_t cost, least_cost;
+    vector<int> best_per;
+    mpz_init_set_ui(least_cost, 0);
+    vector<int> per_var;
+    if (postprocessing) {
+        cout << "The post-processing algorithm is running ...";
+        bool unsat = false;
+        for (int itr = 0; itr < iter; itr++)
+        {
+            mpz_init_set_ui(cost, 0);
+            for (int cla_index = 0; cla_index < maxsat_formula->nPool(); cla_index++)
+            {
+                unsat = true;
+                for (int j = 0; j < maxsat_formula->getPoolClause(cla_index).clause.size(); j++)
+                {
+                    Lit p = maxsat_formula->getPoolClause(cla_index).clause[j];
+                    if (sign(p)) {
+                        if (maxsat_formula->assignment[var(p) + 1] == l_False) {
+                            unsat = false;
+                        }
+                    }
+                    else {
+                        if (maxsat_formula->assignment[var(p) + 1] == l_True) {
+                            unsat = false;
+                        }
+                    }
+                }
+                if (unsat) {
+                    mpz_add_ui(cost, cost,
+                        maxsat_formula->getPoolClause(cla_index).weight);
+                }
+            }
+            if (itr == 0) {
+                mpz_set(least_cost, cost);
+            }
+            else {
+                if (mpz_cmp(least_cost, cost) > 0) {
+                    mpz_set(least_cost, cost);
+                    best_per.clear();
+                    best_per.assign(per_var.begin(), per_var.end());
+                }
+            }
+            // undo the last perturb
+            for (int per_atom = 0; per_atom < per_var.size(); per_atom++) {
+                if (maxsat_formula->assignment[per_var[per_atom]] == l_True) {
+                    maxsat_formula->assignment[per_var[per_atom]] == l_False;
+                }
+                else if (maxsat_formula->assignment[per_var[per_atom]] == l_False)
+                {
+                    maxsat_formula->assignment[per_var[per_atom]] == l_True;
+                }
+            }
+            per_var.clear();
+            // the new perturb
+            per_var = sample_k_items(maxsat_formula->nVars(), (int) (maxsat_formula->nVars() * Gamma));
+            // cout << "The size of per_var: " << per_var.size() << endl;
+            for (int per_atom = 0; per_atom < per_var.size(); per_atom++) {
+                if (maxsat_formula->assignment[per_var[per_atom]] == l_True) {
+                    maxsat_formula->assignment[per_var[per_atom]] == l_False;
+                }
+                else if (maxsat_formula->assignment[per_var[per_atom]] == l_False)
+                {
+                    maxsat_formula->assignment[per_var[per_atom]] == l_True;
+                }
+            }
+        }
+        // undo the last perturb
+        for (int per_atom = 0; per_atom < per_var.size(); per_atom++)
+        {
+            if (maxsat_formula->assignment[per_var[per_atom]] == l_True) {
+                maxsat_formula->assignment[per_var[per_atom]] == l_False;
+            }
+            else if (maxsat_formula->assignment[per_var[per_atom]] == l_False) {
+                maxsat_formula->assignment[per_var[per_atom]] == l_True;
+            }
+        }
+        per_var.clear();
+        // assigning the value to best perturbtion
+        for (int per_atom = 0; per_atom < best_per.size(); per_atom++)
+        {
+            if (maxsat_formula->assignment[best_per[per_atom]] == l_True) {
+                maxsat_formula->assignment[best_per[per_atom]] == l_False;
+            }
+            else if (maxsat_formula->assignment[best_per[per_atom]] == l_False) {
+                maxsat_formula->assignment[best_per[per_atom]] == l_True;
+            }
+        }
+    }
+    // finally write the final assignment
+    assignfile.open("result_" + sampled_maxsat_file);
+    assignfile << "v ";
+    for (int variable = 1; variable <= maxsat_formula->nVars(); variable++)
+    {
+        if (maxsat_formula->assignment[variable] == l_True) {
+            assignfile << variable << " ";
+        }
+        else if (maxsat_formula->assignment[variable] == l_False) {
+            assignfile << -variable << " ";
+        }
+    }
+    assignfile.close();
+    
     return;
 }
 
