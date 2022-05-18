@@ -262,7 +262,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                     //     }
                     // }
                     // disable assignment heuristic
-                    if (!use_pool && decision_heu) {
+                    if (!use_pool || decision_heu) {
                         if (true) {
                             if (maxsat_formula->assignment[variable] == l_True) {
                                 if (maxsat_formula->occurance_list[2*(variable - 1)] > F * maxsat_formula->occurance_list[2*(variable - 1) + 1]) {
@@ -381,10 +381,10 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 cout << " Not using the pool " << endl;
                 return;
             }
-
-            if (incompatible.size() > 0) {
-                // now invoking maxsat query again
-                // myfile.open(stream_maxsat_file, std::ios_base::app);
+            // if (incompatible.size() > 0) {
+            //     // now invoking maxsat query again
+            //     // myfile.open(stream_maxsat_file, std::ios_base::app);
+            //     cout << "maxsat_formula->nPool(): " << maxsat_formula->nPool() << endl;
                 for (int cla_index = 0; cla_index < maxsat_formula->nPool();
                      cla_index++) {
                     poolfile << maxsat_formula->getPoolClause(cla_index).weight << " ";
@@ -396,7 +396,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                     }
                     poolfile << "0" << endl;
                 }
-            }
+            // }
             int c = 0;
             if (median_heu && use_filtering_condition) {
                 vector<double> temp_f(maxsat_formula->occurance_F);
