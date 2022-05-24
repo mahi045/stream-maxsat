@@ -225,7 +225,9 @@ void sample_clauses(MaxSATFormula *maxsat_formula) {
     cout << "The available memory: " << available_memory
          << endl;
     std::ostringstream stringStream;
-    stringStream << "./open-wbo_static -print-model -cpu-lim="<< to_string(TIMEOUT - 100) << " -mem-lim=" << available_memory << " " << sampled_maxsat_file + " > " + "result_" + sampled_maxsat_file;
+    int timeout = TIMEOUT - 100;
+    timeout = (timeout < 10) ? 10 : timeout;
+    stringStream << "./open-wbo_static -print-model -cpu-lim="<< to_string(timeout) << " -mem-lim=" << available_memory << " " << sampled_maxsat_file + " > " + "result_" + sampled_maxsat_file;
     
     system(stringStream.str().c_str());
 
