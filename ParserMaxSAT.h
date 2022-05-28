@@ -91,6 +91,7 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
   uint64_t hard_weight = UINT64_MAX;
   uint64_t num_var, num_cla;
   uint32_t wght, len, count;
+  bool non_stream = false;
   mpz_init_set_ui(maxsat_formula->clause_weight_sum, 0);
   mpz_init_set_ui(maxsat_formula->bucket_clause_weight, 0);
   printf("Running bias heuristic with modified weight !!!\n");
@@ -104,7 +105,8 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
       if (eagerMatch(in, "p cnf")) {
         num_var = parseInt(in); // Variables
         num_cla = parseInt(in); // Clauses
-        init_stream(maxsat_formula, num_var, num_cla);
+        non_stream = init_stream(maxsat_formula, num_var, num_cla);
+        if (non_stream) break;
       } else if (eagerMatch(in, "wcnf")) {
         maxsat_formula->setProblemType(_WEIGHTED_);
         num_var = parseInt(in); // Variables
@@ -113,7 +115,8 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
           hard_weight = parseWeight(in);
           maxsat_formula->setHardWeight(hard_weight);
         }
-        init_stream(maxsat_formula, num_var, num_cla);
+        non_stream = init_stream(maxsat_formula, num_var, num_cla);
+        if (non_stream) break;
         nbuckets = (num_cla / BUCKET_SIZE) + ((num_cla % BUCKET_SIZE) != 0);
         printf("The number of buckets: %d\n", nbuckets);
       } else
@@ -151,7 +154,11 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
       }
     }
   }
-  if (!sampling_maxsat && maxsat_formula->nSoft() % BUCKET_SIZE > 0) {
+  if (non_stream) {
+    // calling maxsat solver on the full problem
+    run_maxsat_solver(maxsat_formula);
+  }
+  else if (!sampling_maxsat && maxsat_formula->nSoft() % BUCKET_SIZE > 0) {
     printf("%d-th bucket !! \n", (maxsat_formula->nSoft() / BUCKET_SIZE) + 1);
     streaming_maxsat(maxsat_formula);
   }

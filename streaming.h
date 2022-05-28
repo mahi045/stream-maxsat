@@ -43,12 +43,12 @@ int currentUsedSizeinVM(){ //Note: this value is in KB!
     return result;
 }
 
-void init_stream(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
+bool init_stream(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
     // POOL_SIZE = min((uint64_t) (K * var / (eps * eps)), cla);
     
-    maxsat_formula->occurance_list.growTo(2 * var + 1, 0.0);
-    if (median_heu)
-        maxsat_formula->occurance_F.resize(var + 1, 0.0);
+    // maxsat_formula->occurance_list.growTo(2 * var + 1, 0.0);
+    // if (median_heu)
+    //     maxsat_formula->occurance_F.resize(var + 1, 0.0);
     int random_k = 0;
     if (random_sat_of_beta) {
         int k = 1;
@@ -86,15 +86,22 @@ void init_stream(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
     cout << "The pool size is: " << POOL_SIZE << ", which is " << (double) POOL_SIZE / var << " factor of n" << endl;
     cout << "The number of clauses is " <<  (double) cla / var << " factor of n" << endl;
     // setting the capacity of pool
+    maxsat_formula->assignment.growTo(var + 1, l_Undef);
     if (POOL_SIZE == cla) {
         cout << "No streaming algorithm !!!" << endl;
+        return true; // no streaming algorithm
     }
+    cout << "Run streaming algorithm !!!" << endl;
+    maxsat_formula->occurance_list.growTo(2 * var + 1, 0.0);
+    if (median_heu)
+        maxsat_formula->occurance_F.resize(var + 1, 0.0);
     maxsat_formula->createPool(POOL_SIZE);
-    maxsat_formula->assignment.growTo(var + 1, l_Undef);
+
     // maxsat_formula->var_bias.growTo(var + 1, 0);
     printf("Size of occurance list: %d\n", maxsat_formula->occurance_list.size());
     printf("Size of assignment list: %d\n", maxsat_formula->assignment.size());
     // maxsat_formula->weight_pool.clear();
+    return false;
 }
 
 // double bias_threshold(MaxSATFormula *maxsat_formula) {
@@ -109,6 +116,33 @@ void init_stream(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
 //     }
 //     return sum;
 // }
+
+void run_maxsat_solver(MaxSATFormula *maxsat_formula) {
+    string result_file_name;
+    std::ostringstream stringStream;
+    stringStream.str("");
+    ofstream assignfile;
+    string delim = " ", line, variable;
+    int lit;
+    std::chrono::duration<double> remaining_time;
+    uint32_t remaining_time_second, timeout;
+    std::chrono::high_resolution_clock::time_point current_time;
+    current_time = std::chrono::high_resolution_clock::now();
+    std::string stream_maxsat_file = "streaming_" + file_name;
+    remaining_time_second = ceil((TIMEOUT - remaining_time.count()));
+    timeout = min(TIMEOUT, remaining_time_second);
+    timeout = (timeout < 10) ? 10 : timeout;
+    int available_memory = total_memory;
+    if (use_fixed_memory)
+    {
+        int used_memory = currentUsedSizeinVM() / 1024;
+        available_memory = (available_memory > used_memory) ? (available_memory - used_memory) : available_memory;
+    }
+    cout << "The available memory (only maxsat call): " << available_memory << endl;
+    stringStream << "./open-wbo_static -print-model -cpu-lim=" << timeout << " -mem-lim=" << available_memory << " " << file_name + " > " + "result_" + stream_maxsat_file;
+    // calling the smapled maxsat query
+    system(stringStream.str().c_str());
+}
 
 void streaming_maxsat(MaxSATFormula *maxsat_formula) { 
     // POOL_SIZE = min((int) (K * maxsat_formula->nVars() / (eps * eps)), maxsat_formula->nSoft());
