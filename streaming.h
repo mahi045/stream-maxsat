@@ -86,6 +86,9 @@ void init_stream(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
     cout << "The pool size is: " << POOL_SIZE << ", which is " << (double) POOL_SIZE / var << " factor of n" << endl;
     cout << "The number of clauses is " <<  (double) cla / var << " factor of n" << endl;
     // setting the capacity of pool
+    if (POOL_SIZE == cla) {
+        cout << "No streaming algorithm !!!" << endl;
+    }
     maxsat_formula->createPool(POOL_SIZE);
     maxsat_formula->assignment.growTo(var + 1, l_Undef);
     // maxsat_formula->var_bias.growTo(var + 1, 0);
