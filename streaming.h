@@ -129,7 +129,8 @@ void run_maxsat_solver(MaxSATFormula *maxsat_formula) {
     std::chrono::high_resolution_clock::time_point current_time;
     current_time = std::chrono::high_resolution_clock::now();
     std::string stream_maxsat_file = "streaming_" + file_name;
-    remaining_time_second = ceil((TIMEOUT - remaining_time.count()));
+    remaining_time =  current_time - start_time;
+    remaining_time_second = floor((TIMEOUT - remaining_time.count() - 5));
     timeout = min(TIMEOUT, remaining_time_second);
     timeout = (timeout < 10) ? 10 : timeout;
     int available_memory = total_memory;
