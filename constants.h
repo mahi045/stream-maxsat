@@ -20,6 +20,7 @@ static double npercentile = 0.5;
 static bool L_1 = true;
 static bool hoa = false;
 static bool postprocessing = false;
+static bool store_all = false;
 
 static unsigned TIMEOUT = 9990;
 static unsigned SMALL_TIMEOUT = 1000;

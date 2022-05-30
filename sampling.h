@@ -97,6 +97,9 @@ void init_sampling(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
     POOL_SIZE = (3000 * fraction_of_memory * 1000 * 1000) / (4 * (maxsat_formula->beta) + sizeof(Soft));
     POOL_SIZE = min(POOL_SIZE, cla);
     BUCKET_SIZE = ceil((double) POOL_SIZE / R);
+    if (POOL_SIZE == cla) {
+        store_all = true;
+    }
     cout << "The pool size is: " << POOL_SIZE << ", which is " << (double) POOL_SIZE / var << " factor of n" << endl;
     cout << "The number of clauses is " <<  (double) cla / var << " factor of n" << endl;
     // setting the capacity of pool
@@ -129,7 +132,7 @@ void modify_pool(MaxSATFormula *maxsat_formula) {
         }
         if (!((i + 1) % BUCKET_SIZE) || i + 1 == bound) {
 
-            if (maxsat_formula->clause_seen_so_far + BUCKET_SIZE > POOL_SIZE) {
+            if (!store_all && maxsat_formula->clause_seen_so_far + BUCKET_SIZE > POOL_SIZE) {
                 // this clauses will be replaced
                 // int clause_need_replace = ((double) (BUCKET_SIZE) / (BUCKET_SIZE + maxsat_formula->clause_seen_so_far)) * maxsat_formula->nPool();
                 int clause_need_replace = ceil(((double) (mpz_get_d(maxsat_formula->bucket_clause_weight)) / (mpz_get_d(maxsat_formula->clause_weight_sum))) 
