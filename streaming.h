@@ -139,7 +139,7 @@ void run_maxsat_solver(MaxSATFormula *maxsat_formula) {
         int used_memory = currentUsedSizeinVM() / 1024;
         available_memory = (available_memory > used_memory) ? (available_memory - used_memory) : available_memory;
     }
-    cout << "The available memory (only maxsat call): " << available_memory << endl;
+    cout << "The available memory and time limit (only maxsat call): " << available_memory << " and " << timeout << endl;
     stringStream << "./open-wbo_static -print-model -cpu-lim=" << timeout << " -mem-lim=" << available_memory << " " << file_name + " > " + "result_" + stream_maxsat_file;
     // calling the smapled maxsat query
     system(stringStream.str().c_str());
