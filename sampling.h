@@ -96,7 +96,7 @@ void init_sampling(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
     cout << "median(" << expectation << "," << random_k << "," << log_of_clause << ")= " << maxsat_formula->beta << endl;
     POOL_SIZE = (3000 * fraction_of_memory * 1000 * 1000) / (4 * (maxsat_formula->beta) + sizeof(Soft));
     POOL_SIZE = min(POOL_SIZE, cla);
-    BUCKET_SIZE = POOL_SIZE / R;
+    BUCKET_SIZE = ceil((double) POOL_SIZE / R);
     cout << "The pool size is: " << POOL_SIZE << ", which is " << (double) POOL_SIZE / var << " factor of n" << endl;
     cout << "The number of clauses is " <<  (double) cla / var << " factor of n" << endl;
     // setting the capacity of pool
