@@ -143,6 +143,12 @@ void run_maxsat_solver(MaxSATFormula *maxsat_formula) {
     stringStream << "./open-wbo_static -print-model -cpu-lim=" << timeout << " -mem-lim=" << available_memory << " " << file_name + " > " + "result_" + stream_maxsat_file;
     // calling the smapled maxsat query
     system(stringStream.str().c_str());
+    // renaming the output file
+    stringStream.str("");
+    std::string open_wbo_maxsat_file = "result_open_wbo_" + file_name;
+    stringStream << "mv " << open_wbo_maxsat_file << " result_" + stream_maxsat_file;
+    system(stringStream.str().c_str());
+
 }
 
 void streaming_maxsat(MaxSATFormula *maxsat_formula) { 
