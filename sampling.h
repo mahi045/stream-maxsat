@@ -234,6 +234,10 @@ void sample_clauses(MaxSATFormula *maxsat_formula) {
     
     system(stringStream.str().c_str());
 
+    stringStream.str("");
+    std::string open_wbo_maxsat_file = "result_open_wbo_" + file_name;
+    stringStream << "mv " << open_wbo_maxsat_file << " result_" + sampled_maxsat_file;
+    system(stringStream.str().c_str());
     
     maxsat_formula->assignment.growTo(maxsat_formula->nVars() + 1, l_Undef);
     string result_file_name = "result_" + sampled_maxsat_file;
