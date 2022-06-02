@@ -448,6 +448,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 double f = temp_f[temp_f.size() * npercentile];
                 F = ceil(f);
                 temp_f.clear();
+                temp_f.shrink_to_fit();
             }
             if (agreed.size() > 0 && use_hard) {
                 // adding agreed literals as hard clauses
