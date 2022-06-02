@@ -364,6 +364,12 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             cout << stringStream.str() << endl;
             system(stringStream.str().c_str());
 
+            stringStream.str("");
+            std::string open_wbo_maxsat_file = "result_open_wbo_" + stream_maxsat_file;
+            stringStream << "mv " << open_wbo_maxsat_file << " result_" + stream_maxsat_file;
+            system(stringStream.str().c_str());
+            open_wbo_maxsat_file.clear();
+
             // reading the recent maxsat call
             
             result_file_name = "result_" + stream_maxsat_file;
@@ -508,6 +514,12 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
 
                 // std::cout << "maxsat() elapsed time is " << int_s.count() << " seconds )" << std::endl;
                 // cout << "Get result !!!" << endl;
+                stringStream.str("");
+                open_wbo_maxsat_file = "result_open_wbo_" + stream_maxsat_file;
+                stringStream << "mv " << open_wbo_maxsat_file << " result_" + stream_maxsat_file;
+                system(stringStream.str().c_str());
+                open_wbo_maxsat_file.clear();
+
                 result_file_name = "result_" + stream_maxsat_file;
                 ifstream resultfile1(result_file_name);
                 while (getline(resultfile1, line)) {
