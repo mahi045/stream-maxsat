@@ -272,7 +272,7 @@ int main(int argc, char **argv) {
     BoolOption use_median("WBO", "median", "use median as F.\n", true);
     BoolOption use_filter("WBO", "filtering", "use filtering on hard clause inclusion.\n", true);
     BoolOption check_memory("WBO", "lim-mem", "Use limited memory.\n", true);
-    BoolOption exit_after_memout("WBO", "lim-mem", "exit after memout.\n", false);
+    BoolOption exit_after_memout("WBO", "memout-exit", "exit after memout.\n", false);
     parseOptions(argc, argv, true);
     R = (int)R_value;
     K = (int)K_value;
