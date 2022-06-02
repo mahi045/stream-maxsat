@@ -272,6 +272,7 @@ int main(int argc, char **argv) {
     BoolOption use_median("WBO", "median", "use median as F.\n", true);
     BoolOption use_filter("WBO", "filtering", "use filtering on hard clause inclusion.\n", true);
     BoolOption check_memory("WBO", "lim-mem", "Use limited memory.\n", true);
+    BoolOption exit_after_memout("WBO", "lim-mem", "exit after memout.\n", false);
     parseOptions(argc, argv, true);
     R = (int)R_value;
     K = (int)K_value;
@@ -289,6 +290,7 @@ int main(int argc, char **argv) {
     heparam = (double) hp;
     npercentile = (double) percentile;
     median_heu = (bool) use_median;
+    stop_after_memout = (bool) exit_after_memout;
 
     TIMEOUT = (int) Timeout_value;
     SMALL_TIMEOUT = (int) Immediate_timeout_value;
