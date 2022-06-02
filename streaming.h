@@ -361,6 +361,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             cout << "Calling maxsat query from clause = " << bucket_start + bucket_index * BUCKET_SIZE << " to clause = " << i + bucket_index * BUCKET_SIZE << endl;
             stringStream << "./open-wbo_static -print-model -cpu-lim=" << timeout << " -mem-lim=" << available_memory << " " << stream_maxsat_file + " > " + "result_" + stream_maxsat_file;
             // calling the smapled maxsat query
+            cout << stringStream.str() << endl;
             system(stringStream.str().c_str());
 
             // reading the recent maxsat call
@@ -496,6 +497,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 cout << "The available memory (2nd maxsat call): " << available_memory << endl;
                 stringStream << "./open-wbo_static -print-model -cpu-lim=" << timeout << " -mem-lim=" << available_memory << " " << stream_maxsat_file + " > " + "result_" + stream_maxsat_file;
                 // calling the new maxsat query
+                cout << stringStream.str() << endl;
 
 
                 // auto start = std::chrono::high_resolution_clock::now();
