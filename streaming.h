@@ -374,16 +374,16 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             cout << stringStream.str() << endl;
             system(stringStream.str().c_str());
 
+            cout << "The memory used already:" << endl;
+            stringStream.str("");
+            stringStream << "grep \"The already used memory is\" " << "result_" + stream_maxsat_file;
+            system(stringStream.str().c_str());
+
             stringStream.str("");
             std::string open_wbo_maxsat_file = "result_open_wbo_" + stream_maxsat_file;
             stringStream << "mv " << open_wbo_maxsat_file << " result_" + stream_maxsat_file;
             system(stringStream.str().c_str());
             open_wbo_maxsat_file.clear();
-
-            cout << "The memory used already:" << endl;
-            stringStream.str("");
-            stringStream << "grep 'The already used memory is' " << "result_" + stream_maxsat_file;
-            system(stringStream.str().c_str());
 
             // reading the recent maxsat call
             
