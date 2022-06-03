@@ -275,6 +275,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             //     }
             // }
             double alpha = pow(M_E, -heparam * bucket_index);
+            int number_of_hard_clause = 0;
             for (int variable = 1; variable <= maxsat_formula->nVars(); variable++) {
                 positive_phase = ceil(maxsat_formula->occurance_list[2 * (variable - 1)] - maxsat_formula->temp_occurance_list[2 * (variable - 1)]);
                 negative_phase = ceil(maxsat_formula->occurance_list[2 * (variable - 1) + 1] - maxsat_formula->temp_occurance_list[2 * (variable - 1) + 1]);
@@ -282,6 +283,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                     if (maxsat_formula->assignment[variable] == l_True) {
                         // if (positive_phase > negative_phase) {
                             myfile << static_cast<uint64_t>(positive_phase+1) << " " << variable << " " << 0 << endl;
+                            number_of_hard_clause++;
                             // myfile << static_cast<uint64_t>(negative_phase) << " " << -variable << " " << 0 << endl;
                         // }
                     }
@@ -289,6 +291,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                         // if (positive_phase < negative_phase) {
                         //     myfile << static_cast<uint64_t>(positive_phase) << " " << variable << " " << 0 << endl;
                             myfile << static_cast<uint64_t>(negative_phase+1) << " " << -variable << " " << 0 << endl;
+                            number_of_hard_clause++;
                         // }
                     }
                 }
@@ -359,6 +362,13 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             }
             cout << "The available memory (1st maxsat call): " << available_memory << endl;
             cout << "Calling maxsat query from clause = " << bucket_start + bucket_index * BUCKET_SIZE << " to clause = " << i + bucket_index * BUCKET_SIZE << endl;
+            stringStream.str("");
+            cout << "The number of clauses in the stream: (1st maxsat)";
+            stringStream << "wc -l " << stream_maxsat_file;
+            system(stringStream.str().c_str());
+            cout << "The number of hard clauses is: " << number_of_hard_clause << endl;
+
+            stringStream.str("");
             stringStream << "./open-wbo_static -print-model -cpu-lim=" << timeout << " -mem-lim=" << available_memory << " " << stream_maxsat_file + " > " + "result_" + stream_maxsat_file;
             // calling the smapled maxsat query
             cout << stringStream.str() << endl;
@@ -369,6 +379,11 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             stringStream << "mv " << open_wbo_maxsat_file << " result_" + stream_maxsat_file;
             system(stringStream.str().c_str());
             open_wbo_maxsat_file.clear();
+
+            cout << "The memory used already:" << endl;
+            stringStream.str("");
+            stringStream << "grep 'The already used memory is' " << "result_" + stream_maxsat_file;
+            system(stringStream.str().c_str());
 
             // reading the recent maxsat call
             
