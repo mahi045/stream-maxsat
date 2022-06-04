@@ -287,6 +287,7 @@ uint64_t MaxSATFormula::getMaximumWeight() { return max_soft_weight; }
 
 void MaxSATFormula::setHardWeight(uint64_t weight) {
   hard_weight = weight;
+  hard_clause_identifier = weight;
 } // Sets the weight of hard clauses.
 
 Soft &MaxSATFormula::getSoftClause(int pos) {

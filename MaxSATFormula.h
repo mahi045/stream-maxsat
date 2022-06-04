@@ -122,6 +122,8 @@ public:
   // MaxSATFormula *copyMaxSATFormula();
   vec<double> occurance_list;
   vector<double> occurance_F;
+  vector<bool> in_bucket;
+  vector<bool> seen;
   // vec<double> var_bias;
   // vector<uint64_t> m;
   vec<double> temp_occurance_list;

@@ -96,6 +96,7 @@ bool init_stream(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
     if (median_heu)
         maxsat_formula->occurance_F.resize(var + 1, 0.0);
     maxsat_formula->createPool(POOL_SIZE);
+    maxsat_formula->seen.assign(var + 1, false);
 
     // maxsat_formula->var_bias.growTo(var + 1, 0);
     printf("Size of occurance list: %d\n", maxsat_formula->occurance_list.size());
@@ -180,6 +181,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     int var_ind = 0;
     int bucket_index = maxsat_formula->nSoft() / BUCKET_SIZE - 1;
     int bound = (maxsat_formula->nSoft() % BUCKET_SIZE) ? maxsat_formula->nSoft() % BUCKET_SIZE : BUCKET_SIZE;
+    maxsat_formula->in_bucket.assign(maxsat_formula->nVars() + 1, false);
     // cout << "sizeof(maxsat_formula->getSoftClause(0).weight) => " << sizeof(Soft) << endl;
     // cout << "sizeof(maxsat_formula->getSoftClause(0).weight) => " << maxsat_formula->getSoftClause(0).clause.size() << endl;
     for (int i = 0; i < bound; i++) {
@@ -198,14 +200,16 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             }
             maxsat_formula->occurance_list[var_ind] += w; 
             maxsat_formula->temp_occurance_list[var_ind] += w; 
+            maxsat_formula->seen[var_ind / 2] = true; 
+            maxsat_formula->in_bucket[var_ind / 2] = true; 
             // if (sign(maxsat_formula->getSoftClause(i).clause[j])) {
             //     w *= -1;
             // }
             // maxsat_formula->bias += (abs(maxsat_formula->var_bias[var_ind/2] + w) - abs(maxsat_formula->var_bias[var_ind/2]));
             // maxsat_formula->var_bias[var_ind/2] += w;
-            if (maxsat_formula->hard_clause_identifier <= static_cast<uint64_t>(ceil(maxsat_formula->occurance_list[var_ind]))) {
-                maxsat_formula->hard_clause_identifier = static_cast<uint64_t>(ceil(maxsat_formula->occurance_list[var_ind]) + 2);
-            }
+            // if (maxsat_formula->hard_clause_identifier <= static_cast<uint64_t>(ceil(maxsat_formula->occurance_list[var_ind]))) {
+            //     maxsat_formula->hard_clause_identifier = static_cast<uint64_t>(ceil(maxsat_formula->occurance_list[var_ind]) + 2);
+            // }
             // the median heuristic was here
             if (median_heu) {
                 if (var_ind % 2 == 0) {
@@ -280,20 +284,20 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 positive_phase = ceil(maxsat_formula->occurance_list[2 * (variable - 1)] - maxsat_formula->temp_occurance_list[2 * (variable - 1)]);
                 negative_phase = ceil(maxsat_formula->occurance_list[2 * (variable - 1) + 1] - maxsat_formula->temp_occurance_list[2 * (variable - 1) + 1]);
                 if (maxsat_formula->temp_occurance_list[2 * (variable - 1)] <= 1e-5 && maxsat_formula->temp_occurance_list[2 * (variable - 1) + 1] <= 1e-5) {
-                    if (maxsat_formula->assignment[variable] == l_True) {
-                        // if (positive_phase > negative_phase) {
-                            myfile << static_cast<uint64_t>(positive_phase+1) << " " << variable << " " << 0 << endl;
-                            number_of_hard_clause++;
-                            // myfile << static_cast<uint64_t>(negative_phase) << " " << -variable << " " << 0 << endl;
-                        // }
-                    }
-                    else if (maxsat_formula->assignment[variable] == l_False) {
-                        // if (positive_phase < negative_phase) {
-                        //     myfile << static_cast<uint64_t>(positive_phase) << " " << variable << " " << 0 << endl;
-                            myfile << static_cast<uint64_t>(negative_phase+1) << " " << -variable << " " << 0 << endl;
-                            number_of_hard_clause++;
-                        // }
-                    }
+                    // if (maxsat_formula->assignment[variable] == l_True) {
+                    //     // if (positive_phase > negative_phase) {
+                    //         // myfile << static_cast<uint64_t>(maxsat_formula->hard_clause_identifier) << " " << variable << " " << 0 << endl;
+                    //         number_of_hard_clause++;
+                    //         // myfile << static_cast<uint64_t>(negative_phase) << " " << -variable << " " << 0 << endl;
+                    //     // }
+                    // }
+                    // else if (maxsat_formula->assignment[variable] == l_False) {
+                    //     // if (positive_phase < negative_phase) {
+                    //     //     myfile << static_cast<uint64_t>(positive_phase) << " " << variable << " " << 0 << endl;
+                    //         // myfile << static_cast<uint64_t>(maxsat_formula->hard_clause_identifier) << " " << -variable << " " << 0 << endl;
+                    //         number_of_hard_clause++;
+                    //     // }
+                    // }
                 }
                 else if (positive_phase > 0 || negative_phase > 0) {
                     // if (maxsat_formula->assignment[variable] == l_True) {
@@ -366,12 +370,12 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             cout << "The number of clauses in the stream: (1st maxsat)";
             stringStream << "wc -l " << stream_maxsat_file;
             system(stringStream.str().c_str());
-            cout << "The number of hard clauses is: " << number_of_hard_clause << endl;
+            // cout << "The number of hard clauses is: " << number_of_hard_clause << endl;
 
             stringStream.str("");
             stringStream << "./open-wbo_static -print-model -cpu-lim=" << timeout << " -mem-lim=" << available_memory << " " << stream_maxsat_file + " > " + "result_" + stream_maxsat_file;
             // calling the smapled maxsat query
-            cout << stringStream.str() << endl;
+            // cout << stringStream.str() << endl;
             system(stringStream.str().c_str());
 
             cout << "The memory used already:" << endl;
@@ -401,6 +405,9 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                         end = line.find(delim, start);
                         if (variable != "v") {
                             lit = stoi(variable);
+                            if (!maxsat_formula->in_bucket[abs(lit)]) {
+                                continue;   // no need to update the assignment because it is not in bucket
+                            }
                             if (lit < 0) {
                                 if (use_pool && maxsat_formula->assignment[abs(lit)] == l_True) {
                                     incompatible.push(lit);
@@ -425,6 +432,8 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                     }
                 }
             }
+            maxsat_formula->in_bucket.clear();
+            maxsat_formula->in_bucket.shrink_to_fit();
             resultfile2.close();
             if (!no_assign) {
                 cout << " I found no assignment" << endl;
@@ -521,7 +530,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 cout << "The available memory (2nd maxsat call): " << available_memory << endl;
                 stringStream << "./open-wbo_static -print-model -cpu-lim=" << timeout << " -mem-lim=" << available_memory << " " << stream_maxsat_file + " > " + "result_" + stream_maxsat_file;
                 // calling the new maxsat query
-                cout << stringStream.str() << endl;
+                // cout << stringStream.str() << endl;
 
 
                 // auto start = std::chrono::high_resolution_clock::now();
@@ -550,6 +559,9 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                             end = line.find(delim, start);
                             if (variable != "v") {
                                 lit = stoi(variable);
+                                if (!maxsat_formula->seen[abs(lit)]) {
+                                    continue; // no need to update the assignment because it is not seen
+                                }
                                 if (lit < 0) {
                                     maxsat_formula->assignment[abs(lit)] = l_False;
                                 } else {
