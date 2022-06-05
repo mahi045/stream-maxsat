@@ -11,7 +11,7 @@ static uint64_t POOL_SIZE;
 static int nbuckets;
 static std::string file_name;
 static bool sampling_maxsat;
-static int F;
+static double F;
 static double heparam = 0;
 static int clause_policy = 2;
 static bool median_heu = true;

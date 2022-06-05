@@ -93,8 +93,8 @@ bool init_stream(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
     }
     cout << "Run streaming algorithm !!!" << endl;
     maxsat_formula->occurance_list.growTo(2 * var + 1, 0.0);
-    if (median_heu)
-        maxsat_formula->occurance_F.resize(var + 1, 0.0);
+    // if (median_heu)
+    //     maxsat_formula->occurance_F.resize(var + 1, 0.0);
     maxsat_formula->createPool(POOL_SIZE);
     maxsat_formula->seen.assign(var + 1, false);
 
@@ -211,34 +211,35 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             //     maxsat_formula->hard_clause_identifier = static_cast<uint64_t>(ceil(maxsat_formula->occurance_list[var_ind]) + 2);
             // }
             // the median heuristic was here
-            if (median_heu) {
-                if (var_ind % 2 == 0) {
-                    double f = maxsat_formula->occurance_list[var_ind] >= maxsat_formula->occurance_list[var_ind + 1] ? 
-                        (maxsat_formula->occurance_list[var_ind] / maxsat_formula->occurance_list[var_ind + 1]) :
-                        maxsat_formula->occurance_list[var_ind + 1] / maxsat_formula->occurance_list[var_ind];
-                    if (isinf(f))  {
-                        maxsat_formula->occurance_F[var_ind/2] = 
-                        maxsat_formula->occurance_list[var_ind] >= maxsat_formula->occurance_list[var_ind + 1] ? 
-                        maxsat_formula->occurance_list[var_ind] : maxsat_formula->occurance_list[var_ind + 1];
-                    }
-                    else {
-                        maxsat_formula->occurance_F[var_ind/2] = f;
-                    }
-                }
-                else {
-                    double f = maxsat_formula->occurance_list[var_ind] >= maxsat_formula->occurance_list[var_ind - 1] ? 
-                        (maxsat_formula->occurance_list[var_ind] / maxsat_formula->occurance_list[var_ind - 1]) :
-                        maxsat_formula->occurance_list[var_ind - 1] / maxsat_formula->occurance_list[var_ind];
-                    if (isinf(f))  {
-                        maxsat_formula->occurance_F[var_ind/2] = 
-                        maxsat_formula->occurance_list[var_ind] >= maxsat_formula->occurance_list[var_ind - 1] ? 
-                        maxsat_formula->occurance_list[var_ind] : maxsat_formula->occurance_list[var_ind - 1];
-                    }
-                    else {
-                        maxsat_formula->occurance_F[var_ind/2] = f;
-                    }
-                }
-            }
+            // here is the previous occurance_F
+            // if (median_heu) {
+            //     if (var_ind % 2 == 0) {
+            //         double f = maxsat_formula->occurance_list[var_ind] >= maxsat_formula->occurance_list[var_ind + 1] ? 
+            //             (maxsat_formula->occurance_list[var_ind] / maxsat_formula->occurance_list[var_ind + 1]) :
+            //             maxsat_formula->occurance_list[var_ind + 1] / maxsat_formula->occurance_list[var_ind];
+            //         if (isinf(f))  {
+            //             maxsat_formula->occurance_F[var_ind/2] = 
+            //             maxsat_formula->occurance_list[var_ind] >= maxsat_formula->occurance_list[var_ind + 1] ? 
+            //             maxsat_formula->occurance_list[var_ind] : maxsat_formula->occurance_list[var_ind + 1];
+            //         }
+            //         else {
+            //             maxsat_formula->occurance_F[var_ind/2] = f;
+            //         }
+            //     }
+            //     else {
+            //         double f = maxsat_formula->occurance_list[var_ind] >= maxsat_formula->occurance_list[var_ind - 1] ? 
+            //             (maxsat_formula->occurance_list[var_ind] / maxsat_formula->occurance_list[var_ind - 1]) :
+            //             maxsat_formula->occurance_list[var_ind - 1] / maxsat_formula->occurance_list[var_ind];
+            //         if (isinf(f))  {
+            //             maxsat_formula->occurance_F[var_ind/2] = 
+            //             maxsat_formula->occurance_list[var_ind] >= maxsat_formula->occurance_list[var_ind - 1] ? 
+            //             maxsat_formula->occurance_list[var_ind] : maxsat_formula->occurance_list[var_ind - 1];
+            //         }
+            //         else {
+            //             maxsat_formula->occurance_F[var_ind/2] = f;
+            //         }
+            //     }
+            // }
             // the median heuristic ends here
             // if (maxsat_formula->hard_clause_identifier <= ceil(maxsat_formula->occurance_list[var(maxsat_formula->getSoftClause(i).clause[j])])) {
             //     assert(false);
@@ -477,10 +478,40 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             // }
             int c = 0;
             if (median_heu && use_filtering_condition) {
-                vector<double> temp_f(maxsat_formula->occurance_F);
+                
+                vector<double> temp_f;
+                double f = 0;
+                for (auto lit_index = 0; lit_index < agreed.size(); lit_index++) {
+                    var_ind = 2 * (abs(agreed[lit_index]) - 1);
+                    if (agreed[lit_index] > 0)
+                    {
+                        f = 0;
+                        if (maxsat_formula->occurance_list[var_ind] >= maxsat_formula->occurance_list[var_ind + 1])
+                        {
+                            f = maxsat_formula->occurance_list[var_ind] / maxsat_formula->occurance_list[var_ind + 1];
+                            if (isinf(f))
+                            {
+                                f = maxsat_formula->occurance_list[var_ind];
+                            }
+                            temp_f.push_back(f);
+                        }
+                    }
+                    else if (agreed[lit_index] < 0)
+                    {
+                        f = 0;
+                        if (maxsat_formula->occurance_list[var_ind + 1] >= maxsat_formula->occurance_list[var_ind])
+                        {
+                            f = maxsat_formula->occurance_list[var_ind + 1] / maxsat_formula->occurance_list[var_ind];
+                            if (isinf(f))
+                            {
+                                f = maxsat_formula->occurance_list[var_ind + 1];
+                            }
+                            temp_f.push_back(f);
+                        }
+                    }
+                }
                 sort(temp_f.begin(), temp_f.end());
-                double f = temp_f[temp_f.size() * npercentile];
-                F = ceil(f);
+                F = temp_f[temp_f.size() * npercentile];
                 temp_f.clear();
                 temp_f.shrink_to_fit();
             }
