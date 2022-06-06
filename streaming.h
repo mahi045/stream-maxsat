@@ -376,7 +376,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             stringStream.str("");
             stringStream << "./open-wbo_static -print-model -cpu-lim=" << timeout << " -mem-lim=" << available_memory << " " << stream_maxsat_file + " > " + "result_" + stream_maxsat_file;
             // calling the smapled maxsat query
-            // cout << stringStream.str() << endl;
+            cout << stringStream.str() << endl;
             system(stringStream.str().c_str());
 
             cout << "The memory used already:" << endl;
@@ -391,7 +391,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             open_wbo_maxsat_file.clear();
 
             // reading the recent maxsat call
-            
+            cout << "Reading the result ..." << endl;
             result_file_name = "result_" + stream_maxsat_file;
             ifstream resultfile2(result_file_name);
             bool no_assign = false;
@@ -436,6 +436,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             maxsat_formula->in_bucket.clear();
             maxsat_formula->in_bucket.shrink_to_fit();
             resultfile2.close();
+            cout << "Already read the result ..." << endl;
             if (!no_assign) {
                 cout << " I found no assignment" << endl;
                 // exit(1);
@@ -540,6 +541,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             // file renaming
             stringStream.str("");
             stringStream << "mv " + pool_stream_maxsat_file + " " + stream_maxsat_file;
+            cout << stringStream.str() << endl;
             system(stringStream.str().c_str());
                 // calling the new maxsat query
             if (incompatible.size() > 0 && use_pool) {
