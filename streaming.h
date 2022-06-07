@@ -537,6 +537,8 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 }
             }
             cout << "Total " << incompatible.size() + (agreed.size() - c) << " (" << c << ") literals are incompatible (compatibles)" << endl;
+            incompatible.clear(true);
+            agreed.clear(true);
             poolfile.close();
             // file renaming
             stringStream.str("");
@@ -554,12 +556,14 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
 
                 // cout << "The timeout for second maxsat: " << timeout << endl;
                 stringStream.str("");
-                available_memory = total_memory;
-                if (use_fixed_memory)
-                {
-                    int used_memory = currentUsedSizeinVM() / 1024;
-                    available_memory = (available_memory > used_memory) ? (available_memory - used_memory) : available_memory;
-                }
+
+                // mem limit for second maxsat call are same
+                // available_memory = total_memory;
+                // if (use_fixed_memory)
+                // {
+                //     int used_memory = currentUsedSizeinVM() / 1024;
+                //     available_memory = (available_memory > used_memory) ? (available_memory - used_memory) : available_memory;
+                // }
                 cout << "The available memory (2nd maxsat call): " << available_memory << endl;
                 stringStream << "./open-wbo_static -print-model -cpu-lim=" << timeout << " -mem-lim=" << available_memory << " " << stream_maxsat_file + " > " + "result_" + stream_maxsat_file;
                 // calling the new maxsat query
