@@ -537,6 +537,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 }
             }
             cout << "Total " << incompatible.size() + (agreed.size() - c) << " (" << c << ") literals are incompatible (compatibles)" << endl;
+            bool call_second_maxsat = (incompatible.size() + (agreed.size() - c)) > 0;
             incompatible.clear(true);
             agreed.clear(true);
             poolfile.close();
@@ -546,7 +547,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             cout << stringStream.str() << endl;
             system(stringStream.str().c_str());
                 // calling the new maxsat query
-            if (incompatible.size() > 0 && use_pool) {
+            if (call_second_maxsat && use_pool) {
                 current_time = std::chrono::high_resolution_clock::now();
                 remaining_buckets = (nbuckets - maxsat_formula->nSoft() / BUCKET_SIZE + 1);
                 remaining_time =  current_time - start_time;
