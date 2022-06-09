@@ -243,6 +243,10 @@ int main(int argc, char **argv) {
                         "the value of heparam "
                         "\n",
                         0.05);
+    Glucose::DoubleOption pool_fraction("Open-WBO", "percentage",
+                        "the memory percentage of pool  "
+                        "\n",
+                        0.1);
     Glucose::DoubleOption al("Open-WBO", "alpha",
                         "the value of alpha "
                         "\n",
@@ -282,6 +286,7 @@ int main(int argc, char **argv) {
     use_pool = (bool) pool_c;
     decision_heu = (bool) decision_c;
     use_fixed_memory = (bool) check_memory;
+    fraction_of_memory = (double) pool_fraction;
     L_1 = (bool) l1_sampler;
     hoa = (bool) hoa_sampler;
 
