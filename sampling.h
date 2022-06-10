@@ -94,9 +94,9 @@ void init_sampling(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
     // expectation + log_of_clause + random_k - minimum -
     maxsat_formula->beta =  expectation + log_of_clause + random_k - minimum - maximum;
     cout << "median(" << expectation << "," << random_k << "," << log_of_clause << ")= " << maxsat_formula->beta << endl;
-    POOL_SIZE = (3000 * fraction_of_memory * 1000 * 1000) / (4 * (maxsat_formula->beta) + sizeof(Soft));
+    POOL_SIZE = (total_memory * fraction_of_memory * 1000 * 1000) / (4 * (maxsat_formula->beta) + sizeof(Soft));
     POOL_SIZE = min(POOL_SIZE, cla);
-    BUCKET_SIZE = POOL_SIZE / R;
+    BUCKET_SIZE = (total_memory * fraction_of_memory_bucket * 1000 * 1000); // it is size in terms of MB
     if (POOL_SIZE == cla) {
         store_all = true;
     }
@@ -122,24 +122,51 @@ void modify_pool(MaxSATFormula *maxsat_formula) {
     int index_bucket, index_pool;
     double positive_phase, negative_phase;
     // maxsat_formula->weight_sampler.clear();
-    int bucket_index = maxsat_formula->nSoft() / BUCKET_SIZE - 1;
-    int bound = (maxsat_formula->nSoft() % BUCKET_SIZE) ? maxsat_formula->nSoft() % BUCKET_SIZE : BUCKET_SIZE;
+    // int bucket_index = maxsat_formula->nSoft() / BUCKET_SIZE - 1;
+    int bound = maxsat_formula->nSoft();
+    cout << "maxsat_formula->nSoft(): " << maxsat_formula->nSoft() << endl;
     // cout << "sizeof(maxsat_formula->getSoftClause(0).weight) => " << sizeof(Soft) << endl;
     // cout << "sizeof(maxsat_formula->getSoftClause(0).weight) => " << maxsat_formula->getSoftClause(0).clause.size() << endl;
-    for (int i = 0; i < bound; i++) {
-        if (!(i % BUCKET_SIZE)) {
-            bucket_start = i;
-        }
-        if (!((i + 1) % BUCKET_SIZE) || i + 1 == bound) {
+    // for (int i = 0; i < bound; i++) {
+    //     if (!(i % BUCKET_SIZE)) {
+    //         bucket_start = i;
+    //     }
+    //     if (!((i + 1) % BUCKET_SIZE) || i + 1 == bound) {
 
-            if (!store_all && maxsat_formula->clause_seen_so_far + BUCKET_SIZE > POOL_SIZE) {
+            if (!store_all && maxsat_formula->last_index_in_pool + bound > POOL_SIZE) {
                 // this clauses will be replaced
                 // int clause_need_replace = ((double) (BUCKET_SIZE) / (BUCKET_SIZE + maxsat_formula->clause_seen_so_far)) * maxsat_formula->nPool();
+                int clause_already_added = 0;
+                int space_in_pool = POOL_SIZE - maxsat_formula->last_index_in_pool;
+                for (int cla_index = 0; cla_index < space_in_pool; cla_index++)
+                {
+                    maxsat_formula->updatePoolClause(maxsat_formula->getSoftClause(cla_index).weight,
+                                                     maxsat_formula->getSoftClause(cla_index).clause, maxsat_formula->last_index_in_pool);
+                    maxsat_formula->last_index_in_pool++;
+                    if (maxsat_formula->getSoftClause(cla_index).clause.size() <= maxsat_formula->beta)
+                    {
+                        mpz_sub_ui(maxsat_formula->bucket_clause_weight, maxsat_formula->bucket_clause_weight, maxsat_formula->getSoftClause(cla_index).weight); // update the weight sum
+                    }
+                    mpz_sub_ui(maxsat_formula->clause_weight_sum, maxsat_formula->clause_weight_sum, maxsat_formula->getSoftClause(cla_index).weight);
+                    // 
+                    clause_already_added++;
+                }
+                if (clause_already_added > 0) {
+                    maxsat_formula->weight_sampler.erase(maxsat_formula->weight_sampler.begin(), maxsat_formula->weight_sampler.begin() + clause_already_added);
+                }
+                cout << "clause_already_added: " << clause_already_added << endl;
                 int clause_need_replace = ceil(((double) (mpz_get_d(maxsat_formula->bucket_clause_weight)) / (mpz_get_d(maxsat_formula->clause_weight_sum))) 
                     * maxsat_formula->nPool());
-                int remaining_clause = min(bound, BUCKET_SIZE);
+                int remaining_clause = min(bound, BUCKET_SIZE) - clause_already_added;
                 // cout << "clause_need_replace: " << clause_need_replace << endl;
                 clause_need_replace = min(clause_need_replace, remaining_clause);
+                // if (clause_already_added > 0) {
+                //     cout << "clause_need_replace: " << clause_need_replace << endl;
+                //     cout << "remaining_clause: " << remaining_clause << endl;
+                //     cout << "clause_already_added: " << clause_already_added << endl;
+                //     cout << "maxsat_formula->weight_sampler.size(): " << maxsat_formula->weight_sampler.size() << endl;
+                // }
+
                 // cout << "clause_need_replace: " << clause_need_replace << endl;
                 // if (false && i + 1 == bound) {
                 //     cout << "Now it is executed" << endl;
@@ -153,7 +180,11 @@ void modify_pool(MaxSATFormula *maxsat_formula) {
                 clause_need_replace = min(clause_need_replace, remaining_clause);
                 unordered_set<uint32_t> replaced_clause_pool = maxsat_formula->pick_k_clauses_from_pool(clause_need_replace);
                 unordered_set<uint32_t> replaced_clause_bucket = maxsat_formula->pick_k_clauses(clause_need_replace, true);
-                cout << " From bucket index " << bucket_start + bucket_index * BUCKET_SIZE << " to " << i + bucket_index * BUCKET_SIZE << " => ";
+                cout << " From bucket index "
+                     << maxsat_formula->clause_seen_so_far << " to "
+                     << maxsat_formula->clause_seen_so_far +
+                            maxsat_formula->nSoft()
+                     << " => ";
                 auto start_itr1 = replaced_clause_pool.begin();
                 auto start_itr2 = replaced_clause_bucket.begin();
                 // cout << "replaced_clause_pool.size(): " << replaced_clause_pool.size() << endl;
@@ -173,20 +204,21 @@ void modify_pool(MaxSATFormula *maxsat_formula) {
                 cout << "Total " << clause_need_replace << " clauses replaced from pool !!!" << endl;
             }
             else {
-                for (auto cla_index = 0; cla_index != i + 1; cla_index++) {
+                for (auto cla_index = 0; cla_index < maxsat_formula->nSoft(); cla_index++) {
                     maxsat_formula->updatePoolClause(maxsat_formula->getSoftClause(cla_index).weight, 
                         maxsat_formula->getSoftClause(cla_index).clause, maxsat_formula->last_index_in_pool);
                     maxsat_formula->last_index_in_pool++; // increment the next position in pool (ESSENTIAL)
                 }
             }
-            maxsat_formula->clause_seen_so_far += (i + 1);
+            maxsat_formula->clause_seen_so_far += maxsat_formula->nSoft();
             mpz_init(maxsat_formula->bucket_clause_weight);
             maxsat_formula->weight_sampler.clear();
             maxsat_formula->weight_sampler.shrink_to_fit();
+            maxsat_formula->memory_consumed_by_bucket = 0; // the bucket size is zero
             if (verbose)
                 maxsat_formula->status_pool();
-        }
-    }
+        // }
+    // }
 }
 
 void sample_clauses(MaxSATFormula *maxsat_formula) {

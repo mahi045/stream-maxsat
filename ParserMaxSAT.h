@@ -114,8 +114,9 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
           maxsat_formula->setHardWeight(hard_weight);
         }
         init_sampling(maxsat_formula, num_var, num_cla);
-        nbuckets = (num_cla / BUCKET_SIZE) + ((num_cla % BUCKET_SIZE) != 0);
-        printf("The number of buckets: %d\n", nbuckets);
+        // it is not applicable right now !!
+        // nbuckets = (num_cla / BUCKET_SIZE) + ((num_cla % BUCKET_SIZE) != 0);
+        // printf("The number of buckets: %d\n", nbuckets);
       } else
         printf("c PARSE ERROR! Unexpected char: %c\n", *in),
             printf("s UNKNOWN\n"), exit(_ERROR_);
@@ -144,15 +145,15 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
         maxsat_formula->addSoftClause(weight, lits);
       } else
         maxsat_formula->addHardClause(lits);
-      if (!sampling_maxsat && (maxsat_formula->nSoft() > 0) && (maxsat_formula->nSoft() % BUCKET_SIZE == 0)) {
-        printf("%d-th bucket !! \n", maxsat_formula->nSoft() / BUCKET_SIZE);
+      if (maxsat_formula->memory_consumed_by_bucket >= BUCKET_SIZE) {
+        printf("%d-th bucket !! \n", maxsat_formula->bucket_index);
         modify_pool(maxsat_formula);
         maxsat_formula->clearBucket();
       }
     }
   }
-  if (!sampling_maxsat && maxsat_formula->nSoft() % BUCKET_SIZE > 0) {
-    printf("%d-th bucket !! \n", (maxsat_formula->nSoft() / BUCKET_SIZE) + 1);
+  if (maxsat_formula->memory_consumed_by_bucket > 0) {
+    printf("%d-th bucket !! \n", maxsat_formula->bucket_index);
     modify_pool(maxsat_formula);
   }
   printf("Sum of weight: %s\n", mpz_get_str (NULL, 10, maxsat_formula->clause_weight_sum));

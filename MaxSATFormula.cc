@@ -82,6 +82,8 @@ void MaxSATFormula::addSoftClause(uint64_t weight, vec<Lit> &lits) {
   }
   vec<Lit> copy_lits;
   lits.copyTo(copy_lits);
+  // the memory is the defined as follows
+  memory_consumed_by_bucket = memory_consumed_by_bucket + sizeof(Soft) + 4 * lits.size();
   // if (clause_policy == 0) {
   //   if (use_pool) weight_sampler.push_back(1);
   // }
@@ -111,6 +113,7 @@ void MaxSATFormula::addSoftClause(uint64_t weight, vec<Lit> &lits) {
 
 void MaxSATFormula::clearBucket() {
   soft_clauses.clear(true);
+  n_soft = 0;
 }
 void MaxSATFormula::addPoolClause(uint64_t weight, vec<Lit> &lits) {
   pool_clauses.push();
