@@ -481,7 +481,8 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
         
         vector<double> temp_f;
         double f = 0;
-        for (auto lit_index = 0; lit_index < agreed.size(); lit_index++) {
+        for (auto lit_index = 0; lit_index < agreed.size(); lit_index++)
+        {
             var_ind = 2 * (abs(agreed[lit_index]) - 1);
             if (agreed[lit_index] > 0)
             {
@@ -515,18 +516,22 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
         temp_f.clear();
         temp_f.shrink_to_fit();
     }
-    if (agreed.size() > 0 && use_hard) {
+    if (agreed.size() > 0 && use_hard)
+    {
         // adding agreed literals as hard clauses
-        for (auto lit_index = 0; lit_index < agreed.size(); lit_index++) {
+        for (auto lit_index = 0; lit_index < agreed.size(); lit_index++)
+        {
             int var_ind = 2 * (abs(agreed[lit_index]) - 1);
-            if (agreed[lit_index] < 0 && maxsat_formula->occurance_list[var_ind + 1] >= F * maxsat_formula->occurance_list[var_ind]) {
+            if (agreed[lit_index] < 0 && maxsat_formula->occurance_list[var_ind + 1] >= F * maxsat_formula->occurance_list[var_ind])
+            {
                 // debugfile << agreed[lit_index] << " ";
                 // debugfile << maxsat_formula->occurance_list[var_ind + 1] << " ";
                 // debugfile << maxsat_formula->occurance_list[var_ind] << endl;
                 poolfile << maxsat_formula->hard_clause_identifier << " " << agreed[lit_index] << " 0" << endl;
                 c++;
             }
-            else if (agreed[lit_index] > 0 && maxsat_formula->occurance_list[var_ind] >= F * maxsat_formula->occurance_list[var_ind + 1]) {
+            else if (agreed[lit_index] > 0 && maxsat_formula->occurance_list[var_ind] >= F * maxsat_formula->occurance_list[var_ind + 1])
+            {
                 // debugfile << agreed[lit_index] << " ";
                 // debugfile << maxsat_formula->occurance_list[var_ind] << " ";
                 // debugfile << maxsat_formula->occurance_list[var_ind + 1] << endl;
@@ -536,6 +541,9 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
         }
     }
     cout << "Total " << incompatible.size() + (agreed.size() - c) << " (" << c << ") literals are incompatible (compatibles)" << endl;
+    bool call_second_maxsat = (incompatible.size() + (agreed.size() - c)) > 0;
+    incompatible.clear(true);
+    agreed.clear(true);
     poolfile.close();
     // file renaming
     stringStream.str("");
@@ -543,7 +551,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     cout << stringStream.str() << endl;
     system(stringStream.str().c_str());
         // calling the new maxsat query
-    if (incompatible.size() > 0 && use_pool) {
+    if (call_second_maxsat && use_pool) {
         current_time = std::chrono::high_resolution_clock::now();
         remaining_buckets = (nbuckets - maxsat_formula->nSoft() / BUCKET_SIZE + 1);
         remaining_time =  current_time - start_time;
@@ -553,12 +561,14 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
 
         // cout << "The timeout for second maxsat: " << timeout << endl;
         stringStream.str("");
-        available_memory = total_memory;
-        if (use_fixed_memory)
-        {
-            int used_memory = currentUsedSizeinVM() / 1024;
-            available_memory = (available_memory > used_memory) ? (available_memory - used_memory) : available_memory;
-        }
+
+        // mem limit for second maxsat call are same
+        // available_memory = total_memory;
+        // if (use_fixed_memory)
+        // {
+        //     int used_memory = currentUsedSizeinVM() / 1024;
+        //     available_memory = (available_memory > used_memory) ? (available_memory - used_memory) : available_memory;
+        // }
         cout << "The available memory (2nd maxsat call): " << available_memory << endl;
         stringStream << "./open-wbo_static -print-model -cpu-lim=" << timeout << " -mem-lim=" << available_memory << " " << stream_maxsat_file + " > " + "result_" + stream_maxsat_file;
         // calling the new maxsat query
