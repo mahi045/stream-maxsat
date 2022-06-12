@@ -89,6 +89,7 @@ template <class B, class MaxSATFormula>
 static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
   vec<Lit> lits;
   uint64_t hard_weight = UINT64_MAX;
+  uint64_t total_memory_of_full_instance =0;
   uint64_t num_var, num_cla;
   uint32_t wght, len, count;
   bool non_stream = false;
@@ -117,7 +118,7 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
         }
         non_stream = init_stream(maxsat_formula, num_var, num_cla);
         if (non_stream) break;
-        nbuckets = (num_cla / BUCKET_SIZE) + ((num_cla % BUCKET_SIZE) != 0);
+        nbuckets = ceil((double) total_memory_of_full_instance / BUCKET_SIZE); // this is the new number of buckets
         printf("The number of buckets: %d\n", nbuckets);
       } else
         printf("c PARSE ERROR! Unexpected char: %c\n", *in),
@@ -130,6 +131,7 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
           len = parseInt(in);
           count = parseInt(in);
           maxsat_formula->clause_map[std::make_pair(wght, len)] = count;
+          total_memory_of_full_instance = total_memory_of_full_instance + count * (4 * len + sizeof(Soft));
        }
        else {
          skipLine(in);
@@ -147,8 +149,8 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
         maxsat_formula->addSoftClause(weight, lits);
       } else
         maxsat_formula->addHardClause(lits);
-      if (!sampling_maxsat && (maxsat_formula->nSoft() > 0) && (maxsat_formula->nSoft() % BUCKET_SIZE == 0)) {
-        printf("%d-th bucket !! \n", maxsat_formula->nSoft() / BUCKET_SIZE);
+      if (maxsat_formula->memory_consumed_by_bucket >= BUCKET_SIZE) {
+        printf("%d-th bucket !! \n", maxsat_formula->bucket_index + 1);
         streaming_maxsat(maxsat_formula);
         maxsat_formula->clearBucket();
       }
@@ -158,8 +160,8 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
     // calling maxsat solver on the full problem
     run_maxsat_solver(maxsat_formula);
   }
-  else if (!sampling_maxsat && maxsat_formula->nSoft() % BUCKET_SIZE > 0) {
-    printf("%d-th bucket !! \n", (maxsat_formula->nSoft() / BUCKET_SIZE) + 1);
+  else if (maxsat_formula->memory_consumed_by_bucket > 0) {
+    printf("%d-th bucket !! \n", maxsat_formula->bucket_index + 1);
     streaming_maxsat(maxsat_formula);
   }
   printf("Sum of weight: %s\n", mpz_get_str (NULL, 10, maxsat_formula->clause_weight_sum));
