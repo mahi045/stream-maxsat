@@ -28,19 +28,27 @@ int parseLine(char* line){
     return i;
 }
 
-int currentUsedSizeinVM(){ //Note: this value is in KB!
-    FILE* file = fopen("/proc/self/status", "r");
-    int result = -1;
-    char line[128];
+int currentUsedSizeinVM(MaxSATFormula *maxsat_formula){ //Note: this value is in KB!
+    // FILE* file = fopen("/proc/self/status", "r");
+    // int result = -1;
+    // char line[128];
 
-    while (fgets(line, 128, file) != NULL){
-        if (strncmp(line, "VmSize:", 7) == 0){
-            result = parseLine(line);
-            break;
-        }
-    }
-    fclose(file);
-    return result;
+    // while (fgets(line, 128, file) != NULL){
+    //     if (strncmp(line, "VmSize:", 7) == 0){
+    //         result = parseLine(line);
+    //         break;
+    //     }
+    // }
+    // fclose(file);
+    // return result;
+    uint64_t memory_consumed = maxsat_formula->effective_pool_size;
+    memory_consumed += maxsat_formula->last_index_in_pool * sizeof(Soft);
+    memory_consumed += maxsat_formula->memory_consumed_by_bucket;
+    memory_consumed += sizeof(maxsat_formula);
+    memory_consumed += sizeof(maxsat_formula->assignment[0]) * maxsat_formula->assignment.size();
+    memory_consumed += sizeof(maxsat_formula->occurance_list[0]) * maxsat_formula->occurance_list.size();
+    memory_consumed += sizeof(maxsat_formula->seen[0]) * maxsat_formula->seen.size();
+    return memory_consumed; // the value is in bytes
 }
 
 bool init_stream(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
@@ -138,7 +146,7 @@ void run_maxsat_solver(MaxSATFormula *maxsat_formula) {
     int available_memory = total_memory;
     if (use_fixed_memory)
     {
-        int used_memory = currentUsedSizeinVM() / 1024;
+        int used_memory = 0; // it is non-stream case
         available_memory = (available_memory > used_memory) ? (available_memory - used_memory) : available_memory;
     }
     cout << "The available memory and time limit (only maxsat call): " << available_memory << " and " << timeout << endl;
@@ -360,7 +368,9 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     int available_memory = total_memory;
     if (use_fixed_memory)
     {
-        int used_memory = currentUsedSizeinVM() / 1024;
+        int used_memory = currentUsedSizeinVM(maxsat_formula);
+        used_memory += sizeof(maxsat_formula->in_bucket[0]) * maxsat_formula->in_bucket.size();
+        used_memory = used_memory / (1024 * 1024);
         available_memory = (available_memory > used_memory) ? (available_memory - used_memory) : available_memory;
     }
     cout << "The available memory (1st maxsat call): " << available_memory << endl;

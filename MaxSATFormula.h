@@ -100,8 +100,9 @@ class MaxSATFormula {
 public:
   MaxSATFormula()
       : hard_weight(UINT64_MAX), problem_type(_UNWEIGHTED_), n_vars(0),
-        n_soft(0), n_pool(0), n_hard(0), n_initial_vars(0), sum_soft_weight(0),
-        max_soft_weight(0) {
+        n_soft(0), n_pool(0), n_hard(0), n_initial_vars(0)
+        //, sum_soft_weight(0), max_soft_weight(0) 
+  {
     // objective_function = NULL;
     format = _FORMAT_MAXSAT_;
   }
@@ -138,6 +139,7 @@ public:
   uint32_t last_index_in_pool = 0;
   uint32_t memory_consumed_by_bucket = 0;
   uint32_t bucket_index = 0;
+  uint64_t effective_pool_size = 0;
   // uint64_t bias = 0;
   uint32_t beta;
   std::map<std::pair<uint32_t, uint32_t>, uint32_t> clause_map;
@@ -172,11 +174,11 @@ public:
   void setProblemType(int type); // Set problem type.
   int getProblemType();          // Get problem type.
 
-  void updateSumWeights(uint64_t weight); // Update initial 'ubCost'.
+  // void updateSumWeights(uint64_t weight); // Update initial 'ubCost'.
   // uint64_t getSumWeights() { return sum_soft_weight; }
 
-  void setMaximumWeight(uint64_t weight); // Set initial 'currentWeight'.
-  uint64_t getMaximumWeight();            // Get 'currentWeight'.
+  // void setMaximumWeight(uint64_t weight); // Set initial 'currentWeight'.
+  // uint64_t getMaximumWeight();            // Get 'currentWeight'.
 
   void setHardWeight(uint64_t weight); // Set initial 'hardWeight'.
   uint64_t getHardWeight() { return hard_weight; }
@@ -253,8 +255,8 @@ protected:
   int n_hard;           //<! Number of hard clauses.
   int n_pool;           //<! Number of pool clauses.
   int n_initial_vars;   //<! Number of variables of the initial MaxSAT formula.
-  uint64_t sum_soft_weight; //<! Sum of weights of soft clauses.
-  uint64_t max_soft_weight; //<! Maximum weight of soft clauses.
+  // uint64_t sum_soft_weight; //<! Sum of weights of soft clauses.
+  // uint64_t max_soft_weight; //<! Maximum weight of soft clauses.
 
   // Utils for PB formulas
   //

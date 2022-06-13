@@ -190,6 +190,7 @@ void MaxSATFormula::updatePoolClause(uint64_t weight, vec<Lit> &lits, int pos) {
   else {
     weight_pool[pos] = 0;
   }
+  effective_pool_size += 4 * (lits.size() - pool_clauses[pos].clause.size());
   max_weight_pool = max(max_weight_pool, weight);
   new (&pool_clauses[pos])
       Soft(copy_lits, weight, assump, vars);
@@ -274,19 +275,19 @@ int MaxSATFormula::getProblemType() {
 }
 
 // 'ubCost' is initialized to the sum of weights of the soft clauses.
-void MaxSATFormula::updateSumWeights(uint64_t weight) {
-  if (weight != hard_weight)
-    sum_soft_weight += weight;
-}
+// void MaxSATFormula::updateSumWeights(uint64_t weight) {
+//   if (weight != hard_weight)
+//     sum_soft_weight += weight;
+// }
 
 // The initial 'currentWeight' corresponds to the maximum weight of the soft
 // clauses.
-void MaxSATFormula::setMaximumWeight(uint64_t weight) {
-  if (weight > max_soft_weight && weight != hard_weight)
-    max_soft_weight = weight;
-}
+// void MaxSATFormula::setMaximumWeight(uint64_t weight) {
+//   if (weight > max_soft_weight && weight != hard_weight)
+//     max_soft_weight = weight;
+// }
 
-uint64_t MaxSATFormula::getMaximumWeight() { return max_soft_weight; }
+// uint64_t MaxSATFormula::getMaximumWeight() { return max_soft_weight; }
 
 void MaxSATFormula::setHardWeight(uint64_t weight) {
   hard_weight = weight;

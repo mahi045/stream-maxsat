@@ -143,9 +143,9 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
           maxsat_formula->getProblemType() == _UNWEIGHTED_) {
         assert(weight > 0);
         // Updates the maximum weight of soft clauses.
-        maxsat_formula->setMaximumWeight(weight);
+        // maxsat_formula->setMaximumWeight(weight);
         // Updates the sum of the weights of soft clauses.
-        maxsat_formula->updateSumWeights(weight);
+        // maxsat_formula->updateSumWeights(weight);
         maxsat_formula->addSoftClause(weight, lits);
       } else
         maxsat_formula->addHardClause(lits);
@@ -177,7 +177,7 @@ static void parseMaxSATFormula(gzFile input_stream,
                                MaxSATFormula *maxsat_formula) {
   StreamBuffer in(input_stream);
   parseMaxSAT(in, maxsat_formula);
-  if (maxsat_formula->getMaximumWeight() == 1)
+  if (maxsat_formula->hard_clause_identifier == 2)
     maxsat_formula->setProblemType(_UNWEIGHTED_);
   else
     maxsat_formula->setProblemType(_WEIGHTED_);
