@@ -139,21 +139,21 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
           maxsat_formula->getProblemType() == _UNWEIGHTED_) {
         assert(weight > 0);
         // Updates the maximum weight of soft clauses.
-        maxsat_formula->setMaximumWeight(weight);
+        // maxsat_formula->setMaximumWeight(weight);
         // Updates the sum of the weights of soft clauses.
-        maxsat_formula->updateSumWeights(weight);
+        // maxsat_formula->updateSumWeights(weight);
         maxsat_formula->addSoftClause(weight, lits);
       } else
         maxsat_formula->addHardClause(lits);
       if (maxsat_formula->memory_consumed_by_bucket >= BUCKET_SIZE) {
-        printf("%d-th bucket !! \n", maxsat_formula->bucket_index);
+        printf("%d-th bucket !! \n", ++maxsat_formula->bucket_index);
         modify_pool(maxsat_formula);
         maxsat_formula->clearBucket();
       }
     }
   }
   if (maxsat_formula->memory_consumed_by_bucket > 0) {
-    printf("%d-th bucket !! \n", maxsat_formula->bucket_index);
+    printf("%d-th bucket !! \n", ++maxsat_formula->bucket_index);
     modify_pool(maxsat_formula);
   }
   printf("Sum of weight: %s\n", mpz_get_str (NULL, 10, maxsat_formula->clause_weight_sum));
@@ -170,7 +170,7 @@ static void parseMaxSATFormula(gzFile input_stream,
                                MaxSATFormula *maxsat_formula) {
   StreamBuffer in(input_stream);
   parseMaxSAT(in, maxsat_formula);
-  if (maxsat_formula->getMaximumWeight() == 1)
+  if (maxsat_formula->hard_clause_identifier == 2)
     maxsat_formula->setProblemType(_UNWEIGHTED_);
   else
     maxsat_formula->setProblemType(_WEIGHTED_);

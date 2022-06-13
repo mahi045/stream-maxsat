@@ -31,19 +31,24 @@ int parseLine(char* line){
     return i;
 }
 
-int currentUsedSizeinVM(){ //Note: this value is in KB!
-    FILE* file = fopen("/proc/self/status", "r");
-    int result = -1;
-    char line[128];
+int currentUsedSizeinVM(MaxSATFormula *maxsat_formula){ //Note: this value is in KB!
+    // FILE* file = fopen("/proc/self/status", "r");
+    // int result = -1;
+    // char line[128];
 
-    while (fgets(line, 128, file) != NULL){
-        if (strncmp(line, "VmSize:", 7) == 0){
-            result = parseLine(line);
-            break;
-        }
-    }
-    fclose(file);
-    return result;
+    // while (fgets(line, 128, file) != NULL){
+    //     if (strncmp(line, "VmSize:", 7) == 0){
+    //         result = parseLine(line);
+    //         break;
+    //     }
+    // }
+    // fclose(file);
+    // return result;
+    uint64_t memory_consumed = maxsat_formula->effective_pool_size;
+    memory_consumed += maxsat_formula->last_index_in_pool * sizeof(Soft);
+    memory_consumed += sizeof(maxsat_formula);
+
+    return memory_consumed / 1024; // the value is in Kbytes
 }
 
 vector<int> sample_k_items(int n, int k) {
@@ -154,7 +159,7 @@ void modify_pool(MaxSATFormula *maxsat_formula) {
                 if (clause_already_added > 0) {
                     maxsat_formula->weight_sampler.erase(maxsat_formula->weight_sampler.begin(), maxsat_formula->weight_sampler.begin() + clause_already_added);
                 }
-                cout << "clause_already_added: " << clause_already_added << endl;
+                // cout << "clause_already_added: " << clause_already_added << endl;
                 int clause_need_replace = ceil(((double) (mpz_get_d(maxsat_formula->bucket_clause_weight)) / (mpz_get_d(maxsat_formula->clause_weight_sum))) 
                     * maxsat_formula->nPool());
                 int remaining_clause = min(bound, BUCKET_SIZE) - clause_already_added;
@@ -252,7 +257,7 @@ void sample_clauses(MaxSATFormula *maxsat_formula) {
     myfile.close();
     int available_memory = total_memory;
     if (use_fixed_memory) {
-      int used_memory = currentUsedSizeinVM() / 1024;
+      int used_memory = currentUsedSizeinVM(maxsat_formula) / 1024;
       available_memory = (available_memory > used_memory)
                              ? (available_memory - used_memory)
                              : available_memory;
