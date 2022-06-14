@@ -320,7 +320,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             //     }
             // }
             // disable assignment heuristic
-            if (!use_pool || decision_heu) {
+            if (!use_pool && decision_heu) {
                 if (true) {
                     if (maxsat_formula->assignment[variable] == l_True) {
                         if (maxsat_formula->occurance_list[2*(variable - 1)] > F * maxsat_formula->occurance_list[2*(variable - 1) + 1]) {
@@ -468,6 +468,8 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
         }
         assignfile.close();
         cout << " Not using the pool " << endl;
+        maxsat_formula->memory_consumed_by_bucket = 0; // the bucket is processed and the bucket size is initialized to zero 
+        maxsat_formula->bucket_index++;
         return;
     }
     // if (incompatible.size() > 0) {
