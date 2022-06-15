@@ -88,7 +88,7 @@ bool init_stream(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
     // expectation + log_of_clause + random_k - minimum -
     maxsat_formula->beta =  expectation + log_of_clause + random_k - minimum - maximum;
     cout << "median(" << expectation << "," << random_k << "," << log_of_clause << ")= " << maxsat_formula->beta << endl;
-    POOL_SIZE = (total_memory * fraction_of_memory * 1000 * 1000) / (4 * (maxsat_formula->beta) + sizeof(Soft));
+    POOL_SIZE = (total_memory * fraction_of_memory_pool * 1000 * 1000) / (4 * (maxsat_formula->beta) + sizeof(Soft));
     POOL_SIZE = min(POOL_SIZE, cla);
     BUCKET_SIZE = (total_memory * fraction_of_memory_bucket * 1000 * 1000); // it is size in terms of MB
     cout << "BUCKET_SIZE: (in bytes)" << BUCKET_SIZE << endl;
@@ -104,7 +104,8 @@ bool init_stream(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
     maxsat_formula->occurance_list.growTo(2 * var + 1, 0.0);
     // if (median_heu)
     //     maxsat_formula->occurance_F.resize(var + 1, 0.0);
-    maxsat_formula->createPool(POOL_SIZE);
+    if (use_pool)
+        maxsat_formula->createPool(POOL_SIZE);
     maxsat_formula->seen.assign(var + 1, false);
 
     // maxsat_formula->var_bias.growTo(var + 1, 0);
@@ -257,7 +258,8 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     }
     bucket_start = 0;
     myfile.open(stream_maxsat_file);
-    poolfile.open(pool_stream_maxsat_file);
+    if (use_pool)
+        poolfile.open(pool_stream_maxsat_file);
 
     myfile << "p wcnf " + to_string(maxsat_formula->nVars()) + " " + to_string(maxsat_formula->nSoft()) + " " + to_string(maxsat_formula->hard_clause_identifier) << endl;
     if (use_pool) poolfile << "p wcnf " + to_string(maxsat_formula->nVars()) + " " + to_string(BUCKET_SIZE) + " " + to_string(maxsat_formula->hard_clause_identifier) << endl;
@@ -290,7 +292,8 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     for (int variable = 1; variable <= maxsat_formula->nVars(); variable++) {
         positive_phase = ceil(maxsat_formula->occurance_list[2 * (variable - 1)] - maxsat_formula->temp_occurance_list[2 * (variable - 1)]);
         negative_phase = ceil(maxsat_formula->occurance_list[2 * (variable - 1) + 1] - maxsat_formula->temp_occurance_list[2 * (variable - 1) + 1]);
-        if (maxsat_formula->temp_occurance_list[2 * (variable - 1)] <= 1e-5 && maxsat_formula->temp_occurance_list[2 * (variable - 1) + 1] <= 1e-5) {
+        // earlier logic was this
+        // if (maxsat_formula->temp_occurance_list[2 * (variable - 1)] <= 1e-5 && maxsat_formula->temp_occurance_list[2 * (variable - 1) + 1] <= 1e-5) {
             // if (maxsat_formula->assignment[variable] == l_True) {
             //     // if (positive_phase > negative_phase) {
             //         // myfile << static_cast<uint64_t>(maxsat_formula->hard_clause_identifier) << " " << variable << " " << 0 << endl;
@@ -305,8 +308,8 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             //         number_of_hard_clause++;
             //     // }
             // }
-        }
-        else if (positive_phase > 0 || negative_phase > 0) {
+        // }
+        if (positive_phase > 0 || negative_phase > 0) {
             // if (maxsat_formula->assignment[variable] == l_True) {
             //     if (positive_phase > negative_phase) {
             //         myfile << static_cast<uint64_t>(positive_phase) << " " << variable << " " << 0 << endl;

@@ -243,10 +243,14 @@ int main(int argc, char **argv) {
                         "the value of heparam "
                         "\n",
                         0.05);
-    Glucose::DoubleOption pool_fraction("Open-WBO", "percentage",
+    Glucose::DoubleOption pool_fraction("Open-WBO", "p_pool",
                         "the memory percentage of pool  "
                         "\n",
                         0.1);
+    Glucose::DoubleOption bucket_fraction("Open-WBO", "p_bucket",
+                        "the memory percentage of bucket  "
+                        "\n",
+                        0.02);
     Glucose::DoubleOption al("Open-WBO", "alpha",
                         "the value of alpha "
                         "\n",
@@ -286,7 +290,8 @@ int main(int argc, char **argv) {
     decision_heu = (bool) decision_c;
     use_fixed_memory = (bool) check_memory;
     use_filtering_condition = (bool) use_filter;
-    fraction_of_memory = (double) pool_fraction;
+    fraction_of_memory_pool = (double) pool_fraction;
+    fraction_of_memory_bucket = (double) bucket_fraction;
     heparam = (double) hp;
     npercentile = (double) percentile;
     median_heu = (bool) use_median;
@@ -301,7 +306,8 @@ int main(int argc, char **argv) {
 //     printf("Streaming: %d\n", (int)sampling);
     printf("Timeout for complete maxsat: %d\n", (int)TIMEOUT);
     printf("Timeout for partition maxsat: %d\n", (int)SMALL_TIMEOUT);
-    printf("The memory percentage of pool: %f\n", fraction_of_memory);
+    printf("The memory percentage of pool: %f\n", fraction_of_memory_pool);
+    printf("The memory percentage of bucket: %f\n", fraction_of_memory_bucket);
     
     // // Try to set resource limits:
     // if (cpu_lim != 0) limitTime(cpu_lim);
