@@ -114,8 +114,8 @@ bool init_stream(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
         cout << "We are not using the pool !!!" << endl;
     }
     if (use_pool) {
-        maxsat_formula->createPool(POOL_SIZE) << endl;
-        cout << "We are using the pool !!!";
+        maxsat_formula->createPool(POOL_SIZE);
+        cout << "We are using the pool !!!" << endl;
     }
     maxsat_formula->seen.assign(var + 1, false);
 
