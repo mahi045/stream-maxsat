@@ -85,19 +85,21 @@ void init_sampling(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
         // cout << "The log clauses is: log2(" << cla << ") = " << maxsat_formula->beta << endl;
     }
     int expectation = 0;
+    double exp = 0;
     if (expectation_of_clause) {
-        double exp = 0;
+        int max_clause_size = 0;
         for (auto &x : maxsat_formula->clause_map)
         {
             exp += ((double) x.first.second * x.second / cla);
+            max_clause_size = (x.first.second > max_clause_size) ? x.first.second : max_clause_size;
         }
-        expectation =  4 * ceil(exp);
+        expectation =  min((int) ceil(3 * exp), max_clause_size);
         // cout << "The expected clause lenght is: E[clause_lenght] = " << maxsat_formula->beta << endl;
     }
-    int minimum = min(expectation, min(log_of_clause, random_k));
-    int maximum = max(expectation, max(log_of_clause, random_k));
+    // int minimum = min(expectation, min(log_of_clause, random_k));
+    // int maximum = max(expectation, max(log_of_clause, random_k));
     // expectation + log_of_clause + random_k - minimum -
-    maxsat_formula->beta =  expectation + log_of_clause + random_k - minimum - maximum;
+    maxsat_formula->beta =  expectation;
     cout << "median(" << expectation << "," << random_k << "," << log_of_clause << ")= " << maxsat_formula->beta << endl;
     POOL_SIZE = (total_memory * fraction_of_memory * 1000 * 1000) / (4 * (maxsat_formula->beta) + sizeof(Soft));
     POOL_SIZE = min(POOL_SIZE, cla);
