@@ -74,19 +74,21 @@ bool init_stream(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
         // cout << "The log clauses is: log2(" << cla << ") = " << maxsat_formula->beta << endl;
     }
     int expectation = 0;
+    double exp = 0;
     if (expectation_of_clause) {
-        double exp = 0;
+        int max_clause_size = 0;
         for (auto &x : maxsat_formula->clause_map)
         {
             exp += ((double) x.first.second * x.second / cla);
+            max_clause_size = (x.first.second > max_clause_size) ? x.first.second : max_clause_size;
         }
-        expectation =  4 * ceil(exp);
+        expectation =  min((int) ceil(3 * exp), max_clause_size);
         // cout << "The expected clause lenght is: E[clause_lenght] = " << maxsat_formula->beta << endl;
     }
-    int minimum = min(expectation, min(log_of_clause, random_k));
-    int maximum = max(expectation, max(log_of_clause, random_k));
+    // int minimum = min(expectation, min(log_of_clause, random_k));
+    // int maximum = max(expectation, max(log_of_clause, random_k));
     // expectation + log_of_clause + random_k - minimum -
-    maxsat_formula->beta =  expectation + log_of_clause + random_k - minimum - maximum;
+    maxsat_formula->beta =  expectation;
     cout << "median(" << expectation << "," << random_k << "," << log_of_clause << ")= " << maxsat_formula->beta << endl;
     POOL_SIZE = (total_memory * fraction_of_memory_pool * 1000 * 1000) / (4 * (maxsat_formula->beta) + sizeof(Soft));
     POOL_SIZE = min(POOL_SIZE, cla);
@@ -104,8 +106,17 @@ bool init_stream(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
     maxsat_formula->occurance_list.growTo(2 * var + 1, 0.0);
     // if (median_heu)
     //     maxsat_formula->occurance_F.resize(var + 1, 0.0);
-    if (use_pool)
-        maxsat_formula->createPool(POOL_SIZE);
+    // something like auto-tune
+    random_k = ceil(exp);
+    if ((double) POOL_SIZE / var <= (double) pow(2, random_k) / random_k) {
+        // no need to use the pool, otherwise use the pool
+        use_pool = false;
+        cout << "We are not using the pool !!!" << endl;
+    }
+    if (use_pool) {
+        maxsat_formula->createPool(POOL_SIZE) << endl;
+        cout << "We are using the pool !!!";
+    }
     maxsat_formula->seen.assign(var + 1, false);
 
     // maxsat_formula->var_bias.growTo(var + 1, 0);
@@ -678,39 +689,41 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
         //     remaining_clause = i + 1;
         //     clause_need_replace = ((double) (remaining_clause) / (remaining_clause + maxsat_formula->clause_seen_so_far)) * maxsat_formula->nPool();
         // }
-        unordered_set<uint32_t> replaced_clause_pool = maxsat_formula->pick_k_clauses_from_pool(clause_need_replace);
-        unordered_set<uint32_t> replaced_clause_bucket = maxsat_formula->pick_k_clauses(clause_need_replace, true);
-        cout << " From bucket index "
-                     << maxsat_formula->clause_seen_so_far << " to "
-                     << maxsat_formula->clause_seen_so_far +
-                            maxsat_formula->nSoft()
-                     << " => ";
-        auto start_itr1 = replaced_clause_pool.begin();
-        auto start_itr2 = replaced_clause_bucket.begin();
-        // cout << "replaced_clause_pool.size(): " << replaced_clause_pool.size() << endl;
-        // cout << "replaced_clause_bucket.size(): " << replaced_clause_bucket.size() << endl;
-        // cout << "clause_need_replace: " << clause_need_replace << endl;
-        assert(replaced_clause_pool.size() == replaced_clause_bucket.size());
-        for (;start_itr1 != replaced_clause_pool.end(); start_itr1++, start_itr2++) {
-            // index_bucket = *start_itr2 + maxsat_formula->clause_seen_so_far - 1;
-            index_bucket = *start_itr2;
-            index_pool = *start_itr1;
-            // debugfile << maxsat_formula->getSoftClause(index_bucket).weight << " is replacing " << maxsat_formula->getPoolClause(index_pool).weight << endl;
-            // debugfile << "Before update: " << maxsat_formula->getPoolClause(index_pool).weight << " ";
-            maxsat_formula->updatePoolClause(maxsat_formula->getSoftClause(index_bucket).weight, 
-                maxsat_formula->getSoftClause(index_bucket).clause, index_pool);
-            // debugfile << "After update: " << maxsat_formula->getPoolClause(index_pool+1).weight << " ";
-        }
-        // for (auto cla_index = 0; cla_index < clause_need_replace; cla_index++) {
-        //     // cout << " Bucket " << index_bucket << "'th clause replace pool " << index_pool << "'th clause" << endl;
-        //     index_bucket = replaced_clause_bucket[cla_index] + maxsat_formula->clause_seen_so_far - 1;
-        //     index_pool = replaced_clause_pool[cla_index];
-        //     maxsat_formula->updatePoolClause(maxsat_formula->getSoftClause(index_bucket).weight, 
-        //         maxsat_formula->getSoftClause(index_bucket).clause, index_pool);
+        if (clause_need_replace > 0) {
+            unordered_set<uint32_t> replaced_clause_pool = maxsat_formula->pick_k_clauses_from_pool(clause_need_replace);
+            unordered_set<uint32_t> replaced_clause_bucket = maxsat_formula->pick_k_clauses(clause_need_replace, true);
+            cout << " From bucket index "
+                        << maxsat_formula->clause_seen_so_far << " to "
+                        << maxsat_formula->clause_seen_so_far +
+                                maxsat_formula->nSoft()
+                        << " => ";
+            auto start_itr1 = replaced_clause_pool.begin();
+            auto start_itr2 = replaced_clause_bucket.begin();
+            // cout << "replaced_clause_pool.size(): " << replaced_clause_pool.size() << endl;
+            // cout << "replaced_clause_bucket.size(): " << replaced_clause_bucket.size() << endl;
+            // cout << "clause_need_replace: " << clause_need_replace << endl;
+            assert(replaced_clause_pool.size() == replaced_clause_bucket.size());
+            for (;start_itr1 != replaced_clause_pool.end(); start_itr1++, start_itr2++) {
+                // index_bucket = *start_itr2 + maxsat_formula->clause_seen_so_far - 1;
+                index_bucket = *start_itr2;
+                index_pool = *start_itr1;
+                // debugfile << maxsat_formula->getSoftClause(index_bucket).weight << " is replacing " << maxsat_formula->getPoolClause(index_pool).weight << endl;
+                // debugfile << "Before update: " << maxsat_formula->getPoolClause(index_pool).weight << " ";
+                maxsat_formula->updatePoolClause(maxsat_formula->getSoftClause(index_bucket).weight, 
+                    maxsat_formula->getSoftClause(index_bucket).clause, index_pool);
+                // debugfile << "After update: " << maxsat_formula->getPoolClause(index_pool+1).weight << " ";
+            }
+            // for (auto cla_index = 0; cla_index < clause_need_replace; cla_index++) {
+            //     // cout << " Bucket " << index_bucket << "'th clause replace pool " << index_pool << "'th clause" << endl;
+            //     index_bucket = replaced_clause_bucket[cla_index] + maxsat_formula->clause_seen_so_far - 1;
+            //     index_pool = replaced_clause_pool[cla_index];
+            //     maxsat_formula->updatePoolClause(maxsat_formula->getSoftClause(index_bucket).weight, 
+            //         maxsat_formula->getSoftClause(index_bucket).clause, index_pool);
 
-            
-        // }
-        cout << "Total " << clause_need_replace << " clauses replaced from pool !!!" << endl;
+                
+            // }
+            cout << "Total " << clause_need_replace << " clauses replaced from pool !!!" << endl;
+        }
     }
     else {
         for (auto cla_index = 0; cla_index < maxsat_formula->nSoft(); cla_index++) {
