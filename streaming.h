@@ -108,11 +108,11 @@ bool init_stream(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
     //     maxsat_formula->occurance_F.resize(var + 1, 0.0);
     // something like auto-tune
     random_k = ceil(exp);
-    if ((double) POOL_SIZE / var <= (double) pow(2, random_k) / random_k) {
-        // no need to use the pool, otherwise use the pool
-        use_pool = false;
-        cout << "We are not using the pool !!!" << endl;
-    }
+    // if ((double) POOL_SIZE / var <= (double) pow(2, random_k) / random_k) {
+    //     // no need to use the pool, otherwise use the pool
+    //     use_pool = false;
+    //     cout << "We are not using the pool !!!" << endl;
+    // }
     if (use_pool) {
         maxsat_formula->createPool(POOL_SIZE);
         cout << "We are using the pool !!!" << endl;
@@ -408,6 +408,10 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     system(stringStream.str().c_str());
 
     stringStream.str("");
+    stringStream << "grep \"o \" " << "result_" + stream_maxsat_file;
+    system(stringStream.str().c_str());
+    stringStream.str("");
+
     std::string open_wbo_maxsat_file = "result_open_wbo_" + stream_maxsat_file;
     stringStream << "mv " << open_wbo_maxsat_file << " result_" + stream_maxsat_file;
     system(stringStream.str().c_str());
@@ -610,6 +614,11 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
         // std::cout << "maxsat() elapsed time is " << int_s.count() << " seconds )" << std::endl;
         // cout << "Get result !!!" << endl;
         stringStream.str("");
+
+        stringStream << "grep \"o \" " << "result_" + stream_maxsat_file;
+        system(stringStream.str().c_str());
+        stringStream.str("");
+
         open_wbo_maxsat_file = "result_open_wbo_" + stream_maxsat_file;
         stringStream << "mv " << open_wbo_maxsat_file << " result_" + stream_maxsat_file;
         system(stringStream.str().c_str());
@@ -678,11 +687,12 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
         if (clause_already_added > 0)
         {
             maxsat_formula->weight_sampler.erase(maxsat_formula->weight_sampler.begin(), maxsat_formula->weight_sampler.begin() + clause_already_added);
+            clause_need_replace = ceil(((double)(mpz_get_d(maxsat_formula->bucket_clause_weight)) / (mpz_get_d(maxsat_formula->clause_weight_sum))) * maxsat_formula->nPool());
         }
         cout << "clause_already_added: " << clause_already_added << endl;
         int remaining_clause = BUCKET_SIZE;
         // cout << "clause_need_replace: " << clause_need_replace << endl;
-        clause_need_replace = min(clause_need_replace, bound) - clause_already_added;
+        clause_need_replace = min(clause_need_replace, bound - clause_already_added) ;
         // cout << "clause_need_replace: " << clause_need_replace << endl;
 
         // if (false && i + 1 == bound) {
