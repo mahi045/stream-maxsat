@@ -148,6 +148,8 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
   ofstream assignfile;
   uint64_t hard_weight = UINT64_MAX;
   uint64_t num_var, num_cla;
+  vector<bool> occ;
+  uint32_t variables_not_found = 0;
   mpz_init_set_ui(maxsat_formula->clause_weight_sum, 0);
   mpz_init_set_ui(maxsat_formula->bucket_clause_weight, 0);
   mpz_init_set_ui(maxsat_formula->unsat_weight, 0);
@@ -168,6 +170,8 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
         maxsat_formula->setProblemType(_WEIGHTED_);
         num_var = parseInt(in); // Variables
         num_cla = parseInt(in); // Clauses
+        occ.assign(num_var+1, false);
+        variables_not_found = num_var;
         if (*in != '\r' && *in != '\n') {
           hard_weight = parseWeight(in);
           maxsat_formula->setHardWeight(hard_weight);
@@ -206,6 +210,11 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
         if (sign(lits[j])) w *= -1;
         maxsat_formula->bias += (abs(maxsat_formula->var_bias[var(lits[j])] + w) - abs(maxsat_formula->var_bias[var(lits[j])]));
         maxsat_formula->var_bias[var(lits[j])] += w;
+        if (occ[var(lits[j])] == false) {
+          variables_not_found--;
+          occ[var(lits[j])] = true;
+        }
+        
         if (sign(lits[j])) {
           if (maxsat_formula->assignment[var(lits[j]) + 1] == l_False) {
             unsat = false;
@@ -274,6 +283,7 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
   assignfile << "v ";
   printf("Sum of weight: %s\n", mpz_get_str (NULL, 10, maxsat_formula->clause_weight_sum));
   printf("Sum of unsat weight: %s\n", mpz_get_str (NULL, 10, maxsat_formula->unsat_weight));
+  printf("Number of variables not found in the formula: %u\n", variables_not_found);
   // printf("v");
   if (maxsat_formula->bias > bias_thre) {
     for (uint32_t k = 1; k <= maxsat_formula->nVars(); k++) {
