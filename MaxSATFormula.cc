@@ -305,7 +305,7 @@ Hard &MaxSATFormula::getHardClause(int pos) {
 }
 
 Soft &MaxSATFormula::getPoolClause(int pos) {
-  assert(pos < nPool());
+  assert(pos <= nPool());
   return pool_clauses[pos];
 }
 
@@ -378,6 +378,8 @@ unordered_set<uint32_t> MaxSATFormula::pick_k_clauses(int k, bool reverse = fals
   // cout << " Entered function: pick_k_clauses !!!";
   // auto start = std::chrono::high_resolution_clock::now();
   int rnd_max = weight_sampler.size();
+  // std::map<int, int> unsampled_clauses;
+  // unsampled_clauses.clear();
     int ntake = k;
 
     if (reverse == false) {
@@ -396,15 +398,24 @@ unordered_set<uint32_t> MaxSATFormula::pick_k_clauses(int k, bool reverse = fals
     int offset = pow2(tree_levels) - 1;
     for (int ix = 0; ix < rnd_max; ix++) {
         tree_weights[ix + offset] = weight_sampler[ix];
+        // if (unsampled_clauses.find(weight_sampler[ix]) == unsampled_clauses.end()) {
+        //   unsampled_clauses[weight_sampler[ix]] = 1;
+        // } else {
+        //   unsampled_clauses[weight_sampler[ix]] = unsampled_clauses[weight_sampler[ix]] + 1;
+        // }
     }
     for (int ix = pow2(tree_levels+1) - 1; ix > 0; ix--) {
         tree_weights[(ix - 1) / 2] += tree_weights[ix];
     }
+    // cout << "Unsampled clauses stat: " << endl;
+    // for (auto &x : unsampled_clauses)
+    //   std::cout << " weight: " << x.first << ", cnt: " << x.second << ", ";
 
     /* sample according to uniform distribution */
     double rnd_subrange, w_left;
     double curr_subrange;
     int curr_ix;
+    // unsampled_clauses.clear();
     std::unordered_set<uint32_t> sampled(ntake);
     for (int el = 0; el < ntake; el++) {
 
@@ -421,6 +432,15 @@ unordered_set<uint32_t> MaxSATFormula::pick_k_clauses(int k, bool reverse = fals
 
         /* finally, add element from this iteration */
         sampled.insert(curr_ix - offset);
+        // auto ix = curr_ix - offset;
+        // if (unsampled_clauses.find(weight_sampler[ix]) == unsampled_clauses.end())
+        // {
+        //   unsampled_clauses[weight_sampler[ix]] = 1;
+        // }
+        // else
+        // {
+        //   unsampled_clauses[weight_sampler[ix]] = unsampled_clauses[weight_sampler[ix]] + 1;
+        // }
 
         /* now remove the weight of the chosen element */
         tree_weights[curr_ix] = 0;
@@ -430,6 +450,9 @@ unordered_set<uint32_t> MaxSATFormula::pick_k_clauses(int k, bool reverse = fals
                                     + tree_weights[2 * curr_ix + 2];
         }
     }
+    // cout << "sampled clauses stat: " << endl;
+    // for (auto &x : unsampled_clauses)
+    //   std::cout << " weight: " << x.first << ", cnt: " << x.second << ", ";
     // auto end = std::chrono::high_resolution_clock::now();
     // auto int_s = std::chrono::duration_cast<std::chrono::seconds>(end - start);
     // std::cout << "pick_k_clauses elapsed time is " << int_s.count() << " seconds )" << std::endl;
@@ -438,6 +461,9 @@ unordered_set<uint32_t> MaxSATFormula::pick_k_clauses(int k, bool reverse = fals
 unordered_set<uint32_t> MaxSATFormula::pick_k_clauses_from_pool(int k) {
   // cout << " Entered function: pick_k_clauses_from_pool !!!";
   // auto start = std::chrono::high_resolution_clock::now();
+  // std::map<int, int> unsampled_clauses;
+  // unsampled_clauses.clear();
+
   int rnd_max = weight_pool.size();
     int ntake = k;
 
@@ -452,10 +478,19 @@ unordered_set<uint32_t> MaxSATFormula::pick_k_clauses_from_pool(int k) {
     for (int ix = 0; ix < rnd_max; ix++) {
         tree_weights[ix + offset] = max_weight_pool + 1 - weight_pool[ix];
         assert(tree_weights[ix + offset] >= 0);
+        // if (unsampled_clauses.find(weight_pool[ix]) == unsampled_clauses.end()) {
+        //   unsampled_clauses[weight_pool[ix]] = 1;
+        // } else {
+        //   unsampled_clauses[weight_pool[ix]] = unsampled_clauses[weight_pool[ix]] + 1;
+        // }
     }
+    // cout << "Unsampled clauses stat: " << endl;
+    // for (auto &x : unsampled_clauses)
+    //   std::cout << " weight: " << x.first << ", cnt: " << x.second << ", ";
     for (int ix = pow2(tree_levels+1) - 1; ix > 0; ix--) {
         tree_weights[(ix - 1) / 2] += tree_weights[ix];
     }
+    // unsampled_clauses.clear();
 
     /* sample according to uniform distribution */
     double rnd_subrange, w_left;
@@ -477,6 +512,15 @@ unordered_set<uint32_t> MaxSATFormula::pick_k_clauses_from_pool(int k) {
 
         /* finally, add element from this iteration */
         sampled.insert(curr_ix - offset);
+        // auto ix = curr_ix - offset;
+        // if (unsampled_clauses.find(weight_pool[ix]) == unsampled_clauses.end())
+        // {
+        //   unsampled_clauses[weight_pool[ix]] = 1;
+        // }
+        // else
+        // {
+        //   unsampled_clauses[weight_pool[ix]] = unsampled_clauses[weight_pool[ix]] + 1;
+        // }
 
         /* now remove the weight of the chosen element */
         tree_weights[curr_ix] = 0;
@@ -486,6 +530,9 @@ unordered_set<uint32_t> MaxSATFormula::pick_k_clauses_from_pool(int k) {
                                     + tree_weights[2 * curr_ix + 2];
         }
     }
+    // cout << "sampled clauses stat: " << endl;
+    // for (auto &x : unsampled_clauses)
+    //   std::cout << " weight: " << x.first << ", cnt: " << x.second << ", ";
     // auto end = std::chrono::high_resolution_clock::now();
     // auto int_s = std::chrono::duration_cast<std::chrono::seconds>(end - start);
     // std::cout << "pick_k_clauses_from_pool elapsed time is " << int_s.count() << " seconds )" << std::endl;
