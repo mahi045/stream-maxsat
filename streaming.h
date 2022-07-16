@@ -202,6 +202,15 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     int var_ind = 0;
     // int bucket_index = maxsat_formula->nSoft() / BUCKET_SIZE - 1;
     int bound = maxsat_formula->nSoft();
+    unordered_map<uint32_t, uint32_t> var_map;
+    unordered_map<uint32_t, uint32_t> inv_var_map;
+    var_map.clear();
+    inv_var_map.clear();
+    uint32_t last_variable_of_mapping = 0;
+    uint32_t variable_goes_to_file = 0; 
+    uint32_t renamed_variable = 0;
+    uint32_t number_of_clauses = 0;
+    bool rename_the_problem = true;
     maxsat_formula->in_bucket.assign(maxsat_formula->nVars() + 1, false);
     // cout << "sizeof(maxsat_formula->getSoftClause(0).weight) => " << sizeof(Soft) << endl;
     // cout << "sizeof(maxsat_formula->getSoftClause(0).weight) => " << maxsat_formula->getSoftClause(0).clause.size() << endl;
@@ -284,12 +293,26 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             myfile << "-";
                 if (use_pool) poolfile << "-";
                 }
-                myfile << var(maxsat_formula->getSoftClause(start_index).clause[j]) + 1
-                    << " ";
+                if (rename_the_problem)
+                {
+                    variable_goes_to_file = var(maxsat_formula->getSoftClause(start_index).clause[j]) + 1;
+                    if (var_map.find(variable_goes_to_file) == var_map.end())
+                    {
+                        last_variable_of_mapping++;
+                        var_map[variable_goes_to_file] = last_variable_of_mapping;
+                        inv_var_map[last_variable_of_mapping] = variable_goes_to_file;
+                    }
+                    myfile << var_map[variable_goes_to_file] << " ";
+                }
+                else {
+                    myfile << var(maxsat_formula->getSoftClause(start_index).clause[j]) + 1
+                        << " ";
+                }
                 if (use_pool) poolfile << var(maxsat_formula->getSoftClause(start_index).clause[j]) + 1
                     << " ";
         }
         myfile << "0" << endl;
+        number_of_clauses++;
         if (use_pool) poolfile << "0" << endl;
     }
     // if (decision_heu) {
@@ -339,12 +362,14 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                     if (maxsat_formula->assignment[variable] == l_True) {
                         if (maxsat_formula->occurance_list[2*(variable - 1)] > F * maxsat_formula->occurance_list[2*(variable - 1) + 1]) {
                             myfile << static_cast<uint64_t>(positive_phase-negative_phase) << " " << variable << " " << 0 << endl;
+                            number_of_clauses++;
                         // myfile << static_cast<uint64_t>(negative_phase) << " " << -variable << " " << 0 << endl;
                         }
                     } else if (maxsat_formula->assignment[variable] == l_False) {
                         if (F * maxsat_formula->occurance_list[2*(variable - 1)] < maxsat_formula->occurance_list[2*(variable - 1) + 1]) {
                             // myfile << static_cast<uint64_t>(positive_phase) << " " << variable << " " << 0 << endl;
                             myfile << static_cast<uint64_t>(negative_phase-positive_phase) << " " << -variable << " " << 0 << endl;
+                            number_of_clauses++;
                         }
                     }
                 }
@@ -370,6 +395,24 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     }
     maxsat_formula->temp_occurance_list.clear(true);
     myfile.close();
+    if (rename_the_problem) {
+        // rename the number of variables
+        cout << "The number of variables is: " << to_string(maxsat_formula->nVars()) << " but the bucket has total: " << last_variable_of_mapping << " variables !!!" << endl;
+        ifstream in(stream_maxsat_file);
+        string temp_newfile = "temp_" + stream_maxsat_file;
+        ofstream out(temp_newfile);
+        string v1, v2;
+        uint32_t v3, v4, v5;
+        in >> v1 >> v2 >> v3 >> v4 >> v5;
+        v3 = last_variable_of_mapping; // <- Do whatever you need to here.
+        v4 = number_of_clauses;
+        out << v1 << " " << v2 << " " << v3 << " " << v4 << " " << v5;
+        out << in.rdbuf();
+        out.close();
+        in.close();
+        rename(temp_newfile.c_str(), stream_maxsat_file.c_str());
+    }
+
     stringStream.str("");
     current_time = std::chrono::high_resolution_clock::now();
     remaining_buckets = (nbuckets - maxsat_formula->nSoft() / BUCKET_SIZE + 1);
@@ -433,6 +476,13 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 end = line.find(delim, start);
                 if (variable != "v") {
                     lit = stoi(variable);
+                    if (rename_the_problem) {
+                        renamed_variable = abs(lit);
+                        if (lit < 0)
+                            lit = -inv_var_map[renamed_variable]; 
+                        else 
+                            lit = inv_var_map[renamed_variable]; 
+                    }
                     if (!maxsat_formula->in_bucket[abs(lit)]) {
                         continue;   // no need to update the assignment because it is not in bucket
                     }
@@ -462,6 +512,8 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     }
     maxsat_formula->in_bucket.clear();
     maxsat_formula->in_bucket.shrink_to_fit();
+    var_map.clear();
+    inv_var_map.clear();
     resultfile2.close();
     cout << "Already read the result ..." << endl;
     if (!no_assign) {
