@@ -267,8 +267,17 @@ void sample_clauses(MaxSATFormula *maxsat_formula) {
     cout << "The available memory: " << available_memory
          << endl;
     std::ostringstream stringStream;
-    int timeout = TIMEOUT - 200;
-    timeout = (timeout < 10) ? 10 : timeout;
+    // int timeout = TIMEOUT - 200;
+    // timeout = (timeout < 10) ? 10 : timeout;
+    std::chrono::duration<double> remaining_time;
+    uint32_t remaining_time_second, timeout;
+    std::chrono::high_resolution_clock::time_point current_time;
+    current_time = std::chrono::high_resolution_clock::now();
+    remaining_time =  current_time - start_time;
+    remaining_time_second = floor((TIMEOUT - remaining_time.count() - 50));
+    timeout = min(TIMEOUT, remaining_time_second);
+    timeout = (timeout < 50) ? 50 : timeout;
+
     stringStream << "./open-wbo_static -print-model -cpu-lim="<< to_string(timeout) << " -mem-lim=" << available_memory << " " << sampled_maxsat_file + " > " + "result_" + sampled_maxsat_file;
     cout << stringStream.str() << endl;
     system(stringStream.str().c_str());
