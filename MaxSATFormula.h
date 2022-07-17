@@ -128,8 +128,8 @@ public:
   // vector<uint64_t> m;
   vec<double> temp_occurance_list;
   vec<lbool> assignment;
-  vector<uint32_t> weight_sampler;
-  vector<uint32_t> weight_pool;
+  vector<uint64_t> weight_sampler;
+  vector<uint64_t> weight_pool;
   unordered_set<uint32_t> pick_k_clauses(int k, bool reversed);
   unordered_set<uint32_t> pick_k_clauses_from_pool(int k);
   void status_pool();
@@ -137,7 +137,7 @@ public:
   mpz_t clause_weight_sum, bucket_clause_weight;
   uint64_t hard_clause_identifier = 0, max_weight_pool=0;
   uint32_t last_index_in_pool = 0;
-  uint32_t memory_consumed_by_bucket = 0;
+  uint64_t memory_consumed_by_bucket = 0;
   uint32_t bucket_index = 0;
   uint64_t effective_pool_size = 0;
   // uint64_t bias = 0;
@@ -268,7 +268,7 @@ protected:
   int format;
   // initialize random sampler
   random_device rd;
-  mt19937 rng{rd()};
+  mt19937 rng{rd(12345)};
 };
 
 } // namespace openwbo

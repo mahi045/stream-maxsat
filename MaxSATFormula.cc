@@ -392,7 +392,7 @@ unordered_set<uint32_t> MaxSATFormula::pick_k_clauses(int k, bool reverse = fals
     int tree_levels = ceil(log2((double) rnd_max));
 
     /* initialize vector with place-holders for perfectly-balanced tree */
-    std::vector<double> tree_weights(pow2(tree_levels + 1));
+    std::vector<long double> tree_weights(pow2(tree_levels + 1));
 
     /* compute sums for the tree leaves at each node */
     int offset = pow2(tree_levels) - 1;
@@ -412,8 +412,8 @@ unordered_set<uint32_t> MaxSATFormula::pick_k_clauses(int k, bool reverse = fals
     //   std::cout << " weight: " << x.first << ", cnt: " << x.second << ", ";
 
     /* sample according to uniform distribution */
-    double rnd_subrange, w_left;
-    double curr_subrange;
+    long double rnd_subrange, w_left;
+    long double curr_subrange;
     int curr_ix;
     // unsampled_clauses.clear();
     std::unordered_set<uint32_t> sampled(ntake);
@@ -471,7 +471,7 @@ unordered_set<uint32_t> MaxSATFormula::pick_k_clauses_from_pool(int k) {
     int tree_levels = ceil(log2((double) rnd_max));
 
     /* initialize vector with place-holders for perfectly-balanced tree */
-    std::vector<double> tree_weights(pow2(tree_levels + 1));
+    std::vector<long double> tree_weights(pow2(tree_levels + 1));
 
     /* compute sums for the tree leaves at each node */
     int offset = pow2(tree_levels) - 1;
@@ -493,8 +493,8 @@ unordered_set<uint32_t> MaxSATFormula::pick_k_clauses_from_pool(int k) {
     // unsampled_clauses.clear();
 
     /* sample according to uniform distribution */
-    double rnd_subrange, w_left;
-    double curr_subrange;
+    long double rnd_subrange, w_left;
+    long double curr_subrange;
     int curr_ix;
     std::unordered_set<uint32_t> sampled(ntake);
     for (int el = 0; el < ntake; el++) {
