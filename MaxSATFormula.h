@@ -268,7 +268,7 @@ protected:
   int format;
   // initialize random sampler
   random_device rd;
-  mt19937 rng{rd(12345)};
+  mt19937 rng{12345};
 };
 
 } // namespace openwbo

@@ -82,7 +82,7 @@ bool init_stream(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
             exp += ((double) x.first.second * x.second / cla);
             max_clause_size = (x.first.second > max_clause_size) ? x.first.second : max_clause_size;
         }
-        expectation =  min((int) ceil(3 * exp), max_clause_size);
+        expectation = (int) ceil(3 * exp);
         // cout << "The expected clause lenght is: E[clause_lenght] = " << maxsat_formula->beta << endl;
     }
     // int minimum = min(expectation, min(log_of_clause, random_k));
