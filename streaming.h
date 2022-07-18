@@ -58,6 +58,7 @@ bool init_stream(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
     // if (median_heu)
     //     maxsat_formula->occurance_F.resize(var + 1, 0.0);
     int random_k = 0;
+    cout << "The number of clauses is: " << cla << endl;
     if (random_sat_of_beta) {
         int k = 1;
         for (; ; k++) {
