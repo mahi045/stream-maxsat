@@ -112,7 +112,7 @@ void init_sampling(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
     // setting the capacity of pool
     maxsat_formula->createPool(POOL_SIZE);
     if (hoa && POOL_SIZE < cla) {
-        postprocessing = true;
+        postprocessing = false;
         iter = ceil(log(cla) / (log (10) * 0.25));
         cout << "the value of iterations: " << iter << endl;
     }
