@@ -604,13 +604,22 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
         temp_f.clear();
         temp_f.shrink_to_fit();
     }
+    if (npercentile == 1.0) {
+        // percentile = 100%
+        use_hard = false;
+    }
     if (agreed.size() > 0 && use_hard)
     {
         // adding agreed literals as hard clauses
         for (auto lit_index = 0; lit_index < agreed.size(); lit_index++)
         {
             int var_ind = 2 * (abs(agreed[lit_index]) - 1);
-            if (agreed[lit_index] < 0 && maxsat_formula->occurance_list[var_ind + 1] >= F * maxsat_formula->occurance_list[var_ind])
+            if (npercentile == 0.0) {
+                // percentile = 0%
+                poolfile << maxsat_formula->hard_clause_identifier << " " << agreed[lit_index] << " 0" << endl;
+                c++;
+            }
+            else if (agreed[lit_index] < 0 && maxsat_formula->occurance_list[var_ind + 1] >= F * maxsat_formula->occurance_list[var_ind])
             {
                 // debugfile << agreed[lit_index] << " ";
                 // debugfile << maxsat_formula->occurance_list[var_ind + 1] << " ";
