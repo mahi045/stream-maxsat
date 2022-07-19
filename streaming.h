@@ -204,7 +204,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     // int bucket_index = maxsat_formula->nSoft() / BUCKET_SIZE - 1;
     int bound = maxsat_formula->nSoft();
     unordered_map<uint32_t, uint32_t> var_map;
-    unordered_map<uint32_t, uint32_t> inv_var_map;
+    vector<uint32_t> inv_var_map;
     var_map.clear();
     inv_var_map.clear();
     uint32_t last_variable_of_mapping = 0;
@@ -301,7 +301,11 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                     {
                         last_variable_of_mapping++;
                         var_map[variable_goes_to_file] = last_variable_of_mapping;
-                        inv_var_map[last_variable_of_mapping] = variable_goes_to_file;
+                        if (inv_var_map.size() == 0) {
+                            inv_var_map.push_back(0);
+                        }
+                        inv_var_map.push_back(variable_goes_to_file);
+                        // inv_var_map[last_variable_of_mapping] = variable_goes_to_file;
                     }
                     myfile << var_map[variable_goes_to_file] << " ";
                 }
@@ -413,7 +417,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
         in.close();
         rename(temp_newfile.c_str(), stream_maxsat_file.c_str());
     }
-
+    var_map.clear();
     stringStream.str("");
     current_time = std::chrono::high_resolution_clock::now();
     remaining_buckets = (nbuckets - maxsat_formula->nSoft() / BUCKET_SIZE + 1);
@@ -428,6 +432,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     {
         int used_memory = currentUsedSizeinVM(maxsat_formula);
         used_memory += sizeof(maxsat_formula->in_bucket[0]) * maxsat_formula->in_bucket.size();
+        used_memory += sizeof(inv_var_map[0]) * inv_var_map.size();  // substracting the memory for inv_var_map
         used_memory = used_memory / (1024 * 1024);
         available_memory = (available_memory > used_memory) ? (available_memory - used_memory) : available_memory;
     }
@@ -513,8 +518,8 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     }
     maxsat_formula->in_bucket.clear();
     maxsat_formula->in_bucket.shrink_to_fit();
-    var_map.clear();
     inv_var_map.clear();
+    inv_var_map.shrink_to_fit();
     resultfile2.close();
     cout << "Already read the result ..." << endl;
     if (!no_assign) {
