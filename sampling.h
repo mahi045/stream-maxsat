@@ -197,8 +197,16 @@ void modify_pool(MaxSATFormula *maxsat_formula) {
                 // cout << "replaced_clause_pool.size(): " << replaced_clause_pool.size() << endl;
                 // cout << "replaced_clause_bucket.size(): " << replaced_clause_bucket.size() << endl;
                 // cout << "clause_need_replace: " << clause_need_replace << endl;
-                assert(replaced_clause_pool.size() == replaced_clause_bucket.size());
-                for (;start_itr1 != replaced_clause_pool.end(); start_itr1++, start_itr2++) {
+                // assert(replaced_clause_pool.size() == replaced_clause_bucket.size());
+                if (replaced_clause_pool.size() > replaced_clause_bucket.size())
+                {
+                    cout << "replaced_clause_pool.size() > replaced_clause_bucket.size()" << endl;
+                }
+                if (replaced_clause_pool.size() < replaced_clause_bucket.size())
+                {
+                    cout << "replaced_clause_pool.size() < replaced_clause_bucket.size()" << endl;
+                }
+                for (;start_itr1 != replaced_clause_pool.end() && start_itr2 != replaced_clause_bucket.end(); start_itr1++, start_itr2++) {
                     // index_bucket = *start_itr2 + maxsat_formula->clause_seen_so_far - 1;
                     index_bucket = *start_itr2;
                     index_pool = *start_itr1;
