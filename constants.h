@@ -39,4 +39,5 @@ static bool expectation_of_clause = true;
 static double fraction_of_memory = 0.1;
 static double fraction_of_memory_bucket = 0.02;
 static double Gamma = 0.1;
+static int beta_factor = 3;
 #endif
