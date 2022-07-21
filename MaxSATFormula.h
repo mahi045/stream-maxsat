@@ -131,7 +131,7 @@ public:
   unordered_set<uint32_t> pick_k_clauses(int k, bool reversed);
   unordered_set<uint32_t> pick_k_clauses_from_pool(int k);
   uint32_t clause_seen_so_far = 0;
-  mpz_t clause_weight_sum, bucket_clause_weight, unsat_weight;
+  mpz_t clause_weight_sum, bucket_clause_weight, unsat_weight, unsat_weight_default;
   uint64_t hard_clause_identifier = 0;
   uint64_t bias = 0;
 
@@ -220,6 +220,8 @@ public:
   int getFormat() { return format; }
 
   indexMap &getIndexToName() { return _indexToName; }
+
+  mt19937& getRNG() { return rng; }
 
 protected:
   // MaxSAT database
