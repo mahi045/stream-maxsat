@@ -211,7 +211,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     uint32_t variable_goes_to_file = 0; 
     uint32_t renamed_variable = 0;
     uint32_t number_of_clauses = 0;
-    bool rename_the_problem = false;
+    bool rename_the_problem = true;
     maxsat_formula->in_bucket.assign(maxsat_formula->nVars() + 1, false);
     // cout << "sizeof(maxsat_formula->getSoftClause(0).weight) => " << sizeof(Soft) << endl;
     // cout << "sizeof(maxsat_formula->getSoftClause(0).weight) => " << maxsat_formula->getSoftClause(0).clause.size() << endl;
