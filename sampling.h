@@ -93,14 +93,14 @@ void init_sampling(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
             exp += ((double) x.first.second * x.second / cla);
             max_clause_size = (x.first.second > max_clause_size) ? x.first.second : max_clause_size;
         }
-        expectation =  (int) ceil(3 * exp);
+        expectation =  (int) ceil(beta_factor * exp);
         // cout << "The expected clause lenght is: E[clause_lenght] = " << maxsat_formula->beta << endl;
     }
     // int minimum = min(expectation, min(log_of_clause, random_k));
     // int maximum = max(expectation, max(log_of_clause, random_k));
     // expectation + log_of_clause + random_k - minimum -
     maxsat_formula->beta =  expectation;
-    cout << "median(" << expectation << "," << random_k << "," << log_of_clause << ")= " << maxsat_formula->beta << endl;
+    cout << "The beta factor: " << beta_factor << " and beta : " << expectation << endl;
     POOL_SIZE = (total_memory * fraction_of_memory * 1000 * 1000) / (4 * (maxsat_formula->beta) + sizeof(Soft));
     POOL_SIZE = min(POOL_SIZE, cla);
     BUCKET_SIZE = (total_memory * fraction_of_memory_bucket * 1000 * 1000); // it is size in terms of MB
@@ -245,6 +245,15 @@ void sample_clauses(MaxSATFormula *maxsat_formula) {
     if (hoa) {
         sampled_maxsat_file = "hoa_sampled_" + file_name;
     }
+    unordered_map<uint32_t, uint32_t> var_map;
+    vector<uint32_t> inv_var_map;
+    var_map.clear();
+    inv_var_map.clear();
+    uint32_t last_variable_of_mapping = 0;
+    uint32_t variable_goes_to_file = 0; 
+    uint32_t renamed_variable = 0;
+    uint32_t number_of_clauses = 0;
+    bool rename_the_problem = true;
     myfile.open(sampled_maxsat_file);
     myfile << "p wcnf " + to_string(maxsat_formula->nVars()) + " " +
                   to_string(POOL_SIZE) + " " +
@@ -258,16 +267,50 @@ void sample_clauses(MaxSATFormula *maxsat_formula) {
         if (sign(maxsat_formula->getPoolClause(cla_index).clause[j])) {
           myfile << "-";
         }
-        myfile << var(maxsat_formula->getPoolClause(cla_index).clause[j]) + 1
+        if (rename_the_problem) {
+          variable_goes_to_file =
+              var(maxsat_formula->getPoolClause(cla_index).clause[j]) + 1;
+          if (var_map.find(variable_goes_to_file) == var_map.end()) {
+            last_variable_of_mapping++;
+            var_map[variable_goes_to_file] = last_variable_of_mapping;
+            if (inv_var_map.size() == 0) {
+              inv_var_map.push_back(0);
+            }
+            inv_var_map.push_back(variable_goes_to_file);
+            // inv_var_map[last_variable_of_mapping] = variable_goes_to_file;
+          }
+          myfile << var_map[variable_goes_to_file] << " ";
+        } else {
+          myfile << var(maxsat_formula->getPoolClause(cla_index).clause[j]) + 1
                  << " ";
+        }
       }
       myfile << "0" << endl;
+      number_of_clauses++;
     }
-
+    var_map.clear();
     myfile.close();
+    if (rename_the_problem) {
+        // rename the number of variables
+        cout << "The number of variables is: " << to_string(maxsat_formula->nVars()) << " but the sample has total: " << last_variable_of_mapping << " variables !!!" << endl;
+        ifstream in(sampled_maxsat_file);
+        string temp_newfile = "temp_" + sampled_maxsat_file;
+        ofstream out(temp_newfile);
+        string v1, v2;
+        uint32_t v3, v4, v5;
+        in >> v1 >> v2 >> v3 >> v4 >> v5;
+        v3 = last_variable_of_mapping; // <- Do whatever you need to here.
+        v4 = number_of_clauses;
+        out << v1 << " " << v2 << " " << v3 << " " << v4 << " " << v5;
+        out << in.rdbuf();
+        out.close();
+        in.close();
+        rename(temp_newfile.c_str(), sampled_maxsat_file.c_str());
+    }
     int available_memory = total_memory;
     if (use_fixed_memory) {
       int used_memory = currentUsedSizeinVM(maxsat_formula) / 1024;
+      used_memory += sizeof(inv_var_map[0]) * inv_var_map.size() / (1024 * 1024);
       available_memory = (available_memory > used_memory)
                              ? (available_memory - used_memory)
                              : available_memory;
@@ -316,6 +359,13 @@ void sample_clauses(MaxSATFormula *maxsat_formula) {
                 if (variable != "v")
                 {
                     lit = stoi(variable);
+                    if (rename_the_problem) {
+                        renamed_variable = abs(lit);
+                        if (lit < 0)
+                            lit = -inv_var_map[renamed_variable]; 
+                        else 
+                            lit = inv_var_map[renamed_variable]; 
+                    }
                     if (lit < 0)
                     {
                         maxsat_formula->assignment[abs(lit)] = l_False;
@@ -329,6 +379,9 @@ void sample_clauses(MaxSATFormula *maxsat_formula) {
         }
     }
     resultfile.close();
+    inv_var_map.clear();
+    inv_var_map.shrink_to_fit();
+    
     mpz_t cost, least_cost;
     vector<int> best_per;
     mpz_init_set_ui(least_cost, 0);
@@ -420,8 +473,20 @@ void sample_clauses(MaxSATFormula *maxsat_formula) {
     // finally write the final assignment
     assignfile.open("result_" + sampled_maxsat_file);
     assignfile << "v ";
+    uniform_real_distribution<> dis(0,1.0);
+    bool default_value = dis(maxsat_formula->getRNG()) > 0.5;
+    cout << "default value: " << default_value << endl;
     for (int variable = 1; variable <= maxsat_formula->nVars(); variable++)
     {
+        if (maxsat_formula->assignment[variable] == l_Undef) {
+            // unassigned variables are assigned randomly
+            if (default_value) {
+                maxsat_formula->assignment[variable] = l_True;
+            }
+            else {
+                maxsat_formula->assignment[variable] = l_False;
+            }
+        }
         if (maxsat_formula->assignment[variable] == l_True) {
             assignfile << variable << " ";
         }

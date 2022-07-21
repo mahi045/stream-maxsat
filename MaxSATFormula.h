@@ -230,6 +230,8 @@ public:
 
   int getFormat() { return format; }
 
+  mt19937& getRNG() { return rng; }
+
   // indexMap &getIndexToName() { return _indexToName; }
 
 protected:
