@@ -262,7 +262,11 @@ int main(int argc, char **argv) {
     IntOption c_p("Open-WBO", "clause_policy",
                         "the selection of clause policy "
                         "\n",
-                        2, IntRange(0, 2));    
+                        2, IntRange(0, 2));  
+    IntOption b_factor("Open-WBO", "beta_factor",
+                        "the factor of beta "
+                        "\n",
+                        3, IntRange(1, 100));   
     // the default is 4GB           
     IntOption fixed_memory("Open-WBO", "memlim",
                         "the size of memory "
@@ -285,6 +289,7 @@ int main(int argc, char **argv) {
     eps = (double)epsilon;
     alpha = (double)al;
     clause_policy = (int)c_p; 
+    beta_factor = (int)b_factor;
     use_hard = (bool) hard_c;
     use_pool = (bool) pool_c;
     decision_heu = (bool) decision_c;

@@ -23,6 +23,7 @@ static unsigned SMALL_TIMEOUT = 1000;
 static bool verbose = false;
 static bool use_pool = true;
 static bool use_hard = true;
+static int beta_factor = 3;
 
 static std::chrono::high_resolution_clock::time_point start_time;
 static int number_of_no_assignment = 0;
