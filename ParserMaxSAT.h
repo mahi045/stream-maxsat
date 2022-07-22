@@ -306,7 +306,8 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
   assignfile << "v ";
   printf("Sum of weight: %s\n", mpz_get_str (NULL, 10, maxsat_formula->clause_weight_sum));
   printf("Sum of unsat weight: %s\n", mpz_get_str (NULL, 10, maxsat_formula->unsat_weight));
-  printf("Sum of unsat (default) weight: %s\n", mpz_get_str (NULL, 10, maxsat_formula->unsat_weight_default));
+  if (assigned_variable > 0)
+    printf("Sum of unsat (default) weight: %s\n", mpz_get_str (NULL, 10, maxsat_formula->unsat_weight_default));
   printf("Number of variables not found in the formula: %u\n", variables_not_found);
   // printf("v");
   if (maxsat_formula->bias > bias_thre) {
