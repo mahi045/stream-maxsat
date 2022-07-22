@@ -436,7 +436,12 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     {
         int used_memory = currentUsedSizeinVM(maxsat_formula);
         used_memory += sizeof(maxsat_formula->in_bucket[0]) * maxsat_formula->in_bucket.size();
-        used_memory += sizeof(inv_var_map[0]) * inv_var_map.size();  // substracting the memory for inv_var_map
+        if (rename_the_problem) {
+            used_memory += sizeof(inv_var_map[0]) * inv_var_map.size();  // substracting the memory for inv_var_map
+            used_memory += var_map.bucket_count() * (sizeof(void*) + sizeof(uint32_t));
+            cout << "var_map.bucket_count() * (sizeof(void*) + sizeof(uint32_t)): " <<
+                var_map.bucket_count() * (sizeof(void*) + sizeof(uint32_t)) << endl;
+        }
         used_memory = used_memory / (1024 * 1024);
         available_memory = (available_memory > used_memory) ? (available_memory - used_memory) : available_memory;
     }
@@ -685,6 +690,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     incompatible.clear(true);
     agreed.clear(true);
     poolfile.close();
+    var_map.clear();
     // file renaming
     stringStream.str("");
     stringStream << "mv " + pool_stream_maxsat_file + " " + stream_maxsat_file;
@@ -719,14 +725,14 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
 
         // cout << "The timeout for second maxsat: " << timeout << endl;
         stringStream.str("");
-
-        // mem limit for second maxsat call are same
-        // available_memory = total_memory;
-        // if (use_fixed_memory)
-        // {
-        //     int used_memory = currentUsedSizeinVM() / 1024;
-        //     available_memory = (available_memory > used_memory) ? (available_memory - used_memory) : available_memory;
-        // }
+        available_memory = total_memory;
+        int used_memory = currentUsedSizeinVM(maxsat_formula);
+        if (rename_the_problem) {
+            used_memory += sizeof(inv_var_map[0]) * inv_var_map.size();  
+            cout << "sizeof(inv_var_map[0]) * inv_var_map.size(): " << sizeof(inv_var_map[0]) * inv_var_map.size() << endl;
+        }
+        used_memory = used_memory / (1024 * 1024);
+        available_memory = (available_memory > used_memory) ? (available_memory - used_memory) : available_memory;
         cout << "The available memory (2nd maxsat call): " << available_memory << endl;
         stringStream << "./open-wbo_static -print-model -cpu-lim=" << timeout << " -mem-lim=" << available_memory << " " << stream_maxsat_file + " > " + "result_" + stream_maxsat_file;
         // calling the new maxsat query
@@ -788,6 +794,8 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
         resultfile1.close();
         // cout << "Read result !!!" << endl;
     }
+    inv_var_map.clear();
+    inv_var_map.shrink_to_fit();
     assignfile.open("result_" + stream_maxsat_file);
     assignfile << "v ";
     for (int variable = 1; variable <= maxsat_formula->nVars(); variable++) { 
