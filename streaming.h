@@ -438,9 +438,11 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
         used_memory += sizeof(maxsat_formula->in_bucket[0]) * maxsat_formula->in_bucket.size();
         if (rename_the_problem) {
             used_memory += sizeof(inv_var_map[0]) * inv_var_map.size();  // substracting the memory for inv_var_map
-            used_memory += var_map.bucket_count() * (sizeof(void*) + sizeof(uint32_t));
-            cout << "var_map.bucket_count() * (sizeof(void*) + sizeof(uint32_t)): " <<
-                var_map.bucket_count() * (sizeof(void*) + sizeof(uint32_t)) << endl;
+            if (use_pool) {
+                used_memory += var_map.bucket_count() * (sizeof(void*) + sizeof(uint32_t));
+                cout << "var_map.bucket_count() * (sizeof(void*) + sizeof(uint32_t)): " <<
+                    var_map.bucket_count() * (sizeof(void*) + sizeof(uint32_t)) << endl;
+            }
         }
         used_memory = used_memory / (1024 * 1024);
         available_memory = (available_memory > used_memory) ? (available_memory - used_memory) : available_memory;
@@ -504,6 +506,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                     if (lit < 0) {
                         if (use_pool && maxsat_formula->assignment[abs(lit)] == l_True) {
                             incompatible.push(lit);
+                            maxsat_formula->assignment[abs(lit)] = l_False;
                         }
                         else {
                             maxsat_formula->assignment[abs(lit)] = l_False;
@@ -513,6 +516,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                     }
                     else {
                         if (use_pool && maxsat_formula->assignment[lit] == l_False) {
+                            maxsat_formula->assignment[lit] = l_True;
                             incompatible.push(lit);
                         }
                         else {
