@@ -473,20 +473,21 @@ void sample_clauses(MaxSATFormula *maxsat_formula) {
     // finally write the final assignment
     assignfile.open("result_" + sampled_maxsat_file);
     assignfile << "v ";
-    // uniform_real_distribution<> dis(0,1.0);
-    // bool default_value = dis(maxsat_formula->getRNG()) > 0.5;
+    uniform_real_distribution<> dis(0,1.0);
+    bool default_value = dis(maxsat_formula->getRNG()) > 0.5;
     // cout << "default value: " << default_value << endl;
     for (int variable = 1; variable <= maxsat_formula->nVars(); variable++)
     {
-        // if (maxsat_formula->assignment[variable] == l_Undef) {
-        //     // unassigned variables are assigned randomly
-        //     if (default_value) {
-        //         maxsat_formula->assignment[variable] = l_True;
-        //     }
-        //     else {
-        //         maxsat_formula->assignment[variable] = l_False;
-        //     }
-        // }
+        if (maxsat_formula->assignment[variable] == l_Undef) {
+            // unassigned variables are assigned randomly
+            default_value = dis(maxsat_formula->getRNG()) > 0.5;
+            if (default_value) {
+                maxsat_formula->assignment[variable] = l_True;
+            }
+            else {
+                maxsat_formula->assignment[variable] = l_False;
+            }
+        }
         if (maxsat_formula->assignment[variable] == l_True) {
             assignfile << variable << " ";
         }
