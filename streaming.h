@@ -427,8 +427,11 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     remaining_buckets = (nbuckets - maxsat_formula->nSoft() / BUCKET_SIZE + 1);
     remaining_time =  current_time - start_time;
     remaining_time_second = ceil((TIMEOUT - remaining_time.count()) / (remaining_buckets + remaining_buckets));
+    if (!use_pool) {
+        remaining_time_second *= 2;
+    }
     timeout = min(SMALL_TIMEOUT, remaining_time_second);
-    timeout = (timeout < 10) ? 10 : timeout;
+    timeout = (timeout < 20) ? 20 : timeout;
     incompatible.clear(true);
     agreed.clear(true);
     int available_memory = total_memory;
@@ -457,7 +460,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     // cout << "The number of hard clauses is: " << number_of_hard_clause << endl;
 
     stringStream.str("");
-    stringStream << "./open-wbo_static -print-model -cpu-lim=" << timeout << " -mem-lim=" << available_memory << " " << stream_maxsat_file + " > " + "result_" + stream_maxsat_file;
+    stringStream << "timeout " << timeout << "s ./open-wbo_static -print-model -cpu-lim=" << timeout << " -mem-lim=" << available_memory << " " << stream_maxsat_file + " > " + "result_" + stream_maxsat_file;
     // calling the smapled maxsat query
     cout << stringStream.str() << endl;
     system(stringStream.str().c_str());
@@ -725,7 +728,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
         remaining_time =  current_time - start_time;
         remaining_time_second = ceil((TIMEOUT - remaining_time.count()) / (remaining_buckets + remaining_buckets - 1));
         timeout = min(SMALL_TIMEOUT, remaining_time_second);
-        timeout = (timeout < 10) ? 10 : timeout;
+        timeout = (timeout < 20) ? 20 : timeout;
 
         // cout << "The timeout for second maxsat: " << timeout << endl;
         stringStream.str("");
@@ -738,7 +741,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
         used_memory = used_memory / (1024 * 1024);
         available_memory = (available_memory > used_memory) ? (available_memory - used_memory) : available_memory;
         cout << "The available memory (2nd maxsat call): " << available_memory << endl;
-        stringStream << "./open-wbo_static -print-model -cpu-lim=" << timeout << " -mem-lim=" << available_memory << " " << stream_maxsat_file + " > " + "result_" + stream_maxsat_file;
+        stringStream << "timeout " << timeout << "s ./open-wbo_static -print-model -cpu-lim=" << timeout << " -mem-lim=" << available_memory << " " << stream_maxsat_file + " > " + "result_" + stream_maxsat_file;
         // calling the new maxsat query
         cout << stringStream.str() << endl;
 

@@ -164,7 +164,7 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
     printf("%d-th bucket !! \n", maxsat_formula->bucket_index + 1);
     streaming_maxsat(maxsat_formula);
   }
-  printf("Sum of weight: %s\n", mpz_get_str (NULL, 10, maxsat_formula->clause_weight_sum));
+  // printf("Sum of weight: %s\n", mpz_get_str (NULL, 10, maxsat_formula->clause_weight_sum));
   auto current_time = std::chrono::high_resolution_clock::now();
   // cout << " Stream maxsat execution time: " <<  duration_cast<std::chrono::microseconds>(current_time - start_time).count() / pow(10, 6) << endl;
   // assert(maxsat_formula->nSoft() == maxsat_formula->weight_sampler.size());
