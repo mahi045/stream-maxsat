@@ -126,12 +126,13 @@ public:
   std::map<std::pair<int,int>, int> unsat_clauses;
   vector<uint64_t> m;
   vec<lbool> assignment;
+  vec<lbool> assignment_default;
   vector<uint32_t> weight_sampler;
   vector<uint32_t> weight_pool;
   unordered_set<uint32_t> pick_k_clauses(int k, bool reversed);
   unordered_set<uint32_t> pick_k_clauses_from_pool(int k);
   uint32_t clause_seen_so_far = 0;
-  mpz_t clause_weight_sum, bucket_clause_weight, unsat_weight, unsat_weight_true, unsat_weight_false;
+  mpz_t clause_weight_sum, bucket_clause_weight, unsat_weight, unsat_weight_false;
   uint64_t hard_clause_identifier = 0;
   uint64_t bias = 0;
 
@@ -258,7 +259,7 @@ protected:
   int format;
   // initialize random sampler
   random_device rd;
-  mt19937 rng{rd()};
+  mt19937 rng{12345};
 };
 
 } // namespace openwbo

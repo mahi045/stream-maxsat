@@ -141,6 +141,20 @@ int get_assignment(MaxSATFormula *maxsat_formula) {
   else {
     std::cout << "No assignment is given !!!" << std::endl;
   }
+  if (assigned_variable > 0) {
+    random_device rd;
+    mt19937 rng{12345};
+    uniform_real_distribution<> dis(0,1.0);
+    bool default_value = dis(maxsat_formula->getRNG()) > 0.5;
+    for (auto index = 1; index < maxsat_formula->assignment_default.size(); index++) {
+      if (maxsat_formula->assignment[index] == l_Undef) {
+        if (dis(maxsat_formula->getRNG()) > 0.5)
+          maxsat_formula->assignment_default[index] = l_True;
+        else 
+          maxsat_formula->assignment_default[index] = l_False;
+      }
+    }
+  }
   return assigned_variable;
 }
 template <class B, class MaxSATFormula>
@@ -155,7 +169,6 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
   mpz_init_set_ui(maxsat_formula->bucket_clause_weight, 0);
   mpz_init_set_ui(maxsat_formula->unsat_weight, 0);
   mpz_init_set_ui(maxsat_formula->unsat_weight_false, 0);
-  mpz_init_set_ui(maxsat_formula->unsat_weight_true, 0);
   maxsat_formula->weight_sampler.clear();
   double w;
   maxsat_formula->weight_map.clear();
@@ -212,7 +225,6 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
         maxsat_formula->weight_map[std::make_pair(weight,len)] = maxsat_formula->weight_map[std::make_pair(weight,len)] + 1;
       }
       bool unsat = true;
-      bool unsat_d_true = true;
       bool unsat_d_false = true;
       for (int j = 0; j < lits.size(); j++)
       {
@@ -229,9 +241,8 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
           if (maxsat_formula->assignment[var(lits[j]) + 1] == l_False) {
             unsat = false;
             unsat_d_false = true;
-            unsat_d_true = true;
           }
-          else if (unsat && maxsat_formula->assignment[var(lits[j]) + 1] == l_Undef) {
+          else if (unsat && maxsat_formula->assignment[var(lits[j]) + 1] == l_Undef && maxsat_formula->assignment_default[var(lits[j]) + 1] == l_False) {
             unsat_d_false = false;
           }
         }
@@ -239,10 +250,9 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
           if (maxsat_formula->assignment[var(lits[j]) + 1] == l_True) {
             unsat = false;
             unsat_d_false = true;
-            unsat_d_true = true;
           }
-          else if (unsat && maxsat_formula->assignment[var(lits[j]) + 1] == l_Undef) {
-            unsat_d_true = false;
+          else if (unsat && maxsat_formula->assignment[var(lits[j]) + 1] == l_Undef && maxsat_formula->assignment_default[var(lits[j]) + 1] == l_True) {
+            unsat_d_false = false;
           }
         }
         if (!unsat) 
@@ -265,10 +275,10 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
         mpz_add_ui(maxsat_formula->unsat_weight_false, maxsat_formula->unsat_weight_false,
                     weight);
       }
-      if (unsat && unsat_d_true && assigned_variable > 0) {
-        mpz_add_ui(maxsat_formula->unsat_weight_true, maxsat_formula->unsat_weight_true,
-                    weight);
-      }
+      // if (unsat && unsat_d_true && assigned_variable > 0) {
+      //   mpz_add_ui(maxsat_formula->unsat_weight_true, maxsat_formula->unsat_weight_true,
+      //               weight);
+      // }
       
       // if (weight < hard_weight ||
       //     maxsat_formula->getProblemType() == _UNWEIGHTED_) {
@@ -315,8 +325,8 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
   printf("Sum of weight: %s\n", mpz_get_str (NULL, 10, maxsat_formula->clause_weight_sum));
   printf("Sum of unsat weight: %s\n", mpz_get_str (NULL, 10, maxsat_formula->unsat_weight));
   if (assigned_variable > 0) {
-    printf("Sum of unsat (d: false) weight: %s\n", mpz_get_str (NULL, 10, maxsat_formula->unsat_weight_false));
-    printf("Sum of unsat (d: true) weight: %s\n", mpz_get_str (NULL, 10, maxsat_formula->unsat_weight_true));
+    printf("Sum of unsat (d: default) weight: %s\n", mpz_get_str (NULL, 10, maxsat_formula->unsat_weight_false));
+    // printf("Sum of unsat (d: true) weight: %s\n", mpz_get_str (NULL, 10, maxsat_formula->unsat_weight_true));
   }
   printf("Number of variables not found in the formula: %u\n", variables_not_found);
   // printf("v");

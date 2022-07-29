@@ -20,10 +20,11 @@ using namespace std;
 void init_stream(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
     POOL_SIZE = min((uint64_t) (K * var / (eps * eps)), cla);
     BUCKET_SIZE = POOL_SIZE / R;
-    maxsat_formula->occurance_list.growTo(2 * var + 1, 0.0);
+    // maxsat_formula->occurance_list.growTo(2 * var + 1, 0.0);
     maxsat_formula->assignment.growTo(var + 1, l_Undef);
+    maxsat_formula->assignment_default.growTo(var + 1, l_Undef);
     maxsat_formula->var_bias.growTo(var + 1, 0);
-    printf("Size of occurance list: %d\n", maxsat_formula->occurance_list.size());
+    // printf("Size of occurance list: %d\n", maxsat_formula->occurance_list.size());
     printf("Size of assignment list: %d\n", maxsat_formula->assignment.size());
     maxsat_formula->weight_pool.clear();
 }
