@@ -478,7 +478,7 @@ void sample_clauses(MaxSATFormula *maxsat_formula) {
     // cout << "default value: " << default_value << endl;
     for (int variable = 1; variable <= maxsat_formula->nVars(); variable++)
     {
-        if (maxsat_formula->assignment[variable] == l_Undef) {
+        if (default_variable && maxsat_formula->assignment[variable] == l_Undef) {
             // unassigned variables are assigned randomly
             default_value = dis(maxsat_formula->getRNG()) > 0.5;
             if (default_value) {

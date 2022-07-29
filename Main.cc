@@ -271,6 +271,7 @@ int main(int argc, char **argv) {
     BoolOption sampling("WBO", "sampling", "Symmetry breaking.\n", false);
     BoolOption print_verbose("WBO", "print-verbose", "Printing the verbose.\n", false);
     BoolOption pool_c("WBO", "pool", "use pool.\n", true);
+    BoolOption default_value_for_variable("WBO", "default", "use default value for unassigned variables.\n", false);
     BoolOption l1_sampler("WBO", "l1", "probability proportion to weight.\n", true);
     BoolOption hoa_sampler("WBO", "hoa", "run hoa sampling algorithm.\n", false);
 
@@ -289,6 +290,7 @@ int main(int argc, char **argv) {
     beta_factor = (int)b_factor;
 
     use_pool = (bool) pool_c;
+    default_variable = (bool) default_value_for_variable;
     decision_heu = (bool) decision_c;
     use_fixed_memory = (bool) check_memory;
     fraction_of_memory = (double) pool_fraction;
