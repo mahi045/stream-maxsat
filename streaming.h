@@ -431,7 +431,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
         remaining_time_second *= 2;
     }
     timeout = min(SMALL_TIMEOUT, remaining_time_second);
-    timeout = (timeout < 20) ? 20 : timeout;
+    timeout = (timeout < 10) ? 10 : timeout;
     incompatible.clear(true);
     agreed.clear(true);
     int available_memory = total_memory;
@@ -728,7 +728,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
         remaining_time =  current_time - start_time;
         remaining_time_second = ceil((TIMEOUT - remaining_time.count()) / (remaining_buckets + remaining_buckets - 1));
         timeout = min(SMALL_TIMEOUT, remaining_time_second);
-        timeout = (timeout < 20) ? 20 : timeout;
+        timeout = (timeout < 10) ? 10 : timeout;
 
         // cout << "The timeout for second maxsat: " << timeout << endl;
         stringStream.str("");
