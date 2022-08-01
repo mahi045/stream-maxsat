@@ -156,7 +156,7 @@ static void parseMaxSAT(B &in, MaxSATFormula *maxsat_formula) {
     printf("%d-th bucket !! \n", ++maxsat_formula->bucket_index);
     modify_pool(maxsat_formula);
   }
-  printf("Sum of weight: %s\n", mpz_get_str (NULL, 10, maxsat_formula->clause_weight_sum));
+  // printf("Sum of (less than beta) weight: %s\n", mpz_get_str (NULL, 10, maxsat_formula->clause_weight_sum));
   cout << "The number of pool clauses is: " << maxsat_formula->last_index_in_pool << endl;
   auto current_time = std::chrono::high_resolution_clock::now();
   // cout << " Stream maxsat execution time: " <<  duration_cast<std::chrono::microseconds>(current_time - start_time).count() / pow(10, 6) << endl;

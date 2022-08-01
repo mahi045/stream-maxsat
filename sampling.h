@@ -152,9 +152,14 @@ void modify_pool(MaxSATFormula *maxsat_formula) {
                     maxsat_formula->last_index_in_pool++;
                     if (maxsat_formula->getSoftClause(cla_index).clause.size() <= maxsat_formula->beta)
                     {
-                        mpz_sub_ui(maxsat_formula->bucket_clause_weight, maxsat_formula->bucket_clause_weight, maxsat_formula->getSoftClause(cla_index).weight); // update the weight sum
+                        int w1 = maxsat_formula->getSoftClause(cla_index).weight;
+                        if (hoa) {
+                            w1 = 1;
+                        }
+                        mpz_sub_ui(maxsat_formula->bucket_clause_weight, maxsat_formula->bucket_clause_weight, w1); // update the weight sum
+                        mpz_sub_ui(maxsat_formula->clause_weight_sum, maxsat_formula->clause_weight_sum, w1);
                     }
-                    mpz_sub_ui(maxsat_formula->clause_weight_sum, maxsat_formula->clause_weight_sum, maxsat_formula->getSoftClause(cla_index).weight);
+                    
                     // 
                     clause_already_added++;
                 }
@@ -180,10 +185,11 @@ void modify_pool(MaxSATFormula *maxsat_formula) {
                 //     remaining_clause = i + 1;
                 //     clause_need_replace = ((double) (remaining_clause) / (remaining_clause + maxsat_formula->clause_seen_so_far)) * maxsat_formula->nPool();
                 // }
-                if (!hoa && !L_1) {
-                    // it is special case for random sampling 
-                    clause_need_replace = ((double) (remaining_clause) / (remaining_clause + maxsat_formula->clause_seen_so_far)) * maxsat_formula->nPool();
-                }
+                // IT IS NO LONGER NECESSARY
+                // if (hoa) {
+                //     // it is special case for random sampling 
+                //     clause_need_replace = ((double) (remaining_clause) / (bound + maxsat_formula->clause_seen_so_far)) * maxsat_formula->nPool();
+                // }
                 clause_need_replace = min(clause_need_replace, remaining_clause);
                 unordered_set<uint32_t> replaced_clause_pool = maxsat_formula->pick_k_clauses_from_pool(clause_need_replace);
                 unordered_set<uint32_t> replaced_clause_bucket = maxsat_formula->pick_k_clauses(clause_need_replace, true);

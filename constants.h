@@ -18,6 +18,7 @@ static bool median_heu = true;
 static bool decision_heu = true;
 static double npercentile = 0.5;
 static bool L_1 = true;
+// hoa means uniform sampling
 static bool hoa = false;
 static bool postprocessing = false;
 static bool store_all = false;

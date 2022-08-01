@@ -273,7 +273,7 @@ int main(int argc, char **argv) {
     BoolOption pool_c("WBO", "pool", "use pool.\n", true);
     BoolOption default_value_for_variable("WBO", "default", "use default value for unassigned variables.\n", false);
     BoolOption l1_sampler("WBO", "l1", "probability proportion to weight.\n", true);
-    BoolOption hoa_sampler("WBO", "hoa", "run hoa sampling algorithm.\n", false);
+    BoolOption hoa_sampler("WBO", "hoa", "run uniform sampling algorithm.\n", false);
 
     BoolOption decision_c("WBO", "decision", "enable decision heuristic.\n", false);
     BoolOption use_median("WBO", "median", "use median as F.\n", true);
@@ -296,6 +296,9 @@ int main(int argc, char **argv) {
     fraction_of_memory = (double) pool_fraction;
     L_1 = (bool) l1_sampler;
     hoa = (bool) hoa_sampler;
+    if (hoa) {
+      L_1 = false;
+    }
 
 
     heparam = (double) hp;
