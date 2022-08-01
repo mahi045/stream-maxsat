@@ -830,9 +830,10 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             maxsat_formula->last_index_in_pool++;
             if (maxsat_formula->getSoftClause(cla_index).clause.size() <= maxsat_formula->beta)
             {
-                mpz_sub_ui(maxsat_formula->bucket_clause_weight, maxsat_formula->bucket_clause_weight, maxsat_formula->getSoftClause(cla_index).weight); // update the weight sum
+                mpz_sub_ui(maxsat_formula->bucket_clause_weight, maxsat_formula->bucket_clause_weight, maxsat_formula->getSoftClause(cla_index).weight);
+                mpz_sub_ui(maxsat_formula->clause_weight_sum, maxsat_formula->clause_weight_sum, maxsat_formula->getSoftClause(cla_index).weight); // update the weight sum
             }
-            mpz_sub_ui(maxsat_formula->clause_weight_sum, maxsat_formula->clause_weight_sum, maxsat_formula->getSoftClause(cla_index).weight);
+            
             //
             clause_already_added++;
         }

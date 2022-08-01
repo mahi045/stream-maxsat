@@ -72,13 +72,14 @@ void MaxSATFormula::addSoftClause(uint64_t weight, vec<Lit> &lits) {
   soft_clauses.push();
   vec<Lit> vars;
   Lit assump = lit_Undef;
-  mpz_add_ui(clause_weight_sum, clause_weight_sum, weight); // update the weight sum
+   // update the weight sum
   uint64_t w = weight / pow(1 + alpha, lits.size() - 1);
   if (w < 1) {
     w = 1;
   }
   if (lits.size() <= beta) {
     mpz_add_ui(bucket_clause_weight, bucket_clause_weight, weight); // update the weight sum
+    mpz_add_ui(clause_weight_sum, clause_weight_sum, weight);
   }
   vec<Lit> copy_lits;
   lits.copyTo(copy_lits);
@@ -202,11 +203,12 @@ void MaxSATFormula::addSoftClause(uint64_t weight, vec<Lit> &lits,
                                   vec<Lit> &vars) {
   soft_clauses.push();
   Lit assump = lit_Undef;
-  mpz_add_ui(clause_weight_sum, clause_weight_sum, weight); // update the weight sum
+  
   uint64_t w = weight / pow(1 + alpha, lits.size() - 1);
   w = (w < 1) ? 1 : w;
   if (lits.size() <= beta) {
     mpz_add_ui(bucket_clause_weight, bucket_clause_weight, weight); // update the weight sum
+    mpz_add_ui(clause_weight_sum, clause_weight_sum, weight); // update the weight sum
   }
   vec<Lit> copy_lits;
   lits.copyTo(copy_lits);
