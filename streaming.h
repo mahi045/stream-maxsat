@@ -424,11 +424,18 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     // var_map.clear();
     stringStream.str("");
     current_time = std::chrono::high_resolution_clock::now();
-    remaining_buckets = (nbuckets - maxsat_formula->nSoft() / BUCKET_SIZE + 1);
+    remaining_buckets = (nbuckets - maxsat_formula->bucket_index);
     remaining_time =  current_time - start_time;
+    cout << "remaining time: " << (TIMEOUT - remaining_time.count()) << " remaining buckets: " << remaining_buckets << endl;
     remaining_time_second = ceil((TIMEOUT - remaining_time.count()) / (remaining_buckets + remaining_buckets));
     if (!use_pool) {
         remaining_time_second *= 2;
+    }
+    if (TIMEOUT - remaining_time.count() <= 0) {
+        // timeouted, so exit
+        cout << "timeouted; ";
+        exit(1);
+
     }
     timeout = min(SMALL_TIMEOUT, remaining_time_second);
     timeout = (timeout < 10) ? 10 : timeout;
@@ -724,9 +731,15 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
         // calling the new maxsat query
     if (call_second_maxsat && use_pool) {
         current_time = std::chrono::high_resolution_clock::now();
-        remaining_buckets = (nbuckets - maxsat_formula->nSoft() / BUCKET_SIZE + 1);
+        remaining_buckets = (nbuckets - maxsat_formula->bucket_index);
+        cout << "remaining time: " << (TIMEOUT - remaining_time.count()) << " remaining buckets: " << remaining_buckets << endl;
         remaining_time =  current_time - start_time;
         remaining_time_second = ceil((TIMEOUT - remaining_time.count()) / (remaining_buckets + remaining_buckets - 1));
+        if (TIMEOUT - remaining_time.count() <= 0) {
+          // timeouted, so exit
+          cout << "timeouted; ";
+          exit(1);
+        }
         timeout = min(SMALL_TIMEOUT, remaining_time_second);
         timeout = (timeout < 10) ? 10 : timeout;
 
