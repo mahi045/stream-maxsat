@@ -315,8 +315,8 @@ void sample_clauses(MaxSATFormula *maxsat_formula) {
     }
     int available_memory = total_memory;
     if (use_fixed_memory) {
-      int used_memory = currentUsedSizeinVM(maxsat_formula) / 1024;
-      used_memory += sizeof(inv_var_map[0]) * inv_var_map.size() / (1024 * 1024);
+      int used_memory = 0;
+      used_memory = (sizeof(maxsat_formula) + sizeof(inv_var_map[0]) * inv_var_map.size()) / (1024 * 1024);
       available_memory = (available_memory > used_memory)
                              ? (available_memory - used_memory)
                              : available_memory;
