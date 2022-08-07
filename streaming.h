@@ -207,7 +207,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     vector<uint32_t> inv_var_map;
     var_map.clear();
     inv_var_map.clear();
-    uint32_t last_variable_of_mapping = 0;
+    uint64_t last_variable_of_mapping = 0;
     uint32_t variable_goes_to_file = 0; 
     uint32_t renamed_variable = 0;
     uint32_t number_of_clauses = 0;
@@ -283,16 +283,17 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
         poolfile.open(pool_stream_maxsat_file);
 
     myfile << "p wcnf " + to_string(maxsat_formula->nVars()) + " " + to_string(maxsat_formula->nSoft()) + " " + to_string(maxsat_formula->hard_clause_identifier) << endl;
+    // only keep the header in the wcnf file
     if (use_pool) poolfile << "p wcnf " + to_string(maxsat_formula->nVars()) + " " + to_string(BUCKET_SIZE) + " " + to_string(maxsat_formula->hard_clause_identifier) << endl;
     for (auto start_index = bucket_start; start_index < maxsat_formula->nSoft();
             start_index++) {
         myfile << maxsat_formula->getSoftClause(start_index).weight << " ";
-        if (use_pool) poolfile << maxsat_formula->getSoftClause(start_index).weight << " ";
+        // if (use_pool) poolfile << maxsat_formula->getSoftClause(start_index).weight << " ";
         for (int j = 0;
             j < maxsat_formula->getSoftClause(start_index).clause.size(); j++) {
                 if (sign(maxsat_formula->getSoftClause(start_index).clause[j])) {
             myfile << "-";
-                if (use_pool) poolfile << "-";
+                // if (use_pool) poolfile << "-";
                 }
                 if (rename_the_problem)
                 {
@@ -308,20 +309,20 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                         // inv_var_map[last_variable_of_mapping] = variable_goes_to_file;
                     }
                     myfile << var_map[variable_goes_to_file] << " ";
-                    if (use_pool) 
-                        poolfile << var_map[variable_goes_to_file] << " ";
+                    // if (use_pool) 
+                    //     poolfile << var_map[variable_goes_to_file] << " ";
                 }
                 else {
                     myfile << var(maxsat_formula->getSoftClause(start_index).clause[j]) + 1
                         << " ";
-                    if (use_pool) 
-                        poolfile << var(maxsat_formula->getSoftClause(start_index).clause[j]) + 1 << " ";
+                    // if (use_pool) 
+                    //     poolfile << var(maxsat_formula->getSoftClause(start_index).clause[j]) + 1 << " ";
                 }
                 
         }
         myfile << "0" << endl;
         number_of_clauses++;
-        if (use_pool) poolfile << "0" << endl;
+        // if (use_pool) poolfile << "0" << endl;
     }
     // if (decision_heu) {
     //     bias_thre = bias_threshold(maxsat_formula);
@@ -448,11 +449,11 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
         used_memory += sizeof(maxsat_formula->in_bucket[0]) * maxsat_formula->in_bucket.size();
         if (rename_the_problem) {
             used_memory += sizeof(inv_var_map[0]) * inv_var_map.size();  // substracting the memory for inv_var_map
-            if (use_pool) {
-                used_memory += var_map.bucket_count() * (sizeof(void*) + sizeof(uint32_t));
-                cout << "var_map.bucket_count() * (sizeof(void*) + sizeof(uint32_t)): " <<
-                    var_map.bucket_count() * (sizeof(void*) + sizeof(uint32_t)) << endl;
-            }
+            // if (use_pool) {
+            //     used_memory += var_map.bucket_count() * (sizeof(void*) + sizeof(uint32_t));
+            //     cout << "var_map.bucket_count() * (sizeof(void*) + sizeof(uint32_t)): " <<
+            //         var_map.bucket_count() * (sizeof(void*) + sizeof(uint32_t)) << endl;
+            // }
         }
         used_memory = used_memory / (1024 * 1024);
         available_memory = (available_memory > used_memory) ? (available_memory - used_memory) : available_memory;
@@ -492,6 +493,9 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     result_file_name = "result_" + stream_maxsat_file;
     ifstream resultfile2(result_file_name);
     bool no_assign = false;
+    unordered_map<uint32_t, bool> hard_literals;
+    hard_literals.clear();
+    
     while (getline(resultfile2, line)) {
         if (line.rfind("v ") == 0) {
             no_assign = true;
@@ -519,6 +523,9 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                             maxsat_formula->assignment[abs(lit)] = l_False;
                         }
                         else {
+                            if (use_pool && maxsat_formula->assignment[abs(lit)] == l_Undef) {
+                                hard_literals[abs(lit)] = false;
+                            }
                             maxsat_formula->assignment[abs(lit)] = l_False;
                             if (use_pool)
                                 agreed.push(lit);
@@ -530,6 +537,9 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                             incompatible.push(lit);
                         }
                         else {
+                            if (use_pool && maxsat_formula->assignment[abs(lit)] == l_Undef) {
+                                hard_literals[abs(lit)] = true;
+                            }
                             maxsat_formula->assignment[lit] = l_True;
                             if (use_pool)
                                 agreed.push(lit);
@@ -541,6 +551,9 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     }
     maxsat_formula->in_bucket.clear();
     maxsat_formula->in_bucket.shrink_to_fit();
+    var_map.clear();
+    inv_var_map.clear();
+    inv_var_map.shrink_to_fit();
     // inv_var_map.clear();
     // inv_var_map.shrink_to_fit();
     resultfile2.close();
@@ -575,35 +588,38 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     //     // now invoking maxsat query again
     //     // myfile.open(stream_maxsat_file, std::ios_base::app);
     //     cout << "maxsat_formula->nPool(): " << maxsat_formula->nPool() << endl;
-        for (int cla_index = 0; cla_index < maxsat_formula->nPool();
-                cla_index++) {
-            poolfile << maxsat_formula->getPoolClause(cla_index).weight << " ";
-            for (int j = 0; j < maxsat_formula->getPoolClause(cla_index).clause.size(); j++)
-            {
-                if (sign(maxsat_formula->getPoolClause(cla_index).clause[j])) {
-                    poolfile << "-";
-                }
-                if (rename_the_problem) {
-                    variable_goes_to_file = var(maxsat_formula->getPoolClause(cla_index).clause[j]) + 1;
-                    if (var_map.find(variable_goes_to_file) == var_map.end())
-                    {
-                        last_variable_of_mapping++;
-                        var_map[variable_goes_to_file] = last_variable_of_mapping;
-                        if (inv_var_map.size() == 0)
-                        {
-                            inv_var_map.push_back(0);
-                        }
-                        inv_var_map.push_back(variable_goes_to_file);
-                    }
-                    poolfile << var_map[variable_goes_to_file] << " ";
-                }
-                else {
-                    poolfile << var(maxsat_formula->getPoolClause(cla_index).clause[j]) + 1 << " ";
-                }
-            }
-            poolfile << "0" << endl;
-            number_of_clauses++;
-        }
+    number_of_clauses = 0;
+    last_variable_of_mapping = 0;
+    // DO NOT ADD THE CLAUSE NOW
+        // for (int cla_index = 0; cla_index < maxsat_formula->nPool();
+        //         cla_index++) {
+        //     poolfile << maxsat_formula->getPoolClause(cla_index).weight << " ";
+        //     for (int j = 0; j < maxsat_formula->getPoolClause(cla_index).clause.size(); j++)
+        //     {
+        //         if (sign(maxsat_formula->getPoolClause(cla_index).clause[j])) {
+        //             poolfile << "-";
+        //         }
+        //         if (rename_the_problem) {
+        //             variable_goes_to_file = var(maxsat_formula->getPoolClause(cla_index).clause[j]) + 1;
+        //             if (var_map.find(variable_goes_to_file) == var_map.end())
+        //             {
+        //                 last_variable_of_mapping++;
+        //                 var_map[variable_goes_to_file] = last_variable_of_mapping;
+        //                 if (inv_var_map.size() == 0)
+        //                 {
+        //                     inv_var_map.push_back(0);
+        //                 }
+        //                 inv_var_map.push_back(variable_goes_to_file);
+        //             }
+        //             poolfile << var_map[variable_goes_to_file] << " ";
+        //         }
+        //         else {
+        //             poolfile << var(maxsat_formula->getPoolClause(cla_index).clause[j]) + 1 << " ";
+        //         }
+        //     }
+        //     poolfile << "0" << endl;
+        //     number_of_clauses++;
+        // }
     // }
     int c = 0;
     if (median_heu && use_filtering_condition) {
@@ -677,6 +693,10 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
                 add_hard_clause = true;
             }
             if (add_hard_clause) {
+                if (agreed[lit_index] > 0) 
+                    hard_literals[lit_index] = true;
+                else 
+                    hard_literals[lit_index] = false;
                 if (rename_the_problem)
                 {
                     // renaming the hard clauses
@@ -699,6 +719,111 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
             }
         }
     }
+    bool add_clause = false;
+    for (int cla_index = 0; cla_index < maxsat_formula->nPool();
+         cla_index++)
+    {
+        add_clause = true;
+        // check whether we add the clause
+        for (int j = 0; j < maxsat_formula->getPoolClause(cla_index).clause.size(); j++) {
+            variable_goes_to_file = var(maxsat_formula->getPoolClause(cla_index).clause[j]) + 1;
+            if (hard_literals.find(variable_goes_to_file) != hard_literals.end()) {
+                // the variable is added as a hard clause
+                if (hard_literals[variable_goes_to_file] == false && sign(maxsat_formula->getPoolClause(cla_index).clause[j])) {
+                    add_clause = false;
+                    break;
+                }
+                else if (hard_literals[variable_goes_to_file] == true && !sign(maxsat_formula->getPoolClause(cla_index).clause[j])) {
+                    add_clause = false;
+                    break;
+                }
+            }
+        }
+        if (!add_clause) {
+            continue;
+        }
+        poolfile << maxsat_formula->getPoolClause(cla_index).weight << " ";
+        for (int j = 0; j < maxsat_formula->getPoolClause(cla_index).clause.size(); j++)
+        {
+            if (sign(maxsat_formula->getPoolClause(cla_index).clause[j]))
+            {
+                poolfile << "-";
+            }
+            if (rename_the_problem)
+            {
+                variable_goes_to_file = var(maxsat_formula->getPoolClause(cla_index).clause[j]) + 1;
+                if (var_map.find(variable_goes_to_file) == var_map.end())
+                {
+                    last_variable_of_mapping++;
+                    var_map[variable_goes_to_file] = last_variable_of_mapping;
+                    if (inv_var_map.size() == 0)
+                    {
+                        inv_var_map.push_back(0);
+                    }
+                    inv_var_map.push_back(variable_goes_to_file);
+                }
+                poolfile << var_map[variable_goes_to_file] << " ";
+            }
+            else
+            {
+                poolfile << var(maxsat_formula->getPoolClause(cla_index).clause[j]) + 1 << " ";
+            }
+        }
+        poolfile << "0" << endl;
+        number_of_clauses++;
+    }
+    // now adding the bucket
+    for (auto start_index = bucket_start; start_index < maxsat_formula->nSoft();
+            start_index++) {
+        add_clause = true;
+        // check whether we add the clause
+        for (int j = 0; j < maxsat_formula->getSoftClause(start_index).clause.size(); j++) {
+            variable_goes_to_file = var(maxsat_formula->getSoftClause(start_index).clause[j]) + 1;
+            if (hard_literals.find(variable_goes_to_file) != hard_literals.end()) {
+                // the variable is added as a hard clause
+                if (hard_literals[variable_goes_to_file] == false && sign(maxsat_formula->getSoftClause(start_index).clause[j])) {
+                    add_clause = false;
+                    break;
+                }
+                else if (hard_literals[variable_goes_to_file] == true && !sign(maxsat_formula->getSoftClause(start_index).clause[j])) {
+                    add_clause = false;
+                    break;
+                }
+            }
+        }
+        if (!add_clause) {
+            continue;
+        }
+        poolfile << maxsat_formula->getSoftClause(start_index).weight << " ";
+        for (int j = 0;
+            j < maxsat_formula->getSoftClause(start_index).clause.size(); j++) {
+                if (sign(maxsat_formula->getSoftClause(start_index).clause[j])) {
+                    poolfile << "-";
+                }
+                if (rename_the_problem)
+                {
+                    variable_goes_to_file = var(maxsat_formula->getSoftClause(start_index).clause[j]) + 1;
+                    if (var_map.find(variable_goes_to_file) == var_map.end())
+                    {
+                        last_variable_of_mapping++;
+                        var_map[variable_goes_to_file] = last_variable_of_mapping;
+                        if (inv_var_map.size() == 0) {
+                            inv_var_map.push_back(0);
+                        }
+                        inv_var_map.push_back(variable_goes_to_file);
+                    }
+                    poolfile << var_map[variable_goes_to_file] << " ";
+                }
+                else {
+                    poolfile << var(maxsat_formula->getSoftClause(start_index).clause[j]) + 1
+                        << " ";
+                }
+                
+        }
+        poolfile << "0" << endl;
+        number_of_clauses++;
+        // if (use_pool) poolfile << "0" << endl;
+    }
     cout << "Total " << incompatible.size() + (agreed.size() - c) << " (" << c << ") literals are incompatible (compatibles)" << endl;
     bool call_second_maxsat = (incompatible.size() + (agreed.size() - c)) > 0;
     incompatible.clear(true);
@@ -714,6 +839,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     if (rename_the_problem) {
         // rename the number of variables
         cout << "The number of variables is: " << to_string(maxsat_formula->nVars()) << " but the pool has total: " << last_variable_of_mapping << " variables !!!" << endl;
+        cout << "The bucket and pool has: " << number_of_clauses << " clauses !!!" << endl;
         ifstream in(stream_maxsat_file);
         string temp_newfile = "temp_" + stream_maxsat_file;
         ofstream out(temp_newfile);
