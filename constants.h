@@ -29,7 +29,7 @@ static std::chrono::high_resolution_clock::time_point start_time;
 static int number_of_no_assignment = 0;
 static bool use_fixed_memory = true;
 static int total_memory = 4000;
-static bool use_filtering_condition = true;
+static bool use_filtering_condition = false;
 static bool log_of_beta = true;
 static bool random_sat_of_beta = true;
 static bool expectation_of_clause = true;

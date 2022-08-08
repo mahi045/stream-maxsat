@@ -622,7 +622,8 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
         // }
     // }
     int c = 0;
-    if (median_heu && use_filtering_condition) {
+    if (median_heu && use_filtering_condition && false) {
+        // disabled this !!!
         
         vector<double> temp_f;
         double f = 0;
@@ -666,6 +667,9 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
         use_hard = false;
     }
     bool add_hard_clause;
+    if (npercentile == 0.5) {
+        F = 1;
+    }
     if (agreed.size() > 0 && use_hard)
     {
         // adding agreed literals as hard clauses
