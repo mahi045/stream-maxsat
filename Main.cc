@@ -278,7 +278,7 @@ int main(int argc, char **argv) {
     BoolOption hard_c("WBO", "conflict", "adding the non-conflict variables.\n", true);
     BoolOption decision_c("WBO", "decision", "enable decision heuristic.\n", false);
     BoolOption use_median("WBO", "median", "use median as F.\n", true);
-    BoolOption use_filter("WBO", "filtering", "use filtering on hard clause inclusion.\n", true);
+    BoolOption use_filter("WBO", "filtering", "use filtering on hard clause inclusion.\n", false);
     BoolOption check_memory("WBO", "lim-mem", "Use limited memory.\n", true);
     BoolOption exit_after_memout("WBO", "memout-exit", "exit after memout.\n", false);
     parseOptions(argc, argv, true);
