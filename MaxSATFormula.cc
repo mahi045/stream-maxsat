@@ -398,8 +398,11 @@ unordered_set<uint32_t> MaxSATFormula::pick_k_clauses(int k, bool reverse = fals
 
     /* compute sums for the tree leaves at each node */
     int offset = pow2(tree_levels) - 1;
+    int notzeronumbers = 0;
     for (int ix = 0; ix < rnd_max; ix++) {
         tree_weights[ix + offset] = weight_sampler[ix];
+        if (weight_sampler[ix] > 0) 
+          notzeronumbers++;
         // if (unsampled_clauses.find(weight_sampler[ix]) == unsampled_clauses.end()) {
         //   unsampled_clauses[weight_sampler[ix]] = 1;
         // } else {
@@ -409,6 +412,7 @@ unordered_set<uint32_t> MaxSATFormula::pick_k_clauses(int k, bool reverse = fals
     for (int ix = pow2(tree_levels+1) - 1; ix > 0; ix--) {
         tree_weights[(ix - 1) / 2] += tree_weights[ix];
     }
+    ntake = (notzeronumbers < ntake) ? notzeronumbers : ntake;
     // cout << "Unsampled clauses stat: " << endl;
     // for (auto &x : unsampled_clauses)
     //   std::cout << " weight: " << x.first << ", cnt: " << x.second << ", ";

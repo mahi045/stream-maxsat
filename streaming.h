@@ -996,8 +996,9 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
         //     clause_need_replace = ((double) (remaining_clause) / (remaining_clause + maxsat_formula->clause_seen_so_far)) * maxsat_formula->nPool();
         // }
         if (clause_need_replace > 0) {
-            unordered_set<uint32_t> replaced_clause_pool = maxsat_formula->pick_k_clauses_from_pool(clause_need_replace);
+            
             unordered_set<uint32_t> replaced_clause_bucket = maxsat_formula->pick_k_clauses(clause_need_replace, true);
+            unordered_set<uint32_t> replaced_clause_pool = maxsat_formula->pick_k_clauses_from_pool(replaced_clause_bucket.size());
             cout << " From bucket index "
                         << maxsat_formula->clause_seen_so_far << " to "
                         << maxsat_formula->clause_seen_so_far +
