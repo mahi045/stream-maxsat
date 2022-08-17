@@ -303,7 +303,7 @@ void sample_clauses(MaxSATFormula *maxsat_formula) {
         string temp_newfile = "temp_" + sampled_maxsat_file;
         ofstream out(temp_newfile);
         string v1, v2;
-        uint32_t v3, v4, v5;
+        uint64_t v3, v4, v5;
         in >> v1 >> v2 >> v3 >> v4 >> v5;
         v3 = last_variable_of_mapping; // <- Do whatever you need to here.
         v4 = number_of_clauses;
