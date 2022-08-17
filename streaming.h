@@ -411,7 +411,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
         string temp_newfile = "temp_" + stream_maxsat_file;
         ofstream out(temp_newfile);
         string v1, v2;
-        uint32_t v3, v4, v5;
+        uint64_t v3, v4, v5;
         in >> v1 >> v2 >> v3 >> v4 >> v5;
         v3 = last_variable_of_mapping; // <- Do whatever you need to here.
         v4 = number_of_clauses;
@@ -448,11 +448,11 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
         used_memory += sizeof(maxsat_formula->in_bucket[0]) * maxsat_formula->in_bucket.size();
         if (rename_the_problem) {
             used_memory += sizeof(inv_var_map[0]) * inv_var_map.size();  // substracting the memory for inv_var_map
-            if (use_pool) {
-                used_memory += var_map.bucket_count() * (sizeof(void*) + sizeof(uint32_t));
-                cout << "var_map.bucket_count() * (sizeof(void*) + sizeof(uint32_t)): " <<
-                    var_map.bucket_count() * (sizeof(void*) + sizeof(uint32_t)) << endl;
-            }
+            // if (use_pool) {
+                // used_memory += var_map.bucket_count() * (sizeof(void*) + sizeof(uint32_t));
+                // cout << "var_map.bucket_count() * (sizeof(void*) + sizeof(uint32_t)): " <<
+                //     var_map.bucket_count() * (sizeof(void*) + sizeof(uint32_t)) << endl;
+            // }
         }
         used_memory = used_memory / (1024 * 1024);
         available_memory = (available_memory > used_memory) ? (available_memory - used_memory) : available_memory;
@@ -721,7 +721,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
         string temp_newfile = "temp_" + stream_maxsat_file;
         ofstream out(temp_newfile);
         string v1, v2;
-        uint32_t v3, v4, v5;
+        uint64_t v3, v4, v5;
         in >> v1 >> v2 >> v3 >> v4 >> v5;
         v3 = last_variable_of_mapping; // <- Do whatever you need to here.
         v4 = number_of_clauses;

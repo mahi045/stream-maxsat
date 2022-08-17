@@ -230,11 +230,11 @@ int main(int argc, char **argv) {
        IntOption Timeout_value("Open-WBO", "timeout",
                             "the value of timeout "
                             "\n",
-                            10, IntRange(1, 20000));
+                            5000, IntRange(1, 20000));
        IntOption Immediate_timeout_value("Open-WBO", "small-timeout",
                             "the value of small timeout "
                             "\n",
-                            10, IntRange(1, 10000));
+                            30, IntRange(1, 10000));
     Glucose::DoubleOption epsilon("Open-WBO", "epsilon",
                         "the value of ep "
                         "\n",
