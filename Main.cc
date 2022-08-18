@@ -246,12 +246,12 @@ int main(int argc, char **argv) {
     SMALL_TIMEOUT = (int) Immediate_timeout_value;
     ignore_hard = (bool) ignoreHardWeight;
 
-    printf("R_value: %d\n", R);
-    printf("K_value: %d\n", K);
-    printf("Epsilon: %f\n", (double)epsilon);
+    // printf("R_value: %d\n", R);
+    // printf("K_value: %d\n", K);
+    // printf("Epsilon: %f\n", (double)epsilon);
 //     printf("Streaming: %d\n", (int)sampling);
-    printf("Timeout for complete maxsat: %d\n", (int)TIMEOUT);
-    printf("Timeout for partition maxsat: %d\n", (int)SMALL_TIMEOUT);
+    // printf("Timeout for complete maxsat: %d\n", (int)TIMEOUT);
+    // printf("Timeout for partition maxsat: %d\n", (int)SMALL_TIMEOUT);
     result_file_name = (const char *)assignment;
     // std::cout << "result_file_name: " << result_file_name << std::endl;
     
