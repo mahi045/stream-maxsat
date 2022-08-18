@@ -735,7 +735,7 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
     if (call_second_maxsat && use_pool) {
         current_time = std::chrono::high_resolution_clock::now();
         remaining_buckets = (nbuckets - maxsat_formula->bucket_index);
-        cout << "remaining time: " << (TIMEOUT - remaining_time.count()) << " remaining buckets: " << remaining_buckets << endl;
+        // cout << "remaining time: " << (TIMEOUT - remaining_time.count()) << " remaining buckets: " << remaining_buckets << endl;
         remaining_time =  current_time - start_time;
         remaining_time_second = ceil((TIMEOUT - remaining_time.count()) / (remaining_buckets + remaining_buckets - 1));
         if (TIMEOUT - remaining_time.count() <= 0) {
