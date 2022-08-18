@@ -234,7 +234,7 @@ int main(int argc, char **argv) {
        IntOption Immediate_timeout_value("Open-WBO", "small-timeout",
                             "the value of small timeout "
                             "\n",
-                            30, IntRange(1, 10000));
+                            50, IntRange(1, 10000));
     Glucose::DoubleOption epsilon("Open-WBO", "epsilon",
                         "the value of ep "
                         "\n",
@@ -305,9 +305,9 @@ int main(int argc, char **argv) {
     TIMEOUT = (int) Timeout_value;
     SMALL_TIMEOUT = (int) Immediate_timeout_value;
 
-    printf("R_value: %d\n", R);
-    printf("K_value: %d\n", K);
-    printf("Epsilon: %f\n", (double)epsilon);
+    // printf("R_value: %d\n", R);
+    // printf("K_value: %d\n", K);
+    // printf("Epsilon: %f\n", (double)epsilon);
 //     printf("Streaming: %d\n", (int)sampling);
     printf("Timeout for complete maxsat: %d\n", (int)TIMEOUT);
     printf("Timeout for partition maxsat: %d\n", (int)SMALL_TIMEOUT);
