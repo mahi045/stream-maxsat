@@ -139,6 +139,33 @@ bool init_stream(MaxSATFormula *maxsat_formula, uint64_t var, uint64_t cla) {
 //     }
 //     return sum;
 // }
+void run_single_maxsat_from_script(int timeout, int memlimit) {
+    ofstream myfile;
+    std::ostringstream stringStream;
+    std::string stream_maxsat_file = "streaming_" + file_name;
+    std::string sh_file_to_run = stream_maxsat_file + ".sh";
+    myfile.open(sh_file_to_run);
+    myfile << "#!/bin/bash" << endl;
+    myfile << "ulimit -t " << timeout << endl;
+    myfile << "ulimit -v " << memlimit << endl;
+    myfile << "ulimit -c 0" << endl;
+    myfile << "set -x" << endl;
+    stringStream.str("");
+    stringStream << "./open-wbo_static -print-model -cpu-lim=" << timeout << " -mem-lim=" << memlimit << " " << stream_maxsat_file + " > " + "result_" + stream_maxsat_file;
+    // calling the smapled maxsat query
+    cout << stringStream.str() << endl;
+    myfile << stringStream.str() << endl;
+
+    // giving permission to new .sh file
+    stringStream.str("");
+    stringStream << "chmod +x " << sh_file_to_run;
+    system(stringStream.str().c_str());
+
+    // invoke the .sh file
+    stringStream.str("");
+    stringStream << "./" << sh_file_to_run;
+    system(stringStream.str().c_str());
+}
 
 void run_maxsat_solver(MaxSATFormula *maxsat_formula) {
     string result_file_name;
@@ -163,9 +190,10 @@ void run_maxsat_solver(MaxSATFormula *maxsat_formula) {
         available_memory = (available_memory > used_memory) ? (available_memory - used_memory) : available_memory;
     }
     cout << "The available memory and time limit (only maxsat call): " << available_memory << " and " << timeout << endl;
-    stringStream << "./open-wbo_static -print-model -cpu-lim=" << timeout << " -mem-lim=" << available_memory << " " << file_name + " > " + "result_" + stream_maxsat_file;
+    run_single_maxsat_from_script(timeout, available_memory);
+    // stringStream << "./open-wbo_static -print-model -cpu-lim=" << timeout << " -mem-lim=" << available_memory << " " << file_name + " > " + "result_" + stream_maxsat_file;
     // calling the smapled maxsat query
-    system(stringStream.str().c_str());
+    // system(stringStream.str().c_str());
     // renaming the output file
     stringStream.str("");
     std::string open_wbo_maxsat_file = "result_open_wbo_" + file_name;
@@ -457,20 +485,25 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
         used_memory = used_memory / (1024 * 1024);
         available_memory = (available_memory > used_memory) ? (available_memory - used_memory) : available_memory;
     }
+
+
     cout << "The available memory (1st maxsat call): " << available_memory << endl;
     cout << "Calling maxsat query from clause = " << maxsat_formula->clause_seen_so_far << " to clause = " << maxsat_formula->clause_seen_so_far +
                             maxsat_formula->nSoft() << endl;
+
+    run_single_maxsat_from_script(timeout, available_memory);                        
     stringStream.str("");
     cout << "The number of clauses in the stream: (1st maxsat)";
     stringStream << "wc -l " << stream_maxsat_file;
     system(stringStream.str().c_str());
     // cout << "The number of hard clauses is: " << number_of_hard_clause << endl;
-
-    stringStream.str("");
-    stringStream << "timeout " << timeout << "s ./open-wbo_static -print-model -cpu-lim=" << timeout << " -mem-lim=" << available_memory << " " << stream_maxsat_file + " > " + "result_" + stream_maxsat_file;
-    // calling the smapled maxsat query
-    cout << stringStream.str() << endl;
-    system(stringStream.str().c_str());
+    
+    // this is the previous function call
+    // stringStream.str("");
+    // stringStream << "timeout " << timeout << "s ./open-wbo_static -print-model -cpu-lim=" << timeout << " -mem-lim=" << available_memory << " " << stream_maxsat_file + " > " + "result_" + stream_maxsat_file;
+    // // calling the smapled maxsat query
+    // cout << stringStream.str() << endl;
+    // system(stringStream.str().c_str());
 
     cout << "The memory used already:" << endl;
     stringStream.str("");
@@ -757,13 +790,14 @@ void streaming_maxsat(MaxSATFormula *maxsat_formula) {
         used_memory = used_memory / (1024 * 1024);
         available_memory = (available_memory > used_memory) ? (available_memory - used_memory) : available_memory;
         cout << "The available memory (2nd maxsat call): " << available_memory << endl;
-        stringStream << "timeout " << timeout << "s ./open-wbo_static -print-model -cpu-lim=" << timeout << " -mem-lim=" << available_memory << " " << stream_maxsat_file + " > " + "result_" + stream_maxsat_file;
-        // calling the new maxsat query
-        cout << stringStream.str() << endl;
+        // stringStream << "timeout " << timeout << "s ./open-wbo_static -print-model -cpu-lim=" << timeout << " -mem-lim=" << available_memory << " " << stream_maxsat_file + " > " + "result_" + stream_maxsat_file;
+        // // calling the new maxsat query
+        // cout << stringStream.str() << endl;
+        run_single_maxsat_from_script(timeout, available_memory);
 
 
         // auto start = std::chrono::high_resolution_clock::now();
-        system(stringStream.str().c_str());
+        // system(stringStream.str().c_str());
         // auto end = std::chrono::high_resolution_clock::now();
 
         // auto int_s = std::chrono::duration_cast<std::chrono::seconds>(end - start);
