@@ -155,6 +155,7 @@ void run_single_maxsat_from_script(int timeout, int memlimit) {
     // calling the smapled maxsat query
     cout << stringStream.str() << endl;
     myfile << stringStream.str() << endl;
+    myfile.close();
 
     // giving permission to new .sh file
     stringStream.str("");
