@@ -147,7 +147,7 @@ void run_single_maxsat_from_script(int timeout, int memlimit) {
     myfile.open(sh_file_to_run);
     myfile << "#!/bin/bash" << endl;
     myfile << "ulimit -t " << timeout << endl;
-    myfile << "ulimit -v " << memlimit << endl;
+    myfile << "ulimit -v " << memlimit * 1024 << endl;
     myfile << "ulimit -c 0" << endl;
     myfile << "set -x" << endl;
     stringStream.str("");
